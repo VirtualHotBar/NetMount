@@ -1,1 +1,0 @@
- rcd --rc-addr=:4423 --rc-user=user --rc-pass=pass

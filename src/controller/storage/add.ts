@@ -1,0 +1,5 @@
+
+function addStorage(){
+
+}
+export {addStorage}

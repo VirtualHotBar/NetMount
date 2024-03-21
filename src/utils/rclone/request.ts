@@ -1,11 +1,11 @@
 
 
 // 定义 `rclone` 的 API 端点
-const rcloneApiEndpoint = "http://localhost:4423";
+const rcloneApiEndpoint = "http://localhost:5572";
 
 // 定义账号和密码
-const username = "u";
-const password = "p";
+const username = "";
+const password = "";
 
 // 以 base64 编码的方式来设置账密字符串
 const base64Credentials = btoa(`${username}:${password}`);

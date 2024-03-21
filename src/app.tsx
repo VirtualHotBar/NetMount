@@ -6,6 +6,8 @@ import { invoke } from '@tauri-apps/api';
 
 import { Test } from './controller/test';
 import { Routers } from './type/routers';
+import { Home_page } from './page/home/home';
+import { Storage_page } from './page/storage/storage';
 
 const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content } = Layout;
@@ -14,23 +16,12 @@ const routers: Array<Routers> = [
     {
         title: '首页',
         path: '/',
-        component: <>home</>,
-
-
+        component: <Home_page/>,
     },
     {
         title: '存储',
         path: '/storage',
-        component: <>storage</>,
-        children:
-            [
-                {
-                    title: '测试',
-                    path: '/storage/test',
-                    component: <>test</>,
-
-                }
-            ]
+        component: <Storage_page/>,
     },
     {
         title: '设置',
@@ -148,7 +139,7 @@ function App() {
     }, [location]);
 
     return (
-        <Layout className=' w-full h-full'>
+        <Layout className='w-full h-full'>
             <Sider >
                 <div style={{ textAlign: 'center', padding: '0.5rem' }}>
                     <span className=' font-bold' style={{ fontSize: '1.5rem' }}>
