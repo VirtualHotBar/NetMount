@@ -59,8 +59,11 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "netmount",
-        "width": 800
+        "title": "NetMount",
+        "width": 800,
+        "minHeight": 300,
+        "minWidth": 400
+
       }
     ]
   }
