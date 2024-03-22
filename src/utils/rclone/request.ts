@@ -29,11 +29,11 @@ export function rclone_api_post(path:string, data?:object){
     })
 }
 
-export function rclone_api_get(path:string){
+/* export function rclone_api_get(path:string){
     return fetch(rcloneApiEndpoint + path,{
         method: 'GET',
         headers
 }).then((res)=>{
         return res.json()
     })
-}
+} */
