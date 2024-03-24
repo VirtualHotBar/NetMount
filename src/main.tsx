@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-
+import { useTranslation } from 'react-i18next';
+import './services/i18n'
 import './index.css'
 import { App } from './app'
 import { BrowserRouter } from 'react-router-dom'
@@ -7,17 +8,17 @@ import { init } from './controller/main';
 import ReactDOM from 'react-dom/client';
 
 function StartPage() {
-  const [startStr, setStartStr] = useState('正在启动...')
+  const { t } = useTranslation()
+  const [startStr, setStartStr] = useState('loading')
 
   useEffect(() => {
     appStart(setStartStr)
   })
 
   return <>
-    <p>正在启动：{startStr}</p>
+    <p>{t('starting') + ':' + startStr}</p>
   </>
 }
-
 
 const reactRoot = ReactDOM.createRoot(document.getElementById('root')!)
 reactRoot.render(
@@ -29,8 +30,6 @@ async function appStart(setStartStr: Function) {
   if (appStarting) { return }//避免重新执行
   appStarting = true
   await init(setStartStr)//初始化功能
-
-
 
   reactRoot.render(<React.StrictMode>
     <BrowserRouter>

@@ -2,33 +2,18 @@ import React, { useEffect, useState } from 'react'
 import { Layout, Menu, Breadcrumb, Button, Message } from '@arco-design/web-react';
 import "@arco-design/web-react/dist/css/arco.css";
 import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api';
 
 import { Test } from './controller/test';
 import { Routers } from './type/routers';
 import { Home_page } from './page/home/home';
 import { Storage_page } from './page/storage/storage';
+import { AddStorage_page } from './page/storage/add';
 
 const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content } = Layout;
 
-const routers: Array<Routers> = [
-    {
-        title: '首页',
-        path: '/',
-        component: <Home_page/>,
-    },
-    {
-        title: '存储',
-        path: '/storage',
-        component: <Storage_page/>,
-    },
-    {
-        title: '设置',
-        path: '/setting',
-        component: <>settings</>,
-    }
-]
 
 
 //递归查询对应的路由
@@ -54,7 +39,9 @@ function searchRoute(
 function mapMenuItem(routes: Routers[]): JSX.Element {
     return <>{
         routes.map((item) => {
-            if (item.children && item.children.length > 0) {
+            if (item.hide) {
+                return <></>
+            } else if (item.children && item.children.length > 0 && !item.hideChildren) {
                 return (<SubMenu key={item.path} title={item.title}>   {mapMenuItem(item.children)}</SubMenu>)
             } else {
                 return (<MenuItem key={item.path}> {item.title}</MenuItem>)
@@ -88,9 +75,9 @@ function generateBreadcrumb(pathname: string, routes: Routers[]): JSX.Element[] 
     if (pathSnippets.length == 1) {
         return [];
     }
-    // 创建面包屑项（根据是否有子菜单决定是否为链接）
+    // 创建面包屑项（根据是否有子菜单和是否隐藏子菜单决定是否为链接）
     function createBreadcrumbItem(route: Routers): JSX.Element {
-        if (route.children && route.children.length > 0) {
+        if (route.children && route.children.length > 0 && !route.hideChildren) {
             return <>{route.title}</>;
         } else {
             return <Link to={route.path}>{route.title}</Link>;
@@ -128,13 +115,57 @@ function App() {
     //const [router, setRouter] = useState<Routers | null>();
     const navigate = useNavigate();
     const location = useLocation();
+    const { t, i18n } = useTranslation()
+
     const [selectedKeys, setSelectedKeys] = useState<string[]>(['/']);
+
+
+    const routers: Array<Routers> = [
+        {
+            title: t('home'),
+            path: '/',
+            component: <Home_page />,
+        },
+        {
+            title: t('storage'),
+            path: '/storage',
+            children: [
+                {
+                    title: t('manage'),
+                    path: '/storage/manage',
+                    component: <Storage_page />,
+                    hideChildren:true,
+                    children:[
+                        {
+                            title: t('add'),
+                            path: '/storage/manage/add',
+                            key:'/storage/manage',//因为父菜单隐藏了子菜单项，在此页面时设置父菜单key以选择父菜单项
+                            component: <AddStorage_page/>,
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            title: t('setting'),
+            path: '/setting',
+            component: <>settings</>,
+        }
+    ]
+
+
+
+
 
     useEffect(() => {
         //setRouter(searchRoute(location.pathname, routers));
         const route = searchRoute(location.pathname, routers);
         if (route) {
-            setSelectedKeys([location.pathname]);
+            if(route.key){
+                setSelectedKeys([route.key]);
+            }else{
+                setSelectedKeys([route.path]);
+            }
         }
     }, [location]);
 

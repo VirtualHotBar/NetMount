@@ -3,5 +3,5 @@ import { createStorage } from "./storage/create";
 import { reupStorage } from "./storage/storage";
 
 export async function Test() {
-    createStorage()
+    
 }

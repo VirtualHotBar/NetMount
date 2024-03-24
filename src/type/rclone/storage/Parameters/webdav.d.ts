@@ -1,12 +1,18 @@
 
-interface WebdavParameters {
+interface WebdavParamsStandard {
     // 标准选项
     url: string;
-    vendor?: "other" | "fastmail" | "nextcloud" | "owncloud" | "sharepoint" | "sharepoint-ntlm" | "rclone";
+    vendor?: {
+        select: string
+        values: Array<string>
+    };
     user?: string;
     pass?: string;
     bearer_token?: string;
+}
 
+
+interface WebdavParamsAdvanced {
     // 高级选项
     bearer_token_command?: string;
     encoding?: string;
@@ -17,4 +23,4 @@ interface WebdavParameters {
     description?: string;
 }
 
-export {WebdavParameters}
+export { WebdavParamsStandard, WebdavParamsAdvanced }
