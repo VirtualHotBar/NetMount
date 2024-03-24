@@ -23,9 +23,18 @@ async function delStorage(name: string) {
     const del = await rclone_api_post(
         '/config/delete', {
         name: name
-    } )
+    })
     console.log(del);
     reupStorage()
 }
 
-export { reupStorage,delStorage }
+//获取存储
+async function getStorage(name: string): Promise<object> {
+    const get = await rclone_api_post(
+        '/config/get', {
+        name: name
+    })
+    return get
+}
+
+export { reupStorage, delStorage, getStorage }

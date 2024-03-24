@@ -4,7 +4,6 @@ import { delStorage, reupStorage } from "../../controller/storage/storage"
 import { rcloneInfo } from "../../services/rclone"
 import { useEffect, useReducer, useState } from "react";
 import { hooks } from "../../services/hook";
-import { addStorage } from "../../controller/storage/add";
 import { useNavigate } from "react-router-dom";
 
 function Storage_page() {
@@ -19,7 +18,7 @@ function Storage_page() {
     return (
         <div style={{ width: "100%", height: "100%", }}>
             <div style={{ width: "100%", height: "2rem", }}>
-                <Button onClick={()=>{navigate('./add')}}>{t('add')}</Button>
+                <Button onClick={() => { navigate('./add') }}>{t('add')}</Button>
                 <Button onClick={reupStorage}>{t('refresh')}</Button>
             </div>
             <div style={{ height: "calc(100% - 2rem)" }}>
@@ -29,6 +28,7 @@ function Storage_page() {
                             <div key={item.name}>
                                 {item.name + ':' + item.type}
                                 <Button onClick={() => delStorage(item.name)}>{t('delete')}</Button>
+                                <Button onClick={() => navigate('./add?edit=true&name=' + item.name + '&type=' + item.type)}>{t('edit')}</Button>
                             </div>
                         )
                     })

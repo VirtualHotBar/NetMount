@@ -22,6 +22,7 @@ const advanced: WebdavParamsAdvanced = {
 }
 
 const webdavDefaults: DefaultParams = {
+    "name":"Webdav",
     "standard": standard,
     "advanced": advanced,
     "required": ["url"]

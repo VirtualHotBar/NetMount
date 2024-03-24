@@ -9,5 +9,22 @@
     "manage":"管理",
     "storage_type":"存储类型",
     "please_select":"请选择",
-    "Webdav_introduce":"WebDAV是一组基于超文本传输协议的技术集合，有利于用户间协同编辑和管理存储在万维网服务器文档。"
+    "Webdav_introduce":"WebDAV是一组基于超文本传输协议的技术集合，有利于用户间协同编辑和管理存储在万维网服务器文档。",
+    "url":"地址",
+    "vendor":"提供商",
+    "user":"用户",
+    "pass":"密码",
+    "save":"保存",
+    "step_back":"返回",
+    "step_next":"下一步",
+    "storage_introduce":"存储介绍",
+    "show_advanced_options":"显示高级选项",
+    "please_input":"请输入",
+    "Input_and_press_enter":"输入并回车",
+    "missing_parameter":"缺少参数",
+    "StorageName":"存储名称",
+    "storage_name_illegal":"存储名称不合法",
+    "Storage_added_successfully":"存储添加成功",
+    "Storage_added_failed":"存储添加失败",
+    "edit":"编辑"
 }

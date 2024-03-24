@@ -1,6 +1,0 @@
-
-function addStorage(){
-
-    
-}
-export {addStorage}
