@@ -11,7 +11,6 @@ function Storage_page() {
     const { t } = useTranslation()
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
     const navigate = useNavigate();
-    const [page,setPage] = useState<Array<'default'|'add'>>()
 
     useEffect(() => {
         hooks.upStorage = forceUpdate
@@ -39,13 +38,6 @@ function Storage_page() {
     )
 }
 
-
-
-
-function AddStorage() {
-
-    return <>add</>
-}
 
 
 

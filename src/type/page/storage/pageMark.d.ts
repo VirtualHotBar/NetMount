@@ -1,4 +1,0 @@
-
-interface StoragePageMark {
-    pageMark: string;
-}
