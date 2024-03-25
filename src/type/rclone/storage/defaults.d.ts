@@ -1,8 +1,12 @@
+interface ParametersType  {
+    [key: string]: any
+}
+
 interface DefaultParams {
     "name": string,//存储名称
-    "standard": object,
-    "advanced": object,
+    "standard": ParametersType,
+    "advanced": ParametersType,
     "required": Array<string>
 }
 
-export { DefaultParams }
+export { DefaultParams, ParametersType }

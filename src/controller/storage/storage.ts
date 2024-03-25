@@ -1,5 +1,6 @@
 import { hooks } from "../../services/hook"
 import { rcloneInfo } from "../../services/rclone"
+import { ParametersType } from "../../type/rclone/storage/defaults"
 import { rclone_api_post } from "../../utils/rclone/request"
 
 
@@ -29,7 +30,7 @@ async function delStorage(name: string) {
 }
 
 //获取存储
-async function getStorage(name: string): Promise<object> {
+async function getStorageParams(name: string): Promise<ParametersType> {
     const get = await rclone_api_post(
         '/config/get', {
         name: name
@@ -37,4 +38,4 @@ async function getStorage(name: string): Promise<object> {
     return get
 }
 
-export { reupStorage, delStorage, getStorage }
+export { reupStorage, delStorage, getStorageParams }

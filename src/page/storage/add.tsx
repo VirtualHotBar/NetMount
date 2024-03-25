@@ -1,18 +1,13 @@
 import { Button, Checkbox, Input, InputNumber, InputTag, Link, Message, Select } from "@arco-design/web-react";
 import { webdavDefaults } from "../../controller/storage/parameters/defaults/webdav";
-import { DefaultParams } from "../../type/rclone/storage/defaults";
+import { DefaultParams, ParametersType } from "../../type/rclone/storage/defaults";
 import { useTranslation } from "react-i18next";
 import { searchStorage, storageListAll } from "../../controller/storage/listAll";
 import { useEffect, useState } from "react";
 import { checkParams, createStorage } from "../../controller/storage/create";
 import { useNavigate, useParams } from "react-router-dom";
 import { getURLSearchParam } from "../../utils/rclone/utils";
-import { getStorage } from "../../controller/storage/storage";
-
-// 定义参数对象的类型
-type ParametersType = {
-    [key: string]: any;
-}
+import { getStorageParams } from "../../controller/storage/storage";
 
 function getProperties(obj: Record<string, any>) {
 
@@ -39,16 +34,54 @@ function AddStorage_page() {
 
     const [storageName, setStorageName] = useState('')//存储名称
 
-    const params = useParams();
-
     let parameters: ParametersType = {};
 
     const setParams = (key: string, value: any) => {
         parameters[key] = value;
     };
 
+    const editMode = async () => {
+        const type = getURLSearchParam('type')
+        const name = getURLSearchParam('name')
+        const storage = await getStorageParams(name)
+
+        setSelectStorage(type)
+        setStorageName(name)
+
+        let defaultParamsEdit = searchStorage(type).defaultParams
 
 
+        const overwriteParams = (params: ParametersType) => {
+            getProperties(params).forEach((paramsItem) => {
+                if (storage[paramsItem.key]) {
+                    const valueType = typeof params[paramsItem.key]
+                    if (valueType === 'object' && !(params[paramsItem.key] instanceof Array)) {
+                        if (params[paramsItem.key].values.includes(storage[paramsItem.key])) {
+                            params[paramsItem.key].select = storage[paramsItem.key]
+                        }
+                    } else {
+                        params[paramsItem.key] = storage[paramsItem.key];
+                    }
+                }
+            })
+        }
+
+        overwriteParams(defaultParamsEdit.standard)
+        overwriteParams(defaultParamsEdit.advanced)
+
+        console.log(defaultParamsEdit);
+
+        setDefaultParams(defaultParamsEdit)
+
+        setStep(1)
+    }
+
+    useEffect(() => {
+        if (getURLSearchParam('edit')) {
+            editMode()
+        }
+
+    }, [])
 
 
     return <>
@@ -145,9 +178,17 @@ interface InputItemProps {
 
 function InputItem(props: InputItemProps) {
     const { t } = useTranslation()
-    const valueType = typeof props.data.value
+
+    let valueType: 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function' | 'array' = typeof props.data.value;
+
+    if (valueType === 'string' && (props.data.value === 'true' || props.data.value === 'false')) {
+        valueType = 'boolean';
+    }
 
 
+    else if (valueType === 'object' && Array.isArray(props.data.value)) {
+        valueType = 'array';
+    }
 
     const setParams = (value: any) => {
         props.setParams(props.data.key, value)
@@ -169,7 +210,11 @@ function InputItem(props: InputItemProps) {
             <Select
                 style={{ width: 154 }}
                 defaultValue={props.data.value.select}
-                onChange={(value) => setParams(value)}
+                onChange={(value) => {
+                    console.log(value);
+
+                    setParams(value)
+                }}
             >
                 {props.data.value.values.map((item: string, index: number) => (
                     <Select.Option key={index} value={item}>{t(item)}</Select.Option>
@@ -185,15 +230,15 @@ function InputItem(props: InputItemProps) {
                 style={{ width: 160, margin: '10px 24px 10px 0' }}
             />}
 
-        {valueType == 'boolean' &&/* 复选框 */
+        {valueType === 'boolean' &&/* 复选框 */
             <Checkbox defaultValue={props.data.value} onChange={(checked) => setParams(checked)}></Checkbox>
         }
 
-        {Array.isArray(props.data.value) &&/* 数组 */
+        {valueType === 'array' &&/* 数组 */
             <InputTag
                 defaultValue={props.data.value}
                 allowClear
-                tokenSeparators={[',']}//分词
+                tokenSeparators={[',', '[', ']', '[]']}//分词
                 placeholder={t('Input_and_press_enter')}
                 onChange={(value) => setParams(value)}
                 style={{ width: 350 }}
