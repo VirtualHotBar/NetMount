@@ -3,7 +3,7 @@ import { rcloneInfo } from "../../services/rclone"
 import { ParametersType } from "../../type/rclone/storage/defaults"
 import { rclone_api_post } from "../../utils/rclone/request"
 
-
+//列举存储
 async function reupStorage() {
     const dump = await rclone_api_post(
         '/config/dump',
@@ -19,7 +19,7 @@ async function reupStorage() {
 }
 
 
-
+//删除存储
 async function delStorage(name: string) {
     const del = await rclone_api_post(
         '/config/delete', {
@@ -36,6 +36,15 @@ async function getStorageParams(name: string): Promise<ParametersType> {
         name: name
     })
     return get
+}
+
+//挂载存储
+async function mountStorage(name: string) {
+    const get = await rclone_api_post(
+        '/mount/mount', {
+            remotePath: name,
+    })
+    console.log(get);
 }
 
 export { reupStorage, delStorage, getStorageParams }

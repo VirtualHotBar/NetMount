@@ -1,26 +1,14 @@
 import { Button, Checkbox, Input, InputNumber, InputTag, Link, Message, Select } from "@arco-design/web-react";
-import { webdavDefaults } from "../../controller/storage/parameters/defaults/webdav";
 import { DefaultParams, ParametersType } from "../../type/rclone/storage/defaults";
 import { useTranslation } from "react-i18next";
 import { searchStorage, storageListAll } from "../../controller/storage/listAll";
 import { useEffect, useState } from "react";
 import { checkParams, createStorage } from "../../controller/storage/create";
 import { useNavigate, useParams } from "react-router-dom";
-import { getURLSearchParam } from "../../utils/rclone/utils";
+import { getProperties, getURLSearchParam } from "../../utils/rclone/utils";
 import { getStorageParams } from "../../controller/storage/storage";
 
-function getProperties(obj: Record<string, any>) {
 
-    let result: Array<{ key: any, value: any }> = []
-
-    for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            result.push({ key: key, value: obj[key] })
-        }
-    }
-
-    return result
-}
 
 
 function AddStorage_page() {
@@ -69,8 +57,6 @@ function AddStorage_page() {
         overwriteParams(defaultParamsEdit.standard)
         overwriteParams(defaultParamsEdit.advanced)
 
-        console.log(defaultParamsEdit);
-
         setDefaultParams(defaultParamsEdit)
 
         setStep(1)
@@ -80,7 +66,6 @@ function AddStorage_page() {
         if (getURLSearchParam('edit')) {
             editMode()
         }
-
     }, [])
 
 
@@ -149,7 +134,7 @@ function AddStorage_page() {
                             })}
                     </div>
 
-                    <Button onClick={() => setStep(0)}>{t('step_back')}</Button>
+                    <Button onClick={() => { getURLSearchParam('edit') ? navigate('/storage/manage') : setStep(0) }}>{t('step_back')}</Button>
                     <Button onClick={async () => {
                         console.log(storageName, parameters);
 
@@ -183,10 +168,7 @@ function InputItem(props: InputItemProps) {
 
     if (valueType === 'string' && (props.data.value === 'true' || props.data.value === 'false')) {
         valueType = 'boolean';
-    }
-
-
-    else if (valueType === 'object' && Array.isArray(props.data.value)) {
+    } else if (valueType === 'object' && props.data.value instanceof Array) {
         valueType = 'array';
     }
 
@@ -194,7 +176,12 @@ function InputItem(props: InputItemProps) {
         props.setParams(props.data.key, value)
     }
 
-    setParams(props.data.value)
+    if (valueType == 'object' && props.data.value.select) {
+        setParams(props.data.value.select)
+    } else {
+        setParams(props.data.value)
+    }
+
 
     return <>
         {
@@ -203,7 +190,10 @@ function InputItem(props: InputItemProps) {
 
         {
             valueType === 'string' &&/* 输入框，string */
-            <Input style={{ width: 350 }} allowClear key={props.data.key} defaultValue={props.data.value} onChange={(value) => setParams(value)} placeholder={t('please_input')} />
+            <>{props.data.key != 'pass' ?
+                <Input style={{ width: 350 }} allowClear key={props.data.key} defaultValue={props.data.value} onChange={(value) => setParams(value)} placeholder={t('please_input')} /> :
+                <Input.Password style={{ width: 350 }} allowClear key={props.data.key} defaultValue={props.data.value} onChange={(value) => setParams(value)} placeholder={t('please_input')} />
+            }</>
         }
 
         {valueType === 'object' && props.data.value.select != null &&/* 选择器 */
@@ -212,7 +202,6 @@ function InputItem(props: InputItemProps) {
                 defaultValue={props.data.value.select}
                 onChange={(value) => {
                     console.log(value);
-
                     setParams(value)
                 }}
             >
