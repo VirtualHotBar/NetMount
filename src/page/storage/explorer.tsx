@@ -1,9 +1,12 @@
 import React, { CSSProperties, useEffect, useReducer, useState } from 'react'
-import { Button, Input, Link, List, Select, Spin, Tabs, Typography } from '@arco-design/web-react';
+import { Button, Divider, Grid, Input, Link, List, Select, Spin, Tabs, Typography } from '@arco-design/web-react';
+import {IconLeft, IconUpCircle } from '@arco-design/web-react/icon';
 import { rcloneInfo } from '../../services/rclone';
 import { useTranslation } from 'react-i18next';
 import { getFileList } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
+const Row = Grid.Row;
+const Col = Grid.Col;
 const TabPane = Tabs.TabPane;
 const tipsStyle: CSSProperties = {
     textAlign: 'center',
@@ -34,6 +37,20 @@ const sanitizePath = (newPath: string): string => {
     }
 
     return newPath;
+};
+
+//取父目录
+const getParentPath = (currentPath: string): string => {
+    // 如果路径为空或者只有一个"/"，则无上级目录
+    if (currentPath === '/' || currentPath === '') {
+        return currentPath;
+    }
+
+    // 找到最后一个"/"出现的位置
+    const lastSlashIndex = currentPath.lastIndexOf('/');
+
+    // 返回截取到倒数第二个"/"之前的路径作为上级目录
+    return currentPath.substring(0, lastSlashIndex);
 };
 
 function ExplorerItem() {
@@ -83,8 +100,14 @@ function ExplorerItem() {
 
     return (
         <>
-            <Input.Group compact>
-                <Select defaultValue={storageName} style={{ width: '9rem' }} placeholder={t('please_select')} onChange={(value) =>
+        
+        <Row >
+        <Col flex='2rem'>
+        <Button  type='secondary'  icon={<IconLeft />} onClick={() => {updatePath(getParentPath(path!))}} disabled={!storageName}/>
+        </Col>
+        <Col flex='auto'>
+        <Input.Group compact>
+                <Select /* bordered={false} */ defaultValue={storageName} style={{ width: '9rem' }} placeholder={t('please_select')} onChange={(value) =>
                     setStorageName(value)
                 }>
                     {
@@ -98,6 +121,9 @@ function ExplorerItem() {
                 </Select>
                 <Input style={{ width: 'calc(100% - 9rem)' }} disabled={!storageName} value={pathTemp} normalize={() => { return path! }} onChange={(value) => { setPathTemp(value) }} onPressEnter={() => { updatePath(pathTemp) }} />
             </Input.Group>
+        </Col>
+      </Row>
+
             {storageName && !loading ?
                 <List>{
                     fileList ?
