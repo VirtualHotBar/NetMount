@@ -1,5 +1,6 @@
 import { hooks } from "../../services/hook"
 import { rcloneInfo } from "../../services/rclone"
+import { FileInfo } from "../../type/rclone/rcloneInfo"
 import { ParametersType } from "../../type/rclone/storage/defaults"
 import { rclone_api_post } from "../../utils/rclone/request"
 
@@ -38,13 +39,30 @@ async function getStorageParams(name: string): Promise<ParametersType> {
     return get
 }
 
-//挂载存储
+//挂载存储<dev>
 async function mountStorage(name: string) {
     const get = await rclone_api_post(
         '/mount/mount', {
-            remotePath: name,
+        remotePath: name,
     })
     console.log(get);
 }
 
-export { reupStorage, delStorage, getStorageParams }
+async function getFileList(storageName: string, path: string): Promise<FileInfo[]> {
+    if (path.substring(0, 1) == '/') {
+        path = path.substring(1, path.length)
+    }
+
+    if (path.substring(path.length - 1, path.length) == '/') {
+        path = path.substring(0, path.length - 1)
+    }
+
+    const fileList = await rclone_api_post(
+        '/operations/list', {
+        fs: storageName + ':',
+        remote: path
+    })
+    return fileList.list
+}
+
+export { reupStorage, delStorage, getStorageParams, getFileList }

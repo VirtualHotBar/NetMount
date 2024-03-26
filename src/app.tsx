@@ -10,6 +10,7 @@ import { Routers } from './type/routers';
 import { Home_page } from './page/home/home';
 import { Storage_page } from './page/storage/storage';
 import { AddStorage_page } from './page/storage/add';
+import { Explorer_page } from './page/storage/explorer';
 
 const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content } = Layout;
@@ -143,6 +144,11 @@ function App() {
                             component: <AddStorage_page/>,
                         }
                     ]
+                },
+                {
+                    title: t('explorer'),
+                    path: '/storage/explorer',
+                    component:<Explorer_page/>
                 }
             ]
         },
@@ -152,9 +158,6 @@ function App() {
             component: <>settings</>,
         }
     ]
-
-
-
 
 
     useEffect(() => {

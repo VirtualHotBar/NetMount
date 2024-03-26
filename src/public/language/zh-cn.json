@@ -2,6 +2,7 @@
     "starting":"正在启动",
     "home":"首页",
     "storage":"存储",
+    "explorer":"浏览",
     "setting":"设置",
     "add":"添加",
     "refresh":"刷新",
@@ -26,5 +27,6 @@
     "storage_name_illegal":"存储名称不合法",
     "Storage_added_successfully":"存储添加成功",
     "Storage_added_failed":"存储添加失败",
-    "edit":"编辑"
+    "edit":"编辑",
+    "please_select_storage":"请选择存储"
 }

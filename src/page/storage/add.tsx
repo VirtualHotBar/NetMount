@@ -1,4 +1,4 @@
-import { Button, Checkbox, Input, InputNumber, InputTag, Link, Message, Select } from "@arco-design/web-react";
+import { Button, Checkbox, Input, InputNumber, InputTag, Link, Message, Select, Switch } from "@arco-design/web-react";
 import { DefaultParams, ParametersType } from "../../type/rclone/storage/defaults";
 import { useTranslation } from "react-i18next";
 import { searchStorage, storageListAll } from "../../controller/storage/listAll";
@@ -219,8 +219,8 @@ function InputItem(props: InputItemProps) {
                 style={{ width: 160, margin: '10px 24px 10px 0' }}
             />}
 
-        {valueType === 'boolean' &&/* 复选框 */
-            <Checkbox defaultValue={props.data.value} onChange={(checked) => setParams(checked)}></Checkbox>
+        {valueType === 'boolean' &&/* 开关 */
+            <Switch defaultChecked={props.data.value} onChange={(value) => setParams(value)} />
         }
 
         {valueType === 'array' &&/* 数组 */
