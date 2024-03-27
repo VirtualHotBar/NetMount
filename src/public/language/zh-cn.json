@@ -1,6 +1,8 @@
 {
     "starting":"正在启动",
     "home":"首页",
+    "name":"名称",
+    "type":"类型",
     "storage":"存储",
     "explorer":"浏览",
     "setting":"设置",
@@ -28,5 +30,19 @@
     "Storage_added_successfully":"存储添加成功",
     "Storage_added_failed":"存储添加失败",
     "edit":"编辑",
-    "please_select_storage":"请选择存储"
+    "please_select_storage":"请选择存储",
+    "actions":"操作",
+    "size":"大小",
+    "modified_time":"修改时间",
+    "mount":"挂载",
+    "task":"任务",
+    "transmit":"传输",
+    "error":"错误",
+    "success": "成功",
+    "dev_tips":"正在开发，敬请期待",
+    "confirm_delete_question":"确定要删除吗？",
+    "dir": "目录",
+    "create_directory":"创建目录",
+    "dir_name_cannot_empty":"目录名不能为空",
+    "upload_file": "上传文件"
 }

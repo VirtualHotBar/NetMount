@@ -48,6 +48,8 @@ async function mountStorage(name: string) {
     console.log(get);
 }
 
+
+//获取文件列表
 async function getFileList(storageName: string, path: string): Promise<FileInfo[]> {
     if (path.substring(0, 1) == '/') {
         path = path.substring(1, path.length)
@@ -65,4 +67,56 @@ async function getFileList(storageName: string, path: string): Promise<FileInfo[
     return fileList.list
 }
 
-export { reupStorage, delStorage, getStorageParams, getFileList }
+//删除存储
+async function delFile(storageName: string, path: string, refreshCallback?: Function) {
+    if (path.substring(0, 1) == '/') {
+        path = path.substring(1, path.length)
+    }
+    const backData = await rclone_api_post(
+        '/operations/deletefile', {
+        fs: storageName + ':',
+        remote: path
+    })
+    if (refreshCallback) {
+        refreshCallback()
+    }
+}
+
+async function delDir(storageName: string, path: string, refreshCallback?: Function) {
+    if (path.substring(0, 1) == '/') {
+        path = path.substring(1, path.length)
+    }
+    if (path.substring(path.length - 1, path.length) == '/') {
+        path = path.substring(0, path.length - 1)
+    }
+
+    const backData = await rclone_api_post(
+        '/operations/purge', {
+        fs: storageName + ':',
+        remote: path
+    })
+    if (refreshCallback) {
+        refreshCallback()
+    }
+}
+
+//创建目录
+async function mkDir(storageName: string, path: string, refreshCallback?: Function) {
+    if (path.substring(0, 1) == '/') {
+        path = path.substring(1, path.length)
+    }
+    if (path.substring(path.length - 1, path.length) == '/') {
+        path = path.substring(0, path.length - 1)
+    }
+
+    const backData = await rclone_api_post(
+        '/operations/mkdir', {
+        fs: storageName + ':',
+        remote: path
+    })
+    if (refreshCallback) {
+        refreshCallback()
+    }
+}
+
+export { reupStorage, delStorage, getStorageParams, getFileList, delFile ,delDir,mkDir}

@@ -11,6 +11,10 @@ import { Home_page } from './page/home/home';
 import { Storage_page } from './page/storage/storage';
 import { AddStorage_page } from './page/storage/add';
 import { Explorer_page } from './page/storage/explorer';
+import { Mount_page } from './page/mount/mount';
+import { Transmit_page } from './page/transmit/transmit';
+import { Task_page } from './page/task/task';
+import Setting_page from './page/setting/setting';
 
 const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content } = Layout;
@@ -135,27 +139,41 @@ function App() {
                     title: t('manage'),
                     path: '/storage/manage',
                     component: <Storage_page />,
-                    hideChildren:true,
-                    children:[
+                    hideChildren: true,
+                    children: [
                         {
                             title: t('add'),
                             path: '/storage/manage/add',
-                            key:'/storage/manage',//因为父菜单隐藏了子菜单项，在此页面时设置父菜单key以选择父菜单项
-                            component: <AddStorage_page/>,
+                            key: '/storage/manage',//因为父菜单隐藏了子菜单项，在此页面时设置父菜单key以选择父菜单项
+                            component: <AddStorage_page />,
                         }
                     ]
                 },
                 {
                     title: t('explorer'),
                     path: '/storage/explorer',
-                    component:<Explorer_page/>
+                    component: <Explorer_page />
                 }
             ]
+        }, {
+            title: t('mount'),
+            path: '/mount',
+            component: <Mount_page />,
+        },
+        {
+            title: t('transmit'),
+            path: '/transmit',
+            component: <Transmit_page/>,
+        },
+        {
+            title: t('task'),
+            path: '/task',
+            component: <Task_page/>,
         },
         {
             title: t('setting'),
             path: '/setting',
-            component: <>settings</>,
+            component:<Setting_page/>,
         }
     ]
 
@@ -164,9 +182,9 @@ function App() {
         //setRouter(searchRoute(location.pathname, routers));
         const route = searchRoute(location.pathname, routers);
         if (route) {
-            if(route.key){
+            if (route.key) {
                 setSelectedKeys([route.key]);
-            }else{
+            } else {
                 setSelectedKeys([route.path]);
             }
         }

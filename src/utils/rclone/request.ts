@@ -11,20 +11,20 @@ const password = "";
 const base64Credentials = btoa(`${username}:${password}`);
 
 // 定义请求头部，包括授权头部
-const headers = {
-  Authorization: `Basic ${base64Credentials}`,
-  'Content-Type': 'application/json'
+const rcloneApiHeaders = {
+    Authorization: `Basic ${base64Credentials}`,
+    'Content-Type': 'application/json'
 };
 
-export function rclone_api_post(path:string, data?:object){
+function rclone_api_post(path: string, data?: object) {
 
-    if(!data) data = {}
+    if (!data) data = {}
 
     return fetch(rcloneApiEndpoint + path, {
         method: 'POST',
-        headers,
+        headers: rcloneApiHeaders,
         body: JSON.stringify(data)
-    }).then((res)=>{
+    }).then((res) => {
         return res.json()
     })
 }
@@ -37,3 +37,5 @@ export function rclone_api_post(path:string, data?:object){
         return res.json()
     })
 } */
+
+export { rcloneApiEndpoint, rcloneApiHeaders, rclone_api_post }

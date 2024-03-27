@@ -1,26 +1,30 @@
 import React, { CSSProperties, useEffect, useReducer, useState } from 'react'
-import { Button, Divider, Grid, Input, Link, List, Select, Spin, Tabs, Typography } from '@arco-design/web-react';
-import {IconLeft, IconUpCircle } from '@arco-design/web-react/icon';
+import { BackTop, Button, Divider, Grid, Input, Link, List, Message, Modal, Popconfirm, Select, Space, Spin, Table, TableColumnProps, Tabs, Typography, Upload } from '@arco-design/web-react';
+import { IconFolderAdd, IconLeft, IconUpCircle, IconUpload } from '@arco-design/web-react/icon';
 import { rcloneInfo } from '../../services/rclone';
 import { useTranslation } from 'react-i18next';
-import { getFileList } from '../../controller/storage/storage';
+import { delDir, delFile, getFileList, mkDir } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
+import { formatSize } from '../../utils/rclone/utils';
+import { rcloneApiEndpoint, rcloneApiHeaders } from '../../utils/rclone/request';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const TabPane = Tabs.TabPane;
 const tipsStyle: CSSProperties = {
     textAlign: 'center',
-    marginTop: '6rem',
+    paddingTop: '6rem',
+    fontSize: '1rem'
 };
 
 function Explorer_page() {
     return (
         <>
-            <Tabs defaultActiveTab='1'>
+            {/*             <Tabs defaultActiveTab='1'>
                 <TabPane key='1' title='Tab 1'>
                     <ExplorerItem />
                 </TabPane>
-            </Tabs>
+            </Tabs> */}
+            <ExplorerItem />
         </>
     )
 }
@@ -53,9 +57,12 @@ const getParentPath = (currentPath: string): string => {
     return currentPath.substring(0, lastSlashIndex);
 };
 
+
 function ExplorerItem() {
     const { t } = useTranslation()
+
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
+    const [modal, contextHolder] = Modal.useModal();
     const [storageName, setStorageName] = useState<string>()
     const [path, setPath] = useState<string>()
     const [pathTemp, setPathTemp] = useState<string>('')
@@ -64,6 +71,27 @@ function ExplorerItem() {
 
     const [loading, setLoading] = useState(false)
 
+    const [dirNameTemp, setDirNameTemp] = useState<string>('');
+
+    const columns: TableColumnProps[] = [
+        {
+            title: t('name'),
+            dataIndex: 'fileName',
+        },
+        {
+            title: t('modified_time'),
+            dataIndex: 'fileModTime',
+        },
+        {
+            title: t('size'),
+            dataIndex: 'fileSize',
+        },
+        {
+            title: t('actions'),
+            dataIndex: 'actions',
+            align: 'right'
+        }
+    ]
 
     async function fileInfo() {
         setLoading(true)
@@ -98,63 +126,110 @@ function ExplorerItem() {
         }
     }, [storageName])
 
+
+    function MakeDir() {
+        if (storageName && path) {
+            setDirNameTemp('')
+            modal.info!({
+                title: t('create_directory'),
+                icon: null,
+                content: <Input placeholder={t('please_input')} onChange={(value) => setDirNameTemp(value)} />,
+                onOk: async () => {
+                    dirNameTemp ? await mkDir(storageName, path + '/' + dirNameTemp, fileInfo) : Message.error(t('dir_name_cannot_empty'))
+                },
+            })
+        }
+    }
+    function UploadFile() {
+        if (storageName && path) {
+            setDirNameTemp('')
+            modal.info!({
+                title: t('upload_file'),
+                icon: null,
+                content: <>
+                    <Upload drag name='file0' headers={rcloneApiHeaders} data={{body:JSON.stringify({ fs: 'Webdav:', remote: 'od-cn/HotPE'})}} action={rcloneApiEndpoint + '/operations/uploadfile'} ></Upload></>,
+                onOk: fileInfo,
+                onCancel: fileInfo
+            })
+        }
+    }
+
     return (
-        <>
-        
-        <Row >
-        <Col flex='2rem'>
-        <Button  type='secondary'  icon={<IconLeft />} onClick={() => {updatePath(getParentPath(path!))}} disabled={!storageName}/>
-        </Col>
-        <Col flex='auto'>
-        <Input.Group compact>
-                <Select /* bordered={false} */ defaultValue={storageName} style={{ width: '9rem' }} placeholder={t('please_select')} onChange={(value) =>
-                    setStorageName(value)
-                }>
-                    {
-                        rcloneInfo.storageList.map((item) => {
-                            return (
-                                <Select.Option key={item.name} value={item.name}>{item.name}({item.type})</Select.Option>
-                            )
-                        })
+        <div style={{ height: '100%', width: '100%' }}>
+            <div style={{ width: "100%", height: "2rem", }}>
+                {contextHolder}
+                <Row >
+                    <Col flex='2rem'>
+                        <Button type='secondary' icon={<IconLeft />} onClick={() => { updatePath(getParentPath(path!)) }} disabled={!storageName} />
+                    </Col>
+                    <Col flex='10rem'>
+                        <Select /* bordered={false} */ defaultValue={storageName} placeholder={t('please_select')} onChange={(value) =>
+                            setStorageName(value)
+                        }>
+                            {
+                                rcloneInfo.storageList.map((item) => {
+                                    return (
+                                        <Select.Option key={item.name} value={item.name}>{item.name}({item.type})</Select.Option>
+                                    )
+                                })
+                            }
+                        </Select>
+                    </Col>
+                    <Col flex='auto'>
+                        <Input disabled={!storageName} value={pathTemp} normalize={() => { return path! }} onChange={(value) => { setPathTemp(value) }} onPressEnter={() => { updatePath(pathTemp) }} />
+                    </Col>
+                    <Col flex='2rem'>
+                        <Button type='primary' icon={<IconFolderAdd />} onClick={MakeDir} disabled={!storageName && !path} />
+                    </Col>
+                    <Col flex='2rem'>
+
+                        <Button type='primary' icon={<IconUpload />} onClick={UploadFile} disabled={!storageName && !path} />
+
+                    </Col>
+                </Row>
+            </div>
+
+            <div style={{ height: 'calc(100% - 2rem)' }}>
+
+                {storageName ?
+                    <>{
+                        fileList ?
+                            <Table columns={columns}
+                                loading={loading}
+                                pagination={false}
+                                tableLayoutFixed
+                                data={
+                                    fileList.map((item) => {
+                                        return {
+                                            ...item, fileName: <Link onClick={() => { item.IsDir && updatePath(item.Path) }}>{item.Name}</Link>,
+                                            fileSize: (item.Size != -1 ? formatSize(item.Size) : t('dir')),
+                                            fileModTime: (new Date(item.ModTime)).toLocaleString(),
+                                            actions: <Space>
+                                                <Popconfirm
+                                                    focusLock
+                                                    title={t('confirm_delete_question')}
+                                                    onOk={() => {
+                                                        item.IsDir ? delDir(storageName!, item.Path, fileInfo) :
+                                                            delFile(storageName!, item.Path, fileInfo)
+                                                    }}
+                                                >
+                                                    <Button status='danger'>{t('delete')}</Button>
+                                                </Popconfirm>
+
+                                                {/* <Button onClick={() => { }}>复制路径</Button> */}
+                                            </Space>
+                                        }
+                                    })} />
+                            : ''
                     }
-
-                </Select>
-                <Input style={{ width: 'calc(100% - 9rem)' }} disabled={!storageName} value={pathTemp} normalize={() => { return path! }} onChange={(value) => { setPathTemp(value) }} onPressEnter={() => { updatePath(pathTemp) }} />
-            </Input.Group>
-        </Col>
-      </Row>
-
-            {storageName && !loading ?
-                <List>{
-                    fileList ?
-                        fileList.map((item) => {
-                            return <FileItem fileInfo={item} setPath={updatePath} />
-                        })
-                        : ''
+                    </> :
+                    !storageName && <Typography.Paragraph style={tipsStyle}>{t('please_select_storage')}</Typography.Paragraph>
                 }
-                </List> :
-                !storageName && <Typography.Paragraph style={tipsStyle}>{t('please_select_storage')}</Typography.Paragraph>
-            }
-            {
-                loading && <Spin size={40} />
-            }
-        </>
+            </div>
+        </div>
     )
 }
 
-interface FileItemProps {
-    fileInfo: FileInfo,
-    setPath: (path: string) => void;
-}
 
-function FileItem(props: FileItemProps) {
-    return (
-        <List.Item key={1} actions={[<span >Edit</span>,
-        <span>Delete</span>,]}>
-            
-            <Link hoverable={false}  onClick={() => {props.fileInfo.IsDir && props.setPath(props.fileInfo.Path) }}>{props.fileInfo.Name}</Link>
-        </List.Item>
-    )
-}
 
 export { Explorer_page }
