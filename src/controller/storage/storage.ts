@@ -51,18 +51,11 @@ async function mountStorage(name: string) {
 
 //获取文件列表
 async function getFileList(storageName: string, path: string): Promise<FileInfo[]> {
-    if (path.substring(0, 1) == '/') {
-        path = path.substring(1, path.length)
-    }
-
-    if (path.substring(path.length - 1, path.length) == '/') {
-        path = path.substring(0, path.length - 1)
-    }
 
     const fileList = await rclone_api_post(
         '/operations/list', {
         fs: storageName + ':',
-        remote: path
+        remote: formatPathRclone(path, false)
     })
     return fileList.list
 }
@@ -75,7 +68,7 @@ async function delFile(storageName: string, path: string, refreshCallback?: Func
     const backData = await rclone_api_post(
         '/operations/deletefile', {
         fs: storageName + ':',
-        remote: path
+        remote: formatPathRclone(path, false)
     })
     if (refreshCallback) {
         refreshCallback()
@@ -83,17 +76,11 @@ async function delFile(storageName: string, path: string, refreshCallback?: Func
 }
 
 async function delDir(storageName: string, path: string, refreshCallback?: Function) {
-    if (path.substring(0, 1) == '/') {
-        path = path.substring(1, path.length)
-    }
-    if (path.substring(path.length - 1, path.length) == '/') {
-        path = path.substring(0, path.length - 1)
-    }
 
     const backData = await rclone_api_post(
         '/operations/purge', {
         fs: storageName + ':',
-        remote: path
+        remote: formatPathRclone(path, true)
     })
     if (refreshCallback) {
         refreshCallback()
@@ -102,21 +89,27 @@ async function delDir(storageName: string, path: string, refreshCallback?: Funct
 
 //创建目录
 async function mkDir(storageName: string, path: string, refreshCallback?: Function) {
-    if (path.substring(0, 1) == '/') {
-        path = path.substring(1, path.length)
-    }
-    if (path.substring(path.length - 1, path.length) == '/') {
-        path = path.substring(0, path.length - 1)
-    }
+
 
     const backData = await rclone_api_post(
         '/operations/mkdir', {
         fs: storageName + ':',
-        remote: path
+        remote: formatPathRclone(path, true)
     })
     if (refreshCallback) {
         refreshCallback()
     }
 }
 
-export { reupStorage, delStorage, getStorageParams, getFileList, delFile ,delDir,mkDir}
+function formatPathRclone(path: string, isDir?: boolean): string {
+    if (path.substring(0, 1) == '/') {
+        path = path.substring(1, path.length)
+    }
+
+    if (isDir && path.substring(path.length - 1, path.length) == '/') {
+        path = path.substring(0, path.length - 1)
+    }
+    return path;
+}
+
+export { reupStorage, delStorage, getStorageParams, getFileList, delFile, delDir, mkDir, formatPathRclone }

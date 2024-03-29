@@ -1,12 +1,13 @@
 import React, { CSSProperties, useEffect, useReducer, useState } from 'react'
 import { BackTop, Button, Divider, Grid, Input, Link, List, Message, Modal, Popconfirm, Select, Space, Spin, Table, TableColumnProps, Tabs, Typography, Upload } from '@arco-design/web-react';
-import { IconFolderAdd, IconLeft, IconUpCircle, IconUpload } from '@arco-design/web-react/icon';
+import { IconFolderAdd, IconLeft, IconRefresh, IconUpCircle, IconUpload } from '@arco-design/web-react/icon';
 import { rcloneInfo } from '../../services/rclone';
 import { useTranslation } from 'react-i18next';
-import { delDir, delFile, getFileList, mkDir } from '../../controller/storage/storage';
+import { delDir, delFile, formatPathRclone, getFileList, mkDir } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
 import { formatSize } from '../../utils/rclone/utils';
 import { rcloneApiEndpoint, rcloneApiHeaders } from '../../utils/rclone/request';
+import { RequestOptions } from '@arco-design/web-react/es/Upload';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const TabPane = Tabs.TabPane;
@@ -141,18 +142,47 @@ function ExplorerItem() {
         }
     }
     function UploadFile() {
+
+        const customRequest = (option: RequestOptions) => {
+            const { onProgress, onError, onSuccess, file } = option;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.onprogress = ({ lengthComputable, loaded, total }) => {
+                if (lengthComputable) {
+                    console.log(Math.round(loaded / total * 100));
+                    onProgress(Math.round(loaded / total * 100));
+                }
+            };
+
+            xhr.onload = () => {
+                xhr.status === 200 ? onSuccess() : onError(xhr);
+            };
+
+            xhr.onerror = () => onError(xhr);
+
+            xhr.open('POST', `${rcloneApiEndpoint}/operations/uploadfile?fs=${storageName}:&remote=${formatPathRclone(path!, false)}`, true);
+            xhr.setRequestHeader('Authorization', `Bearer ${rcloneApiHeaders.Authorization}`);
+            xhr.send(formData);
+        };
+
         if (storageName && path) {
             setDirNameTemp('')
             modal.info!({
                 title: t('upload_file'),
                 icon: null,
                 content: <>
-                    <Upload drag name='file0' headers={rcloneApiHeaders} data={{body:JSON.stringify({ fs: 'Webdav:', remote: 'od-cn/HotPE'})}} action={rcloneApiEndpoint + '/operations/uploadfile'} ></Upload></>,
+                    <Upload drag customRequest={customRequest} ></Upload></>,
                 onOk: fileInfo,
                 onCancel: fileInfo
             })
         }
     }
+
+
 
     return (
         <div style={{ height: '100%', width: '100%' }}>
@@ -161,6 +191,9 @@ function ExplorerItem() {
                 <Row >
                     <Col flex='2rem'>
                         <Button type='secondary' icon={<IconLeft />} onClick={() => { updatePath(getParentPath(path!)) }} disabled={!storageName} />
+                    </Col>
+                    <Col flex='2rem'>
+                        <Button type='secondary' icon={<IconRefresh />} onClick={fileInfo} disabled={!storageName} />
                     </Col>
                     <Col flex='10rem'>
                         <Select /* bordered={false} */ defaultValue={storageName} placeholder={t('please_select')} onChange={(value) =>
@@ -182,9 +215,7 @@ function ExplorerItem() {
                         <Button type='primary' icon={<IconFolderAdd />} onClick={MakeDir} disabled={!storageName && !path} />
                     </Col>
                     <Col flex='2rem'>
-
                         <Button type='primary' icon={<IconUpload />} onClick={UploadFile} disabled={!storageName && !path} />
-
                     </Col>
                 </Row>
             </div>
