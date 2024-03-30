@@ -1,5 +1,10 @@
-//https://github.com/rclone/rclone-webui-react/blob/master/src/utils/MountOptions.js
+//https://rclone.org/rc/#data-types
+//https://rclone.org/rc/#mount-mount
+//https://p0.hotpe.top/i/p/1/66080cb6e9a4c.png
 
+//https://github.com/rclone/rclone-webui-react/blob/master/src/utils/MountOptions.js
+//http://localhost:5572/options/get
+//https://rclone.org/commands/rclone_mount/#options-opt
 import { ParametersType, ParamsSelectType } from "../defaults";
 
 interface VfsOptions {
@@ -25,6 +30,14 @@ interface VfsOptions {
     Umask: number;
     WriteBack: number;
     WriteWait: number;
+    Refresh?: boolean;
+    BlockNormDupes?: boolean;
+    UsedIsSize?: boolean;
+    FastFingerprint?: boolean;
+    DiskSpaceTotalSize?: number;
+    UID?: number;
+    GID?: number;
+    Umask?: number;
 }
 
 interface MountOptions {
@@ -37,17 +50,18 @@ interface MountOptions {
     DaemonTimeout: number;
     DebugFUSE: boolean;
     DefaultPermissions: boolean;
-    ExtraFlags: string[]; // 假设数组元素为字符串类型
-    ExtraOptions: string[]; // 假设数组元素为字符串类型
+    ExtraFlags: string[]; 
+    ExtraOptions: string[]; 
     MaxReadAhead: number;
     NoAppleDouble: boolean;
     NoAppleXattr: boolean;
     VolumeName: string;
     WritebackCache: boolean;
+    DaemonWait?: number; 
+    DeviceName?: string; 
+    NetworkMode?: boolean;
+    CaseInsensitive?: boolean | null; 
 }
-
-
-
 
 
 

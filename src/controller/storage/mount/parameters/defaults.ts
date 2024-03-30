@@ -22,20 +22,27 @@ const defaultVfsConfig: VfsOptions = {
     DirCacheTime: 300000000000,
     DirPerms: 511,
     FilePerms: 438,
-    GID: 1000,
     NoChecksum: false,
     NoModTime: false,
     NoSeek: false,
     PollInterval: 60000000000,
     ReadAhead: 0,
     ReadWait: 20000000,
-    UID: 1000,
-    Umask: 2,
     WriteBack: 5000000000,
-    WriteWait: 1000000000,
+    WriteWait: 1000000000,    
+    Refresh: false,
+    BlockNormDupes: false,
+    UsedIsSize: false,
+    FastFingerprint: false,
+    DiskSpaceTotalSize: -1,
+    UID: 4294967295,
+    GID: 4294967295,
+    Umask: 0,
+
 };
 
 const defaultMountConfig: MountOptions = {
+    VolumeName: '',
     AllowNonEmpty: false,
     AllowOther: false,
     AllowRoot: false,
@@ -50,8 +57,11 @@ const defaultMountConfig: MountOptions = {
     MaxReadAhead: 131072,
     NoAppleDouble: true,
     NoAppleXattr: false,
-    VolumeName: '',
     WritebackCache: false,
+    DaemonWait: 0, 
+    DeviceName: '',
+    NetworkMode: false, //挂载为网络驱动器
+    //CaseInsensitive: null,
 };
 
 export { defaultVfsConfig, defaultMountConfig }

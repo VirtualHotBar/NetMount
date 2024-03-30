@@ -1,3 +1,4 @@
+import { Message } from "@arco-design/web-react";
 
 
 // 定义 `rclone` 的 API 端点
@@ -24,9 +25,19 @@ function rclone_api_post(path: string, data?: object) {
         method: 'POST',
         headers: rcloneApiHeaders,
         body: JSON.stringify(data)
-    }).then((res) => {
-        return res.json()
-    })
+    }).then((response) => {
+        if (!response.ok) {
+            Message.error(`Request failed with status ${response.status}: ${response.statusText}`);
+            throw new Error(`Request failed with status ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    }).then((jsonResponse) => {
+        return jsonResponse;
+    }).catch((error) => {
+        Message.error(error.message);
+        console.error("Error fetching from Rclone API:", error.message);
+        throw error;
+    });
 }
 
 /* export function rclone_api_get(path:string){

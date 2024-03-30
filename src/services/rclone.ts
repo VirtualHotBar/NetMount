@@ -4,6 +4,17 @@ import { RcloneInfo } from "../type/rclone/rcloneInfo"
 let rcloneInfo: RcloneInfo = {
     storageList: [],
     mountList: [],
+    version:{   
+        arch: "",
+        decomposed: [],
+        goTags: "",
+        goVersion: "",
+        isBeta: false,
+        isGit: false,
+        linking: "",
+        os: "",
+        version: ""
+    },
     stats: {
         bytes: 0,
         checks: 0,

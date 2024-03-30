@@ -3,7 +3,7 @@ import { createStorage } from "./storage/create";
 import { getFileList, reupStorage } from "./storage/storage";
 
 export async function Test() {
-    console.log(await getFileList('1','/www.sysri'));
-    
-    
+    console.log(await rclone_api_post('/options/get'));
+
+    console.log(await rclone_api_post('/core/version'));
 }

@@ -28,14 +28,6 @@ export default function AddMount_page() {
         <div>
             <Form>
                 {
-                    !showAllOptions ? <>
-
-
-                    </> : <>
-
-                    </>
-                }
-                {
                     <div style={{ display: showAllOptions ? 'block' : 'none' }}>
                         {
                             getProperties(defaultMountConfig).map((item) => {
