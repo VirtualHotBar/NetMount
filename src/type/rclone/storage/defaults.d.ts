@@ -1,4 +1,4 @@
-interface ParametersType  {
+interface ParametersType {
     [key: string]: any
 }
 
@@ -9,4 +9,9 @@ interface DefaultParams {
     "required": Array<string>
 }
 
-export { DefaultParams, ParametersType }
+interface ParamsSelectType {
+    select: string | number,
+    values: Array<string | number> | { [key: string | number]: string | number }
+}
+
+export { DefaultParams, ParametersType, ParamsSelectType }

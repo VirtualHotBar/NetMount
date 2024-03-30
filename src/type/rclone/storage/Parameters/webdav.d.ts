@@ -1,11 +1,9 @@
+import { ParamsSelectType } from "../defaults";
 
 interface WebdavParamsStandard {
     // 标准选项
     url: string;
-    vendor?: {
-        select: string
-        values: Array<string>
-    };
+    vendor?: ParamsSelectType;
     user?: string;
     pass?: string;
     bearer_token?: string;

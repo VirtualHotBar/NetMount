@@ -44,5 +44,6 @@
     "dir": "目录",
     "create_directory":"创建目录",
     "dir_name_cannot_empty":"目录名不能为空",
-    "upload_file": "上传文件"
+    "upload_file": "上传文件",
+    "show_all_options": "显示所有选项"
 }

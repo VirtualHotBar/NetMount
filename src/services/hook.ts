@@ -2,7 +2,8 @@ import { Hooks } from "../type/hook";
 
 let hooks:Hooks = {
     upStats:()=>{},
-    upStorage:()=>{}
+    upStorage:()=>{},
+    upMount:()=>{}
 }
 
 export {hooks}

@@ -5,7 +5,7 @@ import { rcloneInfo } from '../../services/rclone';
 import { useTranslation } from 'react-i18next';
 import { delDir, delFile, formatPathRclone, getFileList, mkDir } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
-import { formatSize } from '../../utils/rclone/utils';
+import { formatSize, getURLSearchParam } from '../../utils/rclone/utils';
 import { rcloneApiEndpoint, rcloneApiHeaders } from '../../utils/rclone/request';
 import { RequestOptions } from '@arco-design/web-react/es/Upload';
 const Row = Grid.Row;
@@ -94,6 +94,9 @@ function ExplorerItem() {
         }
     ]
 
+
+
+    //刷新文件列表
     async function fileInfo() {
         setLoading(true)
         const l = await getFileList(storageName!, path!)
@@ -107,6 +110,15 @@ function ExplorerItem() {
         setPath(sanitizedPath);
         setPathTemp(sanitizedPath)
     };
+
+    useEffect(() => {//页面加载时，从URL中获取存储名称和路径
+        if (getURLSearchParam('name')) {
+            setStorageName(getURLSearchParam('name'))
+            if (getURLSearchParam('path')) {
+                setPath(getURLSearchParam('path'))
+            }
+        }
+    }, []);
 
     useEffect(() => {
         console.log(storageName);
@@ -196,7 +208,7 @@ function ExplorerItem() {
                         <Button type='secondary' icon={<IconRefresh />} onClick={fileInfo} disabled={!storageName} />
                     </Col>
                     <Col flex='10rem'>
-                        <Select /* bordered={false} */ defaultValue={storageName} placeholder={t('please_select')} onChange={(value) =>
+                        <Select /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) =>
                             setStorageName(value)
                         }>
                             {

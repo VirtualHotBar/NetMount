@@ -15,6 +15,7 @@ import { Mount_page } from './page/mount/mount';
 import { Transmit_page } from './page/transmit/transmit';
 import { Task_page } from './page/task/task';
 import Setting_page from './page/setting/setting';
+import AddMount_page from './page/mount/add';
 
 const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content } = Layout;
@@ -159,6 +160,15 @@ function App() {
             title: t('mount'),
             path: '/mount',
             component: <Mount_page />,
+            hideChildren: true,
+            children: [
+                {
+                    title: t('add'),
+                    path: '/mount/add',
+                    key: '/mount',//因为父菜单隐藏了子菜单项，在此页面时设置父菜单key以选择父菜单项
+                    component: <AddMount_page />,
+                }
+            ]
         },
         {
             title: t('transmit'),

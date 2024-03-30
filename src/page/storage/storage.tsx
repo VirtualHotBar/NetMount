@@ -31,7 +31,7 @@ function Storage_page() {
         {
             title: t('actions'),
             dataIndex: 'actions',
-            align:'right'
+            align: 'right'
         }
     ]
 
@@ -50,8 +50,11 @@ function Storage_page() {
                     rcloneInfo.storageList.map((item) => {
                         return {
                             ...item, actions: <Space>
-                                <Button onClick={() => delStorage(item.name)}  status='danger'>{t('delete')}</Button>
-                                <Button onClick={() => navigate('./add?edit=true&name=' + item.name + '&type=' + item.type)} type='primary'>{t('edit')}</Button></Space>
+                                <Button onClick={() => delStorage(item.name)} status='danger'>{t('delete')}</Button>
+                                <Button onClick={() => navigate('./add?edit=true&name=' + item.name + '&type=' + item.type)} type='primary'>{t('edit')}</Button>
+                                <Button onClick={() => navigate('/storage/explorer?name=' + item.name)} type='primary'>{t('explorer')}</Button>
+                            </Space>
+
                         }
                     })} />
             </div>

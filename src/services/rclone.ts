@@ -2,7 +2,8 @@
 import { RcloneInfo } from "../type/rclone/rcloneInfo"
 
 let rcloneInfo: RcloneInfo = {
-    storageList:[],
+    storageList: [],
+    mountList: [],
     stats: {
         bytes: 0,
         checks: 0,
