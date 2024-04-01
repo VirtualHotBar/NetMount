@@ -27,7 +27,7 @@ interface StorageList {
 
 interface MountList {
     storageName: string,
-    drive: string,
+    mountPath: string,
     mountedTime: Date,
 }
 

@@ -1,7 +1,7 @@
 import { Button, Space, Table } from '@arco-design/web-react'
 import React, { useEffect, useReducer } from 'react'
 import { rcloneInfo } from '../../services/rclone'
-import { reupMount } from '../../controller/storage/mount/mount'
+import { reupMount, unmountStorage } from '../../controller/storage/mount/mount'
 import { useTranslation } from 'react-i18next'
 import { hooks } from '../../services/hook'
 import { useNavigate } from 'react-router-dom'
@@ -17,8 +17,8 @@ function Mount_page() {
       dataIndex: 'storageName',
     },
     {
-      title: 'drive',
-      dataIndex: 'drive',
+      title: 'mountPath',
+      dataIndex: 'mountPath',
     },
     {
       title: 'mountedTime',
@@ -51,7 +51,7 @@ function Mount_page() {
               ...item, 
               time: item.mountedTime.toLocaleString(),
               actions: <Space>
-                <Button status='danger'>{t('delete')}</Button>
+                <Button onClick={() => {unmountStorage(item.mountPath)}} status='danger' >{t('delete')}</Button>
               </Space>
 
             }

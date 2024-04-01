@@ -45,5 +45,12 @@
     "create_directory":"创建目录",
     "dir_name_cannot_empty":"目录名不能为空",
     "upload_file": "上传文件",
-    "show_all_options": "显示所有选项"
+    "show_all_options": "显示所有选项",
+    "path":"路径",
+    "mount_path":"挂载路径",
+    "auto_drive_letter":"自动分配盘符",
+    "simulate_hard_drive": "模拟本地硬盘",
+    "read_only":"只读",
+    "mount_options": "挂载选项",
+    "mount_storage_successfully": "挂载存储成功"
 }

@@ -16,16 +16,16 @@ function InputItem_module(props: InputItemProps) {
 
     if (valueType === 'string' && (props.data.value === 'true' || props.data.value === 'false')) {
         valueType = 'boolean';
-    } else if (props.data.value=='[]'||(valueType === 'object' && props.data.value instanceof Array)) {
+    } else if (props.data.value == '[]' || (valueType === 'object' && props.data.value instanceof Array)) {
         valueType = 'array';
     }
 
     const setParams = (value: any) => {
         console.log(value);
-        
-        if (valueType == 'array') {
+
+        if (valueType == 'array' && props.data.key == 'headers') {
             props.setParams(props.data.key, value.join(','))
-        }else{
+        } else {
             props.setParams(props.data.key, value)
         }
     }
@@ -91,7 +91,7 @@ function InputItem_module(props: InputItemProps) {
         )}
 
         <br />
-       
+
     </FormItem>
 }
 

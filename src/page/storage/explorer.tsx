@@ -111,12 +111,18 @@ function ExplorerItem() {
         setPathTemp(sanitizedPath)
     };
 
-    useEffect(() => {//页面加载时，从URL中获取存储名称和路径
+    useEffect(() => {
+        //页面加载时，从URL中获取存储名称和路径
         if (getURLSearchParam('name')) {
             setStorageName(getURLSearchParam('name'))
             if (getURLSearchParam('path')) {
                 setPath(getURLSearchParam('path'))
             }
+        }
+
+
+        if (!storageName && rcloneInfo.storageList.length > 0) {
+            setStorageName(rcloneInfo.storageList[0].name)
         }
     }, []);
 

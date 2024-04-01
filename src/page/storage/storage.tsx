@@ -1,4 +1,4 @@
-import { Button, Space } from "@arco-design/web-react"
+import { Button, Popconfirm, Space } from "@arco-design/web-react"
 import { useTranslation } from 'react-i18next';
 import { delStorage, reupStorage } from "../../controller/storage/storage"
 import { rcloneInfo } from "../../services/rclone"
@@ -50,7 +50,16 @@ function Storage_page() {
                     rcloneInfo.storageList.map((item) => {
                         return {
                             ...item, actions: <Space>
-                                <Button onClick={() => delStorage(item.name)} status='danger'>{t('delete')}</Button>
+                                <Popconfirm
+                                    focusLock
+                                    title={t('confirm_delete_question')}
+                                    onOk={() => {
+                                        delStorage(item.name)
+                                    }}
+                                >
+                                    <Button status='danger'>{t('delete')}</Button>
+                                </Popconfirm>
+
                                 <Button onClick={() => navigate('./add?edit=true&name=' + item.name + '&type=' + item.type)} type='primary'>{t('edit')}</Button>
                                 <Button onClick={() => navigate('/storage/explorer?name=' + item.name)} type='primary'>{t('explorer')}</Button>
                             </Space>
