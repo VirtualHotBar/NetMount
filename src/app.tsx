@@ -3,7 +3,6 @@ import { Layout, Menu, Breadcrumb, Button, Message } from '@arco-design/web-reac
 import "@arco-design/web-react/dist/css/arco.css";
 import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { invoke } from '@tauri-apps/api';
 
 import { Test } from './controller/test';
 import { Routers } from './type/routers';

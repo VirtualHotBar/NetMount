@@ -52,5 +52,7 @@
     "simulate_hard_drive": "模拟本地硬盘",
     "read_only":"只读",
     "mount_options": "挂载选项",
-    "mount_storage_successfully": "挂载存储成功"
+    "mount_storage_successfully": "挂载存储成功",
+    "mounted_time":"挂载时间",
+    "storage_name": "存储名称"
 }

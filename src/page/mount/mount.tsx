@@ -1,4 +1,4 @@
-import { Button, Space, Table } from '@arco-design/web-react'
+import { Button, Space, Table, TableColumnProps } from '@arco-design/web-react'
 import React, { useEffect, useReducer } from 'react'
 import { rcloneInfo } from '../../services/rclone'
 import { reupMount, unmountStorage } from '../../controller/storage/mount/mount'
@@ -11,22 +11,23 @@ function Mount_page() {
   const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
   const navigate = useNavigate();
 
-  const columns = [
+  const columns :TableColumnProps[]= [
     {
-      title: '存储',
+      title: t('storage_name'),
       dataIndex: 'storageName',
     },
     {
-      title: 'mountPath',
+      title:t('mount_path'),
       dataIndex: 'mountPath',
     },
     {
-      title: 'mountedTime',
+      title: t('mounted_time'),
       dataIndex: 'time',
     },
     {
-      title: 'Actions',
-      dataIndex: 'actions'
+      title: t('actions'),
+      dataIndex: 'actions',
+      align: 'right'
     }
   ]
 

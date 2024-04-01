@@ -3,6 +3,7 @@ import { rclone_api_post } from "../utils/rclone/request"
 import { startUpdateCont } from "./stats/continue"
 import { reupMount } from "./storage/mount/mount"
 import { reupStorage } from "./storage/storage"
+import { listenWindow } from "./window"
 
 async function init(setStartStr: Function) {
     setStartStr('ddd')
@@ -10,6 +11,7 @@ async function init(setStartStr: Function) {
     await reupRcloneVersion()
     await reupStorage()
     await reupMount()
+    listenWindow()
 }
 
 async function reupRcloneVersion() {

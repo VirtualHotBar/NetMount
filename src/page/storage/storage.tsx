@@ -62,6 +62,7 @@ function Storage_page() {
 
                                 <Button onClick={() => navigate('./add?edit=true&name=' + item.name + '&type=' + item.type)} type='primary'>{t('edit')}</Button>
                                 <Button onClick={() => navigate('/storage/explorer?name=' + item.name)} type='primary'>{t('explorer')}</Button>
+                                <Button onClick={() => navigate('/mount/add?name=' + item.name)} type='primary'>{t('mount')}</Button>
                             </Space>
 
                         }

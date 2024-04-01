@@ -208,13 +208,15 @@ function ExplorerItem() {
                 {contextHolder}
                 <Row >
                     <Col flex='2rem'>
-                        <Button type='secondary' icon={<IconLeft />} onClick={() => { updatePath(getParentPath(path!)) }} disabled={!storageName} />
+                        <Button /* type='secondary' */ icon={<IconLeft />} onClick={() => { updatePath(getParentPath(path!)) }} disabled={!storageName} type='text' />
                     </Col>
                     <Col flex='2rem'>
-                        <Button type='secondary' icon={<IconRefresh />} onClick={fileInfo} disabled={!storageName} />
+                        <Button /* type='secondary'  */ icon={<IconRefresh />} onClick={fileInfo} disabled={!storageName} type='text' />
                     </Col>
-                    <Col flex='10rem'>
-                        <Select /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) =>
+
+                    <Col style={{ paddingLeft: '1rem', paddingRight: '0.2rem' }} flex='10rem'>
+
+                        <Select  /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) =>
                             setStorageName(value)
                         }>
                             {
@@ -226,19 +228,21 @@ function ExplorerItem() {
                             }
                         </Select>
                     </Col>
-                    <Col flex='auto'>
+                    <Col style={{ paddingLeft: '0.2rem', paddingRight: '1rem' }} flex='auto'>
                         <Input disabled={!storageName} value={pathTemp} normalize={() => { return path! }} onChange={(value) => { setPathTemp(value) }} onPressEnter={() => { updatePath(pathTemp) }} />
                     </Col>
+
                     <Col flex='2rem'>
-                        <Button type='primary' icon={<IconFolderAdd />} onClick={MakeDir} disabled={!storageName && !path} />
+                        <Button icon={<IconFolderAdd />} onClick={MakeDir} disabled={!storageName && !path} type='text' />
                     </Col>
                     <Col flex='2rem'>
-                        <Button type='primary' icon={<IconUpload />} onClick={UploadFile} disabled={!storageName && !path} />
+                        <Button icon={<IconUpload />} onClick={UploadFile} disabled={!storageName && !path} type='text' />
                     </Col>
                 </Row>
             </div>
 
-            <div style={{ height: 'calc(100% - 2rem)' }}>
+            <div style={{ height: 'calc(100% - 2rem)', paddingTop: '1rem' }}>
+                
 
                 {storageName ?
                     <>{

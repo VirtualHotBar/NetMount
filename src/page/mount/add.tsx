@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom';
 import { ParametersType } from '../../type/rclone/storage/defaults';
-import { getProperties } from '../../utils/rclone/utils';
+import { getProperties, getURLSearchParam } from '../../utils/rclone/utils';
 import { defaultMountConfig, defaultVfsConfig } from '../../controller/storage/mount/parameters/defaults';
 import { InputItem_module } from '../other/inputItem';
 import { rcloneInfo } from '../../services/rclone';
@@ -36,9 +36,12 @@ export default function AddMount_page() {
     };
 
     useEffect(() => {
-        if (!storageName && rcloneInfo.storageList.length > 0) {
-            setStorageName(rcloneInfo.storageList[0].name)
-        }
+            if (getURLSearchParam('name')) {
+                setStorageName(getURLSearchParam('name'))
+            }else if(!storageName && rcloneInfo.storageList.length > 0){
+                setStorageName(rcloneInfo.storageList[0].name)
+            }
+
 
         if (isWindows) {
             setMountPath('*')
