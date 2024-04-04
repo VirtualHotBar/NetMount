@@ -21,6 +21,19 @@
     "transfers": 0
 } */
 
+interface RcloneTransferItem {
+    bytes: number; // 已处理的字节数
+    eta: null | number; // 预计剩余时间（如果可用，否则为null）
+    group: string; // 通常是"global_stats"
+    name: string; // 文件或目录名称
+    percentage: number; // 完成百分比
+    size: number; // 文件大小（字节）
+    speed: number; // 当前速度（字节/秒）
+    speedAvg: number; // 平均速度（字节/秒）
+    srcFs: string; // 源文件系统的标识符（如"Webdav:"）
+    dstFs?: string; // 目标文件系统的标识符（如"Webdav:"）
+}
+
 interface RcloneStats {
     bytes: number; // 已处理的字节数
     checks: number; // 完成的校验数
@@ -30,6 +43,7 @@ interface RcloneStats {
     errors: number; // 出现的错误总数
     eta: null | number; // 预计剩余时间（如果可用，否则为null）
     fatalError: boolean; // 是否出现致命错误
+    lastError: string; // 最近发生的错误信息
     renames: number; // 重命名的数量
     retryError: boolean; // 是否有重试错误发生
     serverSideCopies: number; // 服务器端复制操作的数量
@@ -41,7 +55,7 @@ interface RcloneStats {
     totalChecks: number; // 总共完成的校验数
     totalTransfers: number; // 总共完成的传输操作数
     transferTime: number; // 执行传输操作所花费的时间（秒）
-    transfers: number; // 成功传输的文件数量
+    transferring: RcloneTransferItem[]; // 正在进行的传输项列表
 }
 
-export { RcloneStats }
+export { RcloneStats, RcloneTransferItem }

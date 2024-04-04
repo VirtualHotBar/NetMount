@@ -2,6 +2,11 @@
 import { RcloneInfo } from "../type/rclone/rcloneInfo"
 
 let rcloneInfo: RcloneInfo = {
+    auth:{
+        user: '',
+        pass: '',
+        port: 3998,
+    },
     storageList: [],
     mountList: [],
     version:{   
@@ -35,7 +40,8 @@ let rcloneInfo: RcloneInfo = {
         totalChecks: 0,
         totalTransfers: 0,
         transferTime: 0,
-        transfers: 0
+        lastError: '',
+        transferring: []
     }
 }
 

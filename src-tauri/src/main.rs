@@ -6,17 +6,13 @@ use std::env;
 use std::error::Error;
 use std::fs;
 use std::process::Command;
+use tauri::Manager;
 
 const CONFIG_PATH: &str = "config.json";
 
 mod tray;
 
 fn main() {
-    match run_command("git --version") {
-        Ok(output) => println!("{}", output), // 输出成功执行命令的结果
-        Err(error) => eprintln!("运行命令时发生错误: {}", error), // 输出错误信息
-    }
-
     tauri::Builder::default()
         .system_tray(tray::menu())
         .on_system_tray_event(tray::handler)
@@ -29,28 +25,37 @@ fn main() {
         .expect("error while running tauri application");
 }
 
-fn run_command(cmd: &str) -> Result<String, Box<dyn Error>> {
+fn run_command(cmd: &str) -> Result<std::process::Child, Box<dyn Error>> {
     let cmd_str = if cfg!(target_os = "windows") {
         format!("{}", cmd.replace("/", "\\"))
     } else {
         format!("{}", cmd)
     };
 
-    let output = if cfg!(target_os = "windows") {
-        Command::new("cmd").arg("/c").arg(cmd_str).output()?
+    let child = if cfg!(target_os = "windows") {
+        Command::new("cmd").arg("/c").arg(cmd_str).spawn()?
     } else {
-        Command::new("sh").arg("-c").arg(cmd_str).output()?
+        Command::new("sh").arg("-c").arg(cmd_str).spawn()?
     };
 
-    // 将输出字节转换为 UTF-8 编码的字符串，并删除开头和结尾的空白字符
-    let output_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
-
-    Ok(output_str)
+    Ok(child)
 }
 
 #[tauri::command]
-fn start_rclone() -> Result<(), String> {
-    Ok(())
+fn start_rclone(parameter: String) -> Result<(), String> {
+    match run_command(&("res/bin/rclone.exe".to_owned() + &parameter)) {
+        Ok(child) => {
+            println!("rclone.exe started with PID: {}", child.id());
+
+            Ok(())
+        }
+        Err(error) => Err(format!("Failed to start rclone: {}", error)),
+    }
+}
+
+#[tauri::command]
+fn exit_app(app_handle: tauri::AppHandle) {
+    let _ = app_handle.emit_all("exit_app", {});
 }
 
 #[tauri::command]

@@ -1,25 +1,28 @@
 import { Message } from "@arco-design/web-react";
+import { rcloneInfo } from "../../services/rclone";
 
 
 // 定义 `rclone` 的 API 端点
-const rcloneApiEndpoint = "http://localhost:5572";
+const rcloneApiEndpoint = "http://localhost:"+rcloneInfo.auth.port.toString();
 
-// 定义账号和密码
-const username = "";
-const password = "";
-
-// 以 base64 编码的方式来设置账密字符串
-const base64Credentials = btoa(`${username}:${password}`);
-
-// 定义请求头部，包括授权头部
-const rcloneApiHeaders = {
-    Authorization: `Basic ${base64Credentials}`,
+let rcloneApiHeaders= {
+    Authorization: `Basic ${btoa(`${rcloneInfo.auth.user}:${rcloneInfo.auth.pass}`)}`,
     'Content-Type': 'application/json'
 };
+
 
 function rclone_api_post(path: string, data?: object) {
 
     if (!data) data = {}
+
+    // 以 base64 编码的方式来设置账密字符串
+    const base64Credentials = btoa(`${rcloneInfo.auth.user}:${rcloneInfo.auth.pass}`);
+
+    // 定义请求头部，包括授权头部
+    rcloneApiHeaders = {
+        Authorization: `Basic ${base64Credentials}`,
+        'Content-Type': 'application/json'
+    };
 
     return fetch(rcloneApiEndpoint + path, {
         method: 'POST',
@@ -49,4 +52,4 @@ function rclone_api_post(path: string, data?: object) {
     })
 } */
 
-export { rcloneApiEndpoint, rcloneApiHeaders, rclone_api_post }
+export { rcloneApiEndpoint,  rclone_api_post,rcloneApiHeaders }

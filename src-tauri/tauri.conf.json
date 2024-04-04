@@ -19,8 +19,12 @@
       "all": false,
       "window": {
         "all": true
+      },
+      "process": {
+        "all": true
       }
     },
+    
     "bundle": {
       "active": true,
       "category": "DeveloperTool",

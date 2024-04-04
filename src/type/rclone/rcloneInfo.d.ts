@@ -1,7 +1,12 @@
 import { RcloneStats } from "./stats";
 
 interface RcloneInfo {
-    version:RcloneVersion,
+    auth: {
+        user: string,
+        pass: string,
+        port: number,
+    },
+    version: RcloneVersion,
     stats: RcloneStats,
     storageList: Array<StorageList>,
     mountList: Array<MountList>

@@ -35,3 +35,40 @@ export function formatSize(v: number) {
     }
     return Math.round(v * 100) / 100 + ' ' + UNITS[i];
 }
+
+//格式化剩余时间
+export function formatETA(etaInSeconds: number): string {
+  if (isNaN(etaInSeconds) || etaInSeconds <= 0) {
+    return '未知';
+  }
+
+  const hours = Math.floor(etaInSeconds / 3600);
+  const minutes = Math.floor((etaInSeconds % 3600) / 60);
+  const seconds = Math.floor(etaInSeconds % 60);
+
+  let formattedETA = '';
+  
+  if (hours > 0) {
+    formattedETA += `${hours.toString().padStart(2, '0')}h `;
+  }
+  if (minutes > 0) {
+    formattedETA += `${minutes.toString().padStart(2, '0')}m `;
+  }
+
+  formattedETA += `${seconds.toString().padStart(2, '0')}s`;
+
+  return formattedETA;
+}
+  
+export function randomString(length: number): string {
+    const alphanumericChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    //const specialChars = '!@#$%^&*()_+~`|}{[]:;?><,./-=';
+    const specialChars = '';
+    const getRandomChar = (chars: string): string => chars[Math.floor(Math.random() * chars.length)];
+
+    const randomString = Array.from({ length }, () =>
+        Math.random() < 0.8 ? getRandomChar(alphanumericChars) : getRandomChar(specialChars)
+    ).join('');
+
+    return randomString;
+}

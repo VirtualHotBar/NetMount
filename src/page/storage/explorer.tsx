@@ -242,7 +242,7 @@ function ExplorerItem() {
             </div>
 
             <div style={{ height: 'calc(100% - 2rem)', paddingTop: '1rem' }}>
-                
+
 
                 {storageName ?
                     <>{
@@ -251,6 +251,7 @@ function ExplorerItem() {
                                 loading={loading}
                                 pagination={false}
                                 tableLayoutFixed
+
                                 data={
                                     fileList.map((item) => {
                                         return {

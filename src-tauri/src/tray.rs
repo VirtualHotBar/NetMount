@@ -3,6 +3,8 @@ use tauri::{
     SystemTrayMenuItem,
 };
 
+use crate::exit_app;
+
 // 托盘菜单
 pub fn menu() -> SystemTray {
     let tray_menu = SystemTrayMenu::new()
@@ -54,7 +56,8 @@ pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
         // 根据菜单 id 进行事件匹配
         SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
             "quit" => {
-                std::process::exit(0);
+                exit_app(app.clone());
+                //std::process::exit(0);
             }
             "hide&show" => {
                 if (window.is_visible()).expect("REASON") {
