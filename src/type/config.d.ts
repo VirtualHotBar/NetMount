@@ -13,6 +13,7 @@ interface MountListItem {
     parameters: ParametersType,//挂载配置
     autoMount: boolean,//软件启动自动挂载
 }
+
 interface TaskListItem {
     [key: string]: {
         taskType: 'copy' | 'move'| 'delete'| 'sync',
@@ -33,4 +34,4 @@ interface TaskListItem {
         exeId?:number,//任务id,setTimeout或setInterval的返回值
     }
 }
-export { NMConfig }
+export { NMConfig, MountListItem,TaskListItem}

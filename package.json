@@ -13,6 +13,7 @@
     "tauri-build": "tauri build "
   },
   "dependencies": {
+    "@ant-design/charts": "^2.0.3",
     "@arco-design/web-react": "^2.61.0",
     "@tauri-apps/api": "^1.5.3",
     "i18next": "^23.10.1",

@@ -1,10 +1,16 @@
 import { RcloneStats } from "./stats";
 
 interface RcloneInfo {
-    auth: {
-        user: string,
-        pass: string,
-        port: number,
+    endpoint: {
+        url: string,
+        isLocal: boolean,// 是否为本地地址
+        auth: {
+            user: string,
+            pass: string,
+        },
+        localhost: {
+            port: number,
+        }
     },
     version: RcloneVersion,
     stats: RcloneStats,

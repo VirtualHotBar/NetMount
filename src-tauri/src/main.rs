@@ -8,18 +8,28 @@ use std::fs;
 use std::process::Command;
 use tauri::Manager;
 
+mod tray;
+mod utils;
+use crate::utils::set_window_shadow;
+use crate::utils::find_first_available_drive_letter;
+
 const CONFIG_PATH: &str = "config.json";
 
-mod tray;
 
 fn main() {
+
     tauri::Builder::default()
+        .setup(|app| {
+            set_window_shadow(app);
+            Ok(())
+        })
         .system_tray(tray::menu())
         .on_system_tray_event(tray::handler)
         .invoke_handler(tauri::generate_handler![
             read_config_file,
             write_config_file,
-            start_rclone
+            start_rclone,
+            get_available_drive_letter
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -50,6 +60,15 @@ fn start_rclone(parameter: String) -> Result<(), String> {
             Ok(())
         }
         Err(error) => Err(format!("Failed to start rclone: {}", error)),
+    }
+}
+
+#[tauri::command]
+fn get_available_drive_letter() -> Result<String, String> {
+    match find_first_available_drive_letter() {
+        Ok(Some(drive)) => Ok(drive),
+        Ok(None) => Ok(String::from("")),
+        Err(e) => Ok(format!("{}", e))
     }
 }
 

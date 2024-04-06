@@ -1,6 +1,64 @@
 {
   "mount": {
-    "lists": []
+    "lists": [
+      {
+        "storageName": "Webdav",
+        "mountPath": "Z:",
+        "parameters": {
+          "mountOpt": {
+            "VolumeName": "",
+            "AllowNonEmpty": false,
+            "AllowOther": false,
+            "AllowRoot": false,
+            "AsyncRead": true,
+            "AttrTimeout": 1000000000,
+            "Daemon": false,
+            "DaemonTimeout": 0,
+            "DebugFUSE": false,
+            "DefaultPermissions": false,
+            "ExtraFlags": [],
+            "ExtraOptions": [],
+            "MaxReadAhead": 131072,
+            "NoAppleDouble": true,
+            "NoAppleXattr": false,
+            "WritebackCache": false,
+            "DaemonWait": 0,
+            "DeviceName": "",
+            "NetworkMode": false
+          },
+          "vfsOpt": {
+            "ReadOnly": false,
+            "CacheMaxAge": 3600000000000,
+            "CacheMaxSize": -1,
+            "CacheMode": "minimal",
+            "CachePollInterval": 60000000000,
+            "CaseInsensitive": false,
+            "ChunkSize": 134217728,
+            "ChunkSizeLimit": -1,
+            "DirCacheTime": 300000000000,
+            "DirPerms": 511,
+            "FilePerms": 438,
+            "NoChecksum": false,
+            "NoModTime": false,
+            "NoSeek": false,
+            "PollInterval": 60000000000,
+            "ReadAhead": 0,
+            "ReadWait": 20000000,
+            "WriteBack": 5000000000,
+            "WriteWait": 1000000000,
+            "Refresh": false,
+            "BlockNormDupes": false,
+            "UsedIsSize": false,
+            "FastFingerprint": false,
+            "DiskSpaceTotalSize": -1,
+            "UID": 4294967295,
+            "GID": 4294967295,
+            "Umask": 0
+          }
+        },
+        "autoMount": true
+      }
+    ]
   },
   "task": {}
 }

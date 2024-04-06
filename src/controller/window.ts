@@ -4,12 +4,27 @@ import { exit } from "./main";
 
 function listenWindow() {
     appWindow.listen('tauri://close-requested', () => {
-        appWindow.hide()
+        windowsHide()
     })
+
+    document.addEventListener('keydown', function (event) {
+        // 阻止F5或Ctrl+R（Windows/Linux）和Command+R（Mac）刷新页面
+        if (event.key === 'F5' || (event.ctrlKey && event.key === 'r') || (event.metaKey && event.key === 'r')) {
+            event.preventDefault();
+        }
+    });
+}
+
+function windowsHide(){
+    appWindow.hide()
+}
+
+function windowsMini(){
+    appWindow.minimize()
 }
 
 listen('exit_app', async () => {
     await exit()
 });
 
-export { listenWindow }
+export { listenWindow,windowsHide,windowsMini }

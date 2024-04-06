@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Layout, Menu, Breadcrumb, Button, Message } from '@arco-design/web-react';
+import { Layout, Menu, Breadcrumb, Button, Message, Grid } from '@arco-design/web-react';
 import "@arco-design/web-react/dist/css/arco.css";
 import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
@@ -15,11 +15,14 @@ import { Transmit_page } from './page/transmit/transmit';
 import { Task_page } from './page/task/task';
 import Setting_page from './page/setting/setting';
 import AddMount_page from './page/mount/add';
+import { IconClose, IconMinus } from '@arco-design/web-react/icon';
+import { windowsHide, windowsMini } from './controller/window';
+import { rcloneInfo } from './services/rclone';
 
 const { Item: MenuItem, SubMenu } = Menu;
-const { Sider, Header, Content } = Layout;
-
-
+const { Sider, Header, Content, Footer } = Layout;
+const Row = Grid.Row;
+const Col = Grid.Col;
 
 //递归查询对应的路由
 function searchRoute(
@@ -47,9 +50,9 @@ function mapMenuItem(routes: Routers[]): JSX.Element {
             if (item.hide) {
                 return <></>
             } else if (item.children && item.children.length > 0 && !item.hideChildren) {
-                return (<SubMenu key={item.path} title={item.title}>   {mapMenuItem(item.children)}</SubMenu>)
+                return (<SubMenu key={item.path} title={item.title} >   {mapMenuItem(item.children)}</SubMenu>)
             } else {
-                return (<MenuItem key={item.path}> {item.title}</MenuItem>)
+                return (<MenuItem key={item.path} > {item.title}</MenuItem>)
             }
         })
     }</>
@@ -120,7 +123,7 @@ function App() {
     //const [router, setRouter] = useState<Routers | null>();
     const navigate = useNavigate();
     const location = useLocation();
-    const { t, i18n } = useTranslation()
+    const { t } = useTranslation()
 
     const [selectedKeys, setSelectedKeys] = useState<string[]>(['/']);
 
@@ -170,19 +173,19 @@ function App() {
             ]
         },
         {
-            title: t('transmit'),
+            title: t('transmit') /* +(rcloneInfo.stats.transferring? '(' + rcloneInfo.stats.transferring.length + ')': '') */,
             path: '/transmit',
-            component: <Transmit_page/>,
+            component: <Transmit_page />,
         },
         {
             title: t('task'),
             path: '/task',
-            component: <Task_page/>,
+            component: <Task_page />,
         },
         {
             title: t('setting'),
             path: '/setting',
-            component:<Setting_page/>,
+            component: <Setting_page />,
         }
     ]
 
@@ -199,35 +202,58 @@ function App() {
         }
     }, [location]);
 
+
+    /* 
+        <Layout style={{ height: '400px' }}>
+        <Header>Header</Header>
+        <Layout>
+          <Sider>Sider</Sider>
+          <Content>Content</Content>
+        </Layout>
+        <Footer>Footer</Footer>
+      </Layout> */
     return (
-        <Layout className='w-full h-full'>
-            <Sider >
-                <div style={{ textAlign: 'center', padding: '0.5rem' }}>
-                    <span className=' font-bold' style={{ fontSize: '1.5rem' }}>
-                        NetMount
-                    </span>
-                </div>
-                <Menu
-                    defaultOpenKeys={[]} selectedKeys={selectedKeys} style={{ width: '100%' }}
-                    onClickMenuItem={(path) => {
-                        if (path != location.pathname) {
-                            navigate(path)
-                        }
-                    }}
-                >{mapMenuItem(routers)}</Menu>
-            </Sider>
-            <Layout>
-                {/* <Header style={{ paddingLeft: 20 }}>Header</Header> */}
-                <Layout style={{ padding: '0 24px' }}>
-                    <Breadcrumb style={{ margin: '16px 0' }}>{generateBreadcrumb(location.pathname, routers)}
-                    </Breadcrumb>
-                    <Content style={{ padding: '1.4rem' }}>
-                        <Routes>{mapRouters(routers)}</Routes>
-                    </Content>
-                    {/* <Footer>Footer</Footer> */}
-                </Layout>
+
+        <Layout style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'var(--color-bg-1)'
+        }}>
+            <Header style={{ width: '100%', height: '2.4rem', backgroundColor: 'var(--color-bg-2)', borderBlockEnd: '1px solid var(--color-border-2)' }}>
+                <Row >
+                    <Col flex={'auto'} data-tauri-drag-region style={{ height: '2.4rem', display: 'flex' }}>
+                        <img src="../src-tauri/icons/128x128.png" style={{ width: '2.2rem', height: '2.2rem', marginTop: '0.1rem', marginLeft: '0.3rem' }} data-tauri-drag-region />
+                        <span style={{ marginLeft: '0.3rem', fontSize: '1.2rem', marginTop: '0.3rem', color: 'var(--color-text-1)' }} data-tauri-drag-region>NetMount</span>
+
+                    </Col>
+                    <Col flex={'5rem'} style={{ textAlign: 'right' }}>
+                        <Button onClick={windowsMini} icon={<IconMinus style={{ fontSize: '1.1rem', color: 'var(--color-text-2)' }} />} type='text' style={{ width: '2.5rem', paddingTop: '0.5rem' }} />
+                        <Button onClick={windowsHide} icon={<IconClose style={{ fontSize: '1.1rem' }} />} type='text' status='danger' style={{ width: '2.5rem', paddingTop: '0.5rem' }} />
+                    </Col>
+                </Row>
+            </Header>
+
+            <Layout style={{ maxHeight: 'calc(100% - 2.4rem)' }}>
+                <Sider style={{ width: '10rem' }} >
+                    <Menu
+                        defaultOpenKeys={['/storage']}
+                        selectedKeys={selectedKeys}
+                        style={{ height: '100%' }}
+                        onClickMenuItem={(path) => {
+                            if (path != location.pathname) {
+                                navigate(path)
+                            }
+                        }}
+                    >{mapMenuItem(routers)}</Menu>
+                </Sider>
+                <Content style={{ maxHeight: '100%', padding: '1.1rem' }}>
+                    {/* <Breadcrumb style={{ margin: '16px 0' }}>{generateBreadcrumb(location.pathname, routers)}</Breadcrumb> */}
+                    <Routes>{mapRouters(routers)}</Routes>
+                </Content>
             </Layout>
         </Layout>
+
+
     )
 }
 

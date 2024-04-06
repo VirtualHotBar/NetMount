@@ -7,6 +7,7 @@ import { hooks } from "../../services/hook";
 import { useNavigate } from "react-router-dom";
 
 import { Table, TableColumnProps } from '@arco-design/web-react';
+import { NoData_module } from "../other/noData";
 
 
 function Storage_page() {
@@ -40,13 +41,13 @@ function Storage_page() {
             <div style={{ width: "100%", height: "2rem", }}>
                 <Space>
                     <Button onClick={() => { navigate('./add') }} type='primary'>{t('add')}</Button>
-                    <Button onClick={reupStorage} type='primary'>{t('refresh')}</Button>
+                    <Button onClick={reupStorage} >{t('refresh')}</Button>
                 </Space>
 
             </div>
             <div style={{ height: "calc(100% - 2rem)" }}>
                 <br />
-                <Table style={{ height: "100%" }} columns={columns} pagination={false} data={
+                <Table style={{ height: "100%" }} noDataElement={ <NoData_module />} columns={columns} pagination={false} data={
                     rcloneInfo.storageList.map((item) => {
                         return {
                             ...item, actions: <Space>
@@ -57,11 +58,11 @@ function Storage_page() {
                                         delStorage(item.name)
                                     }}
                                 >
-                                    <Button status='danger'>{t('delete')}</Button>
+                                    <Button status='danger' type='secondary'>{t('delete')}</Button>
                                 </Popconfirm>
 
-                                <Button onClick={() => navigate('./add?edit=true&name=' + item.name + '&type=' + item.type)} type='primary'>{t('edit')}</Button>
-                                <Button onClick={() => navigate('/storage/explorer?name=' + item.name)} type='primary'>{t('explorer')}</Button>
+                                <Button onClick={() => navigate('./add?edit=true&name=' + item.name + '&type=' + item.type)}>{t('edit')}</Button>
+                                <Button onClick={() => navigate('/storage/explorer?name=' + item.name)} >{t('explorer')}</Button>
                                 <Button onClick={() => navigate('/mount/add?name=' + item.name)} type='primary'>{t('mount')}</Button>
                             </Space>
 
@@ -71,29 +72,6 @@ function Storage_page() {
         </div>
     )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

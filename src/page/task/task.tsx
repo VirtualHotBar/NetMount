@@ -1,8 +1,11 @@
 import React from 'react'
+import { DevTips_module } from '../other/devTips'
 
 function Task_page() {
     return (
-        <div>task</div>
+        <div>
+             <DevTips_module/>
+        </div>
     )
 }
 

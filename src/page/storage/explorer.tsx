@@ -1,13 +1,15 @@
 import React, { CSSProperties, useEffect, useReducer, useState } from 'react'
-import { BackTop, Button, Divider, Grid, Input, Link, List, Message, Modal, Popconfirm, Select, Space, Spin, Table, TableColumnProps, Tabs, Typography, Upload } from '@arco-design/web-react';
-import { IconFolderAdd, IconLeft, IconRefresh, IconUpCircle, IconUpload } from '@arco-design/web-react/icon';
+import { BackTop, Badge, Button, Divider, Dropdown, Grid, Input, Link, List, Menu, Message, Modal, Notification, Popconfirm, Select, Space, Spin, Table, TableColumnProps, Tabs, Typography, Upload } from '@arco-design/web-react';
+import { IconCopy, IconDelete, IconFolderAdd, IconLeft, IconMore, IconPaste, IconRefresh, IconScissor, IconUpCircle, IconUpload } from '@arco-design/web-react/icon';
 import { rcloneInfo } from '../../services/rclone';
 import { useTranslation } from 'react-i18next';
-import { delDir, delFile, formatPathRclone, getFileList, mkDir } from '../../controller/storage/storage';
+import { copyDir, copyFile, delDir, delFile, formatPathRclone, getFileList, mkDir, moveDir, moveFile } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
 import { formatSize, getURLSearchParam } from '../../utils/rclone/utils';
-import { rcloneApiEndpoint, rcloneApiHeaders } from '../../utils/rclone/request';
+import { rcloneApiHeaders } from '../../utils/rclone/request';
 import { RequestOptions } from '@arco-design/web-react/es/Upload';
+import { NoData_module } from '../other/noData';
+import { clipListItem } from '../../type/page/storage/explorer';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const TabPane = Tabs.TabPane;
@@ -67,12 +69,14 @@ function ExplorerItem() {
     const [storageName, setStorageName] = useState<string>()
     const [path, setPath] = useState<string>()
     const [pathTemp, setPathTemp] = useState<string>('')
+    //const [selectedRowKeys, setSelectedRowKeys] = useState<Array<string | number>>([]);
 
     const [fileList, setFileInfo] = useState<Array<FileInfo>>()
 
     const [loading, setLoading] = useState(false)
 
-    const [dirNameTemp, setDirNameTemp] = useState<string>('');
+    const [clipList, setClipList] = useState<Array<clipListItem>>([])
+
 
     const columns: TableColumnProps[] = [
         {
@@ -111,6 +115,15 @@ function ExplorerItem() {
         setPathTemp(sanitizedPath)
     };
 
+    //剪贴板去重
+    const isClipHave = (storageName_: string, path: string): boolean => {
+        return clipList.findIndex(v => v.storageName === storageName_ && v.path === path) !== -1;
+    };
+    const addCilp = (clip: clipListItem) => {
+        if (isClipHave(clip.storageName, clip.path)) return;
+        setClipList([...clipList, { isMove: clip.isMove, storageName: clip.storageName, path: clip.path, isDir: clip.isDir }])
+    }
+
     useEffect(() => {
         //页面加载时，从URL中获取存储名称和路径
         if (getURLSearchParam('name')) {
@@ -146,13 +159,17 @@ function ExplorerItem() {
     }, [storageName])
 
 
+    useEffect(() => {
+
+    }, [clipList])
+
     function MakeDir() {
+        let dirNameTemp = ''
         if (storageName && path) {
-            setDirNameTemp('')
             modal.info!({
                 title: t('create_directory'),
                 icon: null,
-                content: <Input placeholder={t('please_input')} onChange={(value) => setDirNameTemp(value)} />,
+                content: <Input placeholder={t('please_input')} defaultValue={dirNameTemp} onChange={(value) => dirNameTemp = value} />,
                 onOk: async () => {
                     dirNameTemp ? await mkDir(storageName, path + '/' + dirNameTemp, fileInfo) : Message.error(t('dir_name_cannot_empty'))
                 },
@@ -182,13 +199,12 @@ function ExplorerItem() {
 
             xhr.onerror = () => onError(xhr);
 
-            xhr.open('POST', `${rcloneApiEndpoint}/operations/uploadfile?fs=${storageName}:&remote=${formatPathRclone(path!, false)}`, true);
+            xhr.open('POST', `${rcloneInfo.endpoint.url}/operations/uploadfile?fs=${storageName}:&remote=${formatPathRclone(path!, false)}`, true);
             xhr.setRequestHeader('Authorization', `Bearer ${rcloneApiHeaders.Authorization}`);
             xhr.send(formData);
         };
 
         if (storageName && path) {
-            setDirNameTemp('')
             modal.info!({
                 title: t('upload_file'),
                 icon: null,
@@ -216,8 +232,14 @@ function ExplorerItem() {
 
                     <Col style={{ paddingLeft: '1rem', paddingRight: '0.2rem' }} flex='10rem'>
 
-                        <Select  /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) =>
-                            setStorageName(value)
+                        <Select  /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) => {
+                            if (value !== storageName) {
+                                setStorageName(value)
+                                setPathTemp('/')
+                                setPath('/')
+                            }
+                        }
+
                         }>
                             {
                                 rcloneInfo.storageList.map((item) => {
@@ -238,6 +260,40 @@ function ExplorerItem() {
                     <Col flex='2rem'>
                         <Button icon={<IconUpload />} onClick={UploadFile} disabled={!storageName && !path} type='text' />
                     </Col>
+                    <Col flex='2rem' >
+                        <Badge count={clipList.length} maxCount={9}>
+                            <Dropdown disabled={clipList.length == 0} droplist={
+                                <Menu>
+                                    <Menu.Item onClick={() => {
+                                        clipList.forEach((item) => {
+                                            if (item.isMove) {
+                                                if (item.isDir) {
+                                                    moveDir(item.storageName, item.path, storageName!, path!);
+                                                } else {
+                                                    moveFile(item.storageName, item.path, storageName!, path!);
+                                                }
+                                            } else {
+                                                if (item.isDir) {
+                                                    copyDir(item.storageName, item.path, storageName!, path!);
+                                                } else {
+                                                    copyFile(item.storageName, item.path, storageName!, path!)
+                                                }
+                                            }
+                                        })
+                                        setClipList([])
+                                        Notification.success({
+                                            title: t('success'),
+                                            content: t('transm_task_created'),
+                                        })
+
+                                    }} key='p' disabled={!storageName && !path}>粘贴({clipList.length})</Menu.Item>
+                                    <Menu.Item onClick={() => setClipList([])} key='q'>清空剪切板</Menu.Item>
+                                </Menu>} position='bl'>
+                                <Button icon={<IconPaste />} type='text' />
+                            </Dropdown>
+                        </Badge>
+
+                    </Col>
                 </Row>
             </div>
 
@@ -251,26 +307,54 @@ function ExplorerItem() {
                                 loading={loading}
                                 pagination={false}
                                 tableLayoutFixed
-
+                                rowKey='Path'
+                                /*                                 rowSelection={
+                                                                    {
+                                                                        type: 'checkbox',
+                                                                        selectedRowKeys: selectedRowKeys,
+                                                                        onChange: (selectedKeys, selectedRows) => {
+                                                                            
+                                                                            setSelectedRowKeys(selectedKeys);
+                                                                            console.log('onChange:', selectedKeys, selectedRows);
+                                                                        },
+                                                                        onSelect: (selected, record, selectedRows) => {
+                                                                            console.log('onSelect:', selected, record, selectedRows);
+                                                                        },
+                                
+                                                                    }
+                                                                }
+                                 */
+                                size='small'
+                                noDataElement={<NoData_module />}
                                 data={
                                     fileList.map((item) => {
+
                                         return {
-                                            ...item, fileName: <Link onClick={() => { item.IsDir && updatePath(item.Path) }}>{item.Name}</Link>,
+                                            ...item, fileName: <Link style={{ width: '100%' }} onClick={() => { item.IsDir && updatePath(item.Path) }}><Typography.Ellipsis showTooltip>{item.Name}</Typography.Ellipsis></Link>,
                                             fileSize: (item.Size != -1 ? formatSize(item.Size) : t('dir')),
                                             fileModTime: (new Date(item.ModTime)).toLocaleString(),
-                                            actions: <Space>
-                                                <Popconfirm
-                                                    focusLock
-                                                    title={t('confirm_delete_question')}
-                                                    onOk={() => {
-                                                        item.IsDir ? delDir(storageName!, item.Path, fileInfo) :
-                                                            delFile(storageName!, item.Path, fileInfo)
-                                                    }}
-                                                >
-                                                    <Button status='danger'>{t('delete')}</Button>
-                                                </Popconfirm>
+                                            actions: <Space size={'mini'}>
+                                                <Button onClick={() => { addCilp({ isMove: false, storageName: storageName!, path: item.Path, isDir: item.IsDir }) }} type='text' icon={<IconCopy />} />
+                                                <Button onClick={() => { addCilp({ isMove: true, storageName: storageName!, path: item.Path, isDir: item.IsDir }) }} type='text' icon={<IconScissor />} />
+                                                <Dropdown unmountOnExit={false} droplist={
+                                                    <Menu>
+                                                        <Menu.Item key='del' /* style={{ color: 'var(danger-4)' }} */>
+                                                            <Popconfirm
+                                                                focusLock
+                                                                title={t('confirm_delete_question')}
+                                                                onOk={() => {
+                                                                    item.IsDir ? delDir(storageName!, item.Path, fileInfo) :
+                                                                        delFile(storageName!, item.Path, fileInfo)
+                                                                }}
+                                                            >
+                                                                <IconDelete />
+                                                                {t('delete')}
+                                                            </Popconfirm></Menu.Item>
+                                                        {/*  <Menu.Item key='rename' style={{ color: 'var(primary-4)' }}></Menu.Item> */}
+                                                    </Menu>} position='bl'>
+                                                    <Button icon={<IconMore />} type='text' />
+                                                </Dropdown>
 
-                                                {/* <Button onClick={() => { }}>复制路径</Button> */}
                                             </Space>
                                         }
                                     })} />

@@ -56,6 +56,7 @@
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": ""
+
       }
     },
     "security": {
@@ -71,8 +72,10 @@
         "resizable": true,
         "title": "NetMount",
         "width": 800,
-        "minHeight": 300,
-        "minWidth": 400
+        "minHeight": 450,
+        "minWidth": 700,
+        "transparent":true, 
+        "decorations": false
       }
     ]
   }

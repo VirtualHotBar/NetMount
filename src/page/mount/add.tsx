@@ -7,8 +7,7 @@ import { getProperties, getURLSearchParam } from '../../utils/rclone/utils';
 import { defaultMountConfig, defaultVfsConfig } from '../../controller/storage/mount/parameters/defaults';
 import { InputItem_module } from '../other/inputItem';
 import { rcloneInfo } from '../../services/rclone';
-import { mountStorage } from '../../controller/storage/mount/mount';
-
+import { addMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage } from '../../controller/storage/mount/mount';
 
 const FormItem = Form.Item;
 
@@ -20,6 +19,7 @@ export default function AddMount_page() {
     const [storageName, setStorageName] = useState<string>()
     const [showAllOptions, setShowAllOptions] = useState(false)
     const [mountPath, setMountPath] = useState<string>('')
+    const [autoMount, setAutoMount] = useState(true)
     //const [autoMountPath, setAutoMountPath] = useState(true)//自动分配盘符
 
     const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows');
@@ -36,11 +36,11 @@ export default function AddMount_page() {
     };
 
     useEffect(() => {
-            if (getURLSearchParam('name')) {
-                setStorageName(getURLSearchParam('name'))
-            }else if(!storageName && rcloneInfo.storageList.length > 0){
-                setStorageName(rcloneInfo.storageList[0].name)
-            }
+        if (getURLSearchParam('name')) {
+            setStorageName(getURLSearchParam('name'))
+        } else if (!storageName && rcloneInfo.storageList.length > 0) {
+            setStorageName(rcloneInfo.storageList[0].name)
+        }
 
 
         if (isWindows) {
@@ -108,18 +108,33 @@ export default function AddMount_page() {
                 {/* 按钮 */}
                 <div style={{ width: '100%', textAlign: 'right' }}>
                     <Space>
+                        <Checkbox defaultChecked={autoMount} onChange={(checked) => { setAutoMount(checked) }} >{t('auto_mount')}</Checkbox>
                         {!showAllOptions && <Button onClick={() => { setShowAllOptions(!showAllOptions) }} type='text'>{t('show_all_options')}</Button>}
                         <Button onClick={() => { navigate('/mount') }} >{t('step_back')}</Button>
                         <Button disabled={!storageName || !mountPath} onClick={async () => {
-                            console.log(parameters);
-                            if(await mountStorage(storageName!, mountPath, parameters)){
+                            if (getMountStorage(mountPath)) {
+                                Notification.error({
+                                    title: t('error'),
+                                    content: t('mount_path_already_exists'),
+                                })
+                                return;
+                            }
+
+                            let mountPathTemp = mountPath
+                            if (mountPath === "*") {
+                                mountPathTemp = await getAvailableDriveLetter()
+                            }
+
+                            await addMountStorage(storageName!, mountPathTemp, parameters, autoMount)
+
+                            if (await mountStorage(getMountStorage(mountPathTemp)!)) {
                                 Notification.success({
                                     title: t('success'),
                                     content: t('mount_storage_successfully'),
                                 })
                                 navigate('/mount')
                             }
-                            
+
                         }} type='primary'>{t('mount')}</Button>
                     </Space>
                 </div>

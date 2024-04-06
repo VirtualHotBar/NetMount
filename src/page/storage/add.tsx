@@ -98,7 +98,7 @@ function AddStorage_page() {
                     {selectStorage ? <FormItem label={t('storage_introduce')}>{
                         storageListAll.map((storageItem) => {
                             if (storageItem.type == selectStorage) {
-                                return t(storageItem.introduce ? storageItem.introduce : '')
+                                return <Typography.Text>{t(storageItem.introduce ? storageItem.introduce : '')}</Typography.Text>
                             }
                         })
                     }

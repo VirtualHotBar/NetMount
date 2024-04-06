@@ -4,7 +4,8 @@ import { getFileList, reupStorage } from "./storage/storage";
 import { invoke } from '@tauri-apps/api';
 
 import { appWindow } from "@tauri-apps/api/window";
-import {app } from "@tauri-apps/api";
+import { app } from "@tauri-apps/api";
+import { nmConfig } from "../services/config";
 
 
 export async function Test() {
@@ -12,14 +13,14 @@ export async function Test() {
 
     console.log(await rclone_api_post('/options/get'));
 
+    console.log(nmConfig);
 
 
-
-/*     let data = await invoke('read_config_file') as any;
-    console.log(data);
-    console.log(await invoke('write_config_file', {
-        configData: data
-    })); */
+    /*     let data = await invoke('read_config_file') as any;
+        console.log(data);
+        console.log(await invoke('write_config_file', {
+            configData: data
+        })); */
 
 
     /*     let taskids = (await rclone_api_post('/job/list')).jobids as Array<number>

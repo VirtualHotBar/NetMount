@@ -1,15 +1,24 @@
 
+import { t } from "i18next"
 import { RcloneInfo } from "../type/rclone/rcloneInfo"
+import { RcloneStats } from "../type/rclone/stats"
 
 let rcloneInfo: RcloneInfo = {
-    auth:{
-        user: '',
-        pass: '',
-        port: 3998,
+
+    endpoint: {
+        url: '',
+        isLocal: true,
+        auth: {
+            user: '',
+            pass: '',
+        },
+        localhost: {
+            port: 5572,
+        }
     },
     storageList: [],
     mountList: [],
-    version:{   
+    version: {
         arch: "",
         decomposed: [],
         goTags: "",
@@ -45,4 +54,6 @@ let rcloneInfo: RcloneInfo = {
     }
 }
 
-export { rcloneInfo }
+let rcloneStatsHistory: RcloneStats[] = []
+
+export { rcloneInfo, rcloneStatsHistory }

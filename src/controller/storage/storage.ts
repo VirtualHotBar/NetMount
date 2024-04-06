@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api"
 import { hooks } from "../../services/hook"
 import { rcloneInfo } from "../../services/rclone"
 import { FileInfo } from "../../type/rclone/rcloneInfo"
@@ -105,11 +106,58 @@ function formatPathRclone(path: string, isDir?: boolean): string {
     if (path.substring(0, 1) == '/') {
         path = path.substring(1, path.length)
     }
-
-    if (isDir && path.substring(path.length - 1, path.length) == '/') {
-        path = path.substring(0, path.length - 1)
+    if (isDir) {
+        if (path.substring(path.length - 1, path.length) == '/') {
+            path = path.substring(0, path.length - 1)
+        } else {
+            path = path + '/'
+        }
     }
+
     return path;
 }
 
-export { reupStorage, delStorage, getStorageParams, getFileList, delFile, delDir, mkDir, formatPathRclone }
+//copyFile
+async function copyFile(storageName: string, path: string, destStoragename: string, destPath: string) {
+    const backData = await rclone_api_post(
+        '/operations/copyfile', {
+        srcFs: storageName + ':',
+        srcRemote: formatPathRclone(path),
+        dstFs: destStoragename + ':',
+        dstRemote: formatPathRclone(destPath, true) + getFileName(path)
+    }, true)
+}
+
+async function moveFile(storageName: string, path: string, destStoragename: string, destPath: string) {
+    const backData = await rclone_api_post(
+        '/operations/movefile', {
+        srcFs: storageName + ':',
+        srcRemote: formatPathRclone(path),
+        dstFs: destStoragename + ':',
+        dstRemote: formatPathRclone(destPath, true) + getFileName(path)
+    }, true)
+}
+
+function getFileName(path: string): string {
+    const pathArr = path.split('/')
+    return pathArr[pathArr.length - 1]
+}
+
+//copyDir
+async function copyDir(storageName: string, path: string, destStoragename: string, destPath: string) {
+    const backData = await rclone_api_post(
+        '/sync/copy', {
+        srcFs: storageName + ':' + formatPathRclone(path, true),
+        dstFs: destStoragename + ':' + formatPathRclone(destPath, true) + getFileName(path)
+    }, true)
+}
+
+async function moveDir(storageName: string, path: string, destStoragename: string, destPath: string) {
+    const backData = await rclone_api_post(
+        '/sync/move', {
+        srcFs: storageName + ':' + formatPathRclone(path, true),
+        dstFs: destStoragename + ':' + formatPathRclone(destPath, true) + getFileName(path)
+    }, true)
+}
+
+export { reupStorage, delStorage, getStorageParams, getFileList, delFile, delDir, mkDir, formatPathRclone, copyFile, copyDir, moveFile, moveDir }

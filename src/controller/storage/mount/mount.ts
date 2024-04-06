@@ -1,10 +1,15 @@
+import { invoke } from "@tauri-apps/api"
+import { nmConfig } from "../../../services/config"
 import { hooks } from "../../../services/hook"
 import { rcloneInfo } from "../../../services/rclone"
+import { MountListItem } from "../../../type/config"
 import { ParametersType } from "../../../type/rclone/storage/defaults"
 import { rclone_api_post } from "../../../utils/rclone/request"
 
+
 //列举存储
-async function reupMount() {
+async function reupMount(noRefreshUI?: boolean) {
+
     const mountPoints = (await rclone_api_post(
         '/mount/listmounts',
     )).mountPoints
@@ -20,19 +25,73 @@ async function reupMount() {
             })
         });
     }
-    hooks.upMount()
+    !noRefreshUI && hooks.upMount()
 }
 
-async function mountStorage(storageName: string, mountPath: string, parameters: ParametersType) {
+function getMountStorage(mountPath: string): MountListItem | undefined {
+    return nmConfig.mount.lists.find((item) => item.mountPath === mountPath)
+}
 
-    const back = await rclone_api_post('/mount/mount', {
-        fs: storageName + ":",
-        mountPoint: mountPath,
-        ...parameters
+function isMounted(mountPath: string): boolean {
+    return rcloneInfo.mountList.findIndex((item) => item.mountPath === mountPath) !== -1
+}
+
+async function addMountStorage(storageName: string, mountPath: string, parameters: ParametersType, autoMount?: boolean) {
+
+    if (getMountStorage(mountPath)) {
+        return false
+    }
+
+    const mountInfo: MountListItem = {
+        storageName: storageName,
+        mountPath: mountPath,
+        parameters: parameters,
+        autoMount: (autoMount || false),
+    }
+    nmConfig.mount.lists.push(mountInfo)
+
+    await reupMount()
+}
+
+async function delMountStorage(mountPath: string) {
+    if (isMounted(mountPath)) {
+        await unmountStorage(mountPath)
+    }
+
+    nmConfig.mount.lists.forEach((item, index) => {
+        if (item.mountPath === mountPath) {
+            nmConfig.mount.lists.splice(index, 1)
+        }
     })
 
     await reupMount()
+}
 
+async function editMountStorage(mountInfo: MountListItem) {
+
+    await reupMount()
+    rcloneInfo.mountList.forEach((item) => {
+        if (item.mountPath === mountInfo.mountPath) {
+            return false
+        }
+    })
+
+    const index = nmConfig.mount.lists.findIndex((item) => item.mountPath === mountInfo.mountPath)
+
+    if (index !== -1) {
+        nmConfig.mount.lists[index] = mountInfo
+    }
+}
+
+async function mountStorage(mountInfo: MountListItem) {
+
+    const back = await rclone_api_post('/mount/mount', {
+        fs: mountInfo.storageName + ":",
+        mountPoint: mountInfo.mountPath,
+        ...(mountInfo.parameters)
+    })
+
+    await reupMount()
     return back
 }
 
@@ -44,4 +103,9 @@ async function unmountStorage(mountPath: string) {
     await reupMount()
 }
 
-export { reupMount, mountStorage, unmountStorage }
+async function getAvailableDriveLetter(): Promise<string> {
+    return await invoke('get_available_drive_letter')//Z:
+}
+
+
+export { reupMount, mountStorage, unmountStorage, addMountStorage, delMountStorage, editMountStorage, getMountStorage, isMounted,getAvailableDriveLetter }
