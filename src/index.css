@@ -6,6 +6,24 @@ p {
     color: var(--color-text-1);
 }
 
+
+/* 字体 */
+@font-face {
+    font-family: "Inter";
+    src: url("./assets/font/HarmonyOS_Sans_Regular.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: "Inter-Bold";
+    src: url("./assets/font/HarmonyOS_Sans_Bold.ttf") format("truetype");
+}
+
+@font-face {
+    font-family: 'emoji';
+    src: url('./assets/font/seguiemj.woff2') format('woff2');
+}
+
+
 /*  美化滚动条 */
 ::-webkit-scrollbar {
     width: 6px;

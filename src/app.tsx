@@ -18,6 +18,7 @@ import AddMount_page from './page/mount/add';
 import { IconClose, IconMinus } from '@arco-design/web-react/icon';
 import { windowsHide, windowsMini } from './controller/window';
 import { rcloneInfo } from './services/rclone';
+import { AddTask_page } from './page/task/add';
 
 const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content, Footer } = Layout;
@@ -50,7 +51,7 @@ function mapMenuItem(routes: Routers[]): JSX.Element {
             if (item.hide) {
                 return <></>
             } else if (item.children && item.children.length > 0 && !item.hideChildren) {
-                return (<SubMenu key={item.path} title={item.title} >   {mapMenuItem(item.children)}</SubMenu>)
+                return (<SubMenu key={item.path} title={item.title} >{mapMenuItem(item.children)}</SubMenu>)
             } else {
                 return (<MenuItem key={item.path} > {item.title}</MenuItem>)
             }
@@ -181,6 +182,15 @@ function App() {
             title: t('task'),
             path: '/task',
             component: <Task_page />,
+            hideChildren: true,
+            children: [
+                {
+                    title: t('add'),
+                    path: '/task/add',
+                    key: '/task',//因为父菜单隐藏了子菜单项，在此页面时设置父菜单key以选择父菜单项
+                    component: <AddTask_page />,
+                }
+            ]
         },
         {
             title: t('setting'),
@@ -241,6 +251,7 @@ function App() {
                         style={{ height: '100%' }}
                         onClickMenuItem={(path) => {
                             if (path != location.pathname) {
+                                location.pathname.includes('add')&&Message.warning(t('prompt_for_leaving_the_add_or_edit_page'))
                                 navigate(path)
                             }
                         }}

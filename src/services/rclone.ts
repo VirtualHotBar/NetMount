@@ -4,7 +4,9 @@ import { RcloneInfo } from "../type/rclone/rcloneInfo"
 import { RcloneStats } from "../type/rclone/stats"
 
 let rcloneInfo: RcloneInfo = {
-
+    process:{
+        
+    },
     endpoint: {
         url: '',
         isLocal: true,

@@ -5,8 +5,9 @@ import { invoke } from '@tauri-apps/api';
 
 import { appWindow } from "@tauri-apps/api/window";
 import { app } from "@tauri-apps/api";
-import { nmConfig } from "../services/config";
-
+import { nmConfig, osInfo } from "../services/config";
+import { Aria2 } from "../utils/aria2/aria2";
+import { checkUpdate } from "./update/update";
 
 export async function Test() {
 
@@ -36,4 +37,25 @@ export async function Test() {
 
 
 
+
+        
+
+/*     const aria2Test = new Aria2('https://down.hotpe.top/d/Package/HotPE-V2.7.240201.exe',
+        'F:/',
+        'test1.7z',
+        8, (back) => {
+            console.log(back);
+        })
+
+
+
+    aria2Test.start() */
+    //console.log(await runCmd('curl', [url,'-o', path]));
+
+    console.log(osInfo);
+    
+
+
+
+    
 }

@@ -5,7 +5,7 @@ import { searchStorage, storageListAll } from "../../controller/storage/listAll"
 import { CSSProperties, useEffect, useState } from "react";
 import { checkParams, createStorage } from "../../controller/storage/create";
 import { useNavigate, useParams } from "react-router-dom";
-import { getProperties, getURLSearchParam } from "../../utils/rclone/utils";
+import { getProperties, getURLSearchParam } from "../../utils/utils";
 import { getStorageParams } from "../../controller/storage/storage";
 import { InputItem_module } from "../other/inputItem";
 const FormItem = Form.Item;

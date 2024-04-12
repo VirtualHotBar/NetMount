@@ -1,11 +1,11 @@
 import React, { CSSProperties, useEffect, useReducer, useState } from 'react'
-import { BackTop, Badge, Button, Divider, Dropdown, Grid, Input, Link, List, Menu, Message, Modal, Notification, Popconfirm, Select, Space, Spin, Table, TableColumnProps, Tabs, Typography, Upload } from '@arco-design/web-react';
-import { IconCopy, IconDelete, IconFolderAdd, IconLeft, IconMore, IconPaste, IconRefresh, IconScissor, IconUpCircle, IconUpload } from '@arco-design/web-react/icon';
+import { BackTop, Badge, Button, Divider, Dropdown, Grid, Input, Link, List, Menu, Message, Modal, Notification, Popconfirm, Select, Space, Spin, Table, TableColumnProps, Tabs, Tooltip, Typography, Upload } from '@arco-design/web-react';
+import { IconCopy, IconDelete, IconEdit, IconFolderAdd, IconLeft, IconMore, IconPaste, IconRefresh, IconScissor, IconUpCircle, IconUpload } from '@arco-design/web-react/icon';
 import { rcloneInfo } from '../../services/rclone';
 import { useTranslation } from 'react-i18next';
 import { copyDir, copyFile, delDir, delFile, formatPathRclone, getFileList, mkDir, moveDir, moveFile } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
-import { formatSize, getURLSearchParam } from '../../utils/rclone/utils';
+import { formatSize, getURLSearchParam } from '../../utils/utils';
 import { rcloneApiHeaders } from '../../utils/rclone/request';
 import { RequestOptions } from '@arco-design/web-react/es/Upload';
 import { NoData_module } from '../other/noData';
@@ -82,19 +82,26 @@ function ExplorerItem() {
         {
             title: t('name'),
             dataIndex: 'fileName',
+            ellipsis: true,
         },
         {
             title: t('modified_time'),
             dataIndex: 'fileModTime',
+            ellipsis: true,
+            width: '10.5rem',
         },
         {
             title: t('size'),
             dataIndex: 'fileSize',
+            ellipsis: true,
+            width: '7rem',
         },
         {
             title: t('actions'),
             dataIndex: 'actions',
-            align: 'right'
+            align: 'right',
+            width: '10rem',
+
         }
     ]
 
@@ -176,6 +183,7 @@ function ExplorerItem() {
             })
         }
     }
+
     function UploadFile() {
 
         const customRequest = (option: RequestOptions) => {
@@ -216,7 +224,25 @@ function ExplorerItem() {
         }
     }
 
+    function fileRename(filePath: string, isDir: boolean) {
+        console.log(getParentPath(filePath));
 
+        let nameTemp = filePath.split('/').pop()!;
+        modal.info!({
+            title: t('rename'),
+            icon: null,
+            content: <Input placeholder={t('please_input')} defaultValue={nameTemp} onChange={(value) => nameTemp = value} />,
+            onOk: async () => {
+                if (nameTemp) {
+                    isDir ? await moveDir(storageName!, filePath, storageName!, getParentPath(filePath), nameTemp) :
+                        await moveFile(storageName!, filePath, storageName!, getParentPath(filePath), nameTemp);
+                    fileInfo();
+                } else {
+                    Message.error(t('name_cannot_empty'))
+                }
+            },
+        })
+    }
 
     return (
         <div style={{ height: '100%', width: '100%' }}>
@@ -224,14 +250,12 @@ function ExplorerItem() {
                 {contextHolder}
                 <Row >
                     <Col flex='2rem'>
-                        <Button /* type='secondary' */ icon={<IconLeft />} onClick={() => { updatePath(getParentPath(path!)) }} disabled={!storageName} type='text' />
+                        <Button /* type='secondary' */ icon={<IconLeft />} onClick={() => { updatePath(getParentPath(path!)) }} disabled={!storageName} type='text' title={t('parent_directory')} />
                     </Col>
                     <Col flex='2rem'>
-                        <Button /* type='secondary'  */ icon={<IconRefresh />} onClick={fileInfo} disabled={!storageName} type='text' />
+                        <Button /* type='secondary'  */ icon={<IconRefresh />} onClick={fileInfo} disabled={!storageName} type='text' title={t('refresh')} />
                     </Col>
-
                     <Col style={{ paddingLeft: '1rem', paddingRight: '0.2rem' }} flex='10rem'>
-
                         <Select  /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) => {
                             if (value !== storageName) {
                                 setStorageName(value)
@@ -239,7 +263,6 @@ function ExplorerItem() {
                                 setPath('/')
                             }
                         }
-
                         }>
                             {
                                 rcloneInfo.storageList.map((item) => {
@@ -255,13 +278,13 @@ function ExplorerItem() {
                     </Col>
 
                     <Col flex='2rem'>
-                        <Button icon={<IconFolderAdd />} onClick={MakeDir} disabled={!storageName && !path} type='text' />
+                        <Button icon={<IconFolderAdd />} onClick={MakeDir} disabled={!storageName && !path} type='text' title={t('create_directory')} />
                     </Col>
                     <Col flex='2rem'>
-                        <Button icon={<IconUpload />} onClick={UploadFile} disabled={!storageName && !path} type='text' />
+                        <Button icon={<IconUpload />} onClick={UploadFile} disabled={!storageName && !path} type='text' title={t('upload_file')} />
                     </Col>
                     <Col flex='2rem' >
-                        <Badge count={clipList.length} maxCount={9}>
+                        <Badge count={clipList.length} maxCount={9} title={t('clip_board')}>
                             <Dropdown disabled={clipList.length == 0} droplist={
                                 <Menu>
                                     <Menu.Item onClick={() => {
@@ -285,59 +308,38 @@ function ExplorerItem() {
                                             title: t('success'),
                                             content: t('transm_task_created'),
                                         })
-
-                                    }} key='p' disabled={!storageName && !path}>粘贴({clipList.length})</Menu.Item>
-                                    <Menu.Item onClick={() => setClipList([])} key='q'>清空剪切板</Menu.Item>
+                                    }} key='p' disabled={!storageName && !path}>{t('paste')}({clipList.length})</Menu.Item>
+                                    <Menu.Item onClick={() => setClipList([])} key='q'>{t('empty_the_clipboard')}</Menu.Item>
                                 </Menu>} position='bl'>
                                 <Button icon={<IconPaste />} type='text' />
                             </Dropdown>
                         </Badge>
-
                     </Col>
                 </Row>
             </div>
 
-            <div style={{ height: 'calc(100% - 2rem)', paddingTop: '1rem' }}>
-
-
+            <div style={{ height: 'calc(100% - 2rem)', marginTop:'1rem',overflow: 'auto' }}>
                 {storageName ?
                     <>{
                         fileList ?
                             <Table columns={columns}
                                 loading={loading}
                                 pagination={false}
-                                tableLayoutFixed
                                 rowKey='Path'
-                                /*                                 rowSelection={
-                                                                    {
-                                                                        type: 'checkbox',
-                                                                        selectedRowKeys: selectedRowKeys,
-                                                                        onChange: (selectedKeys, selectedRows) => {
-                                                                            
-                                                                            setSelectedRowKeys(selectedKeys);
-                                                                            console.log('onChange:', selectedKeys, selectedRows);
-                                                                        },
-                                                                        onSelect: (selected, record, selectedRows) => {
-                                                                            console.log('onSelect:', selected, record, selectedRows);
-                                                                        },
-                                
-                                                                    }
-                                                                }
-                                 */
                                 size='small'
                                 noDataElement={<NoData_module />}
                                 data={
                                     fileList.map((item) => {
-
                                         return {
                                             ...item, fileName: <Link style={{ width: '100%' }} onClick={() => { item.IsDir && updatePath(item.Path) }}><Typography.Ellipsis showTooltip>{item.Name}</Typography.Ellipsis></Link>,
                                             fileSize: (item.Size != -1 ? formatSize(item.Size) : t('dir')),
                                             fileModTime: (new Date(item.ModTime)).toLocaleString(),
                                             actions: <Space size={'mini'}>
-                                                <Button onClick={() => { addCilp({ isMove: false, storageName: storageName!, path: item.Path, isDir: item.IsDir }) }} type='text' icon={<IconCopy />} />
-                                                <Button onClick={() => { addCilp({ isMove: true, storageName: storageName!, path: item.Path, isDir: item.IsDir }) }} type='text' icon={<IconScissor />} />
+                                                <Button onClick={() => { addCilp({ isMove: false, storageName: storageName!, path: item.Path, isDir: item.IsDir }) }} type='text' icon={<IconCopy />} title={t('copy')} />
+                                                <Button onClick={() => { addCilp({ isMove: true, storageName: storageName!, path: item.Path, isDir: item.IsDir }) }} type='text' icon={<IconScissor />} title={t('cut')} />
                                                 <Dropdown unmountOnExit={false} droplist={
                                                     <Menu>
+                                                        <Menu.Item key='rename' style={{ color: 'var(primary-4)' }} onClick={() => fileRename(item.Path, item.IsDir)}><IconEdit /> {t('rename')}</Menu.Item>
                                                         <Menu.Item key='del' /* style={{ color: 'var(danger-4)' }} */>
                                                             <Popconfirm
                                                                 focusLock
@@ -347,14 +349,11 @@ function ExplorerItem() {
                                                                         delFile(storageName!, item.Path, fileInfo)
                                                                 }}
                                                             >
-                                                                <IconDelete />
-                                                                {t('delete')}
+                                                                <IconDelete /> {t('delete')}
                                                             </Popconfirm></Menu.Item>
-                                                        {/*  <Menu.Item key='rename' style={{ color: 'var(primary-4)' }}></Menu.Item> */}
                                                     </Menu>} position='bl'>
-                                                    <Button icon={<IconMore />} type='text' />
+                                                    <Button icon={<IconMore />} type='text' title={t('more')} />
                                                 </Dropdown>
-
                                             </Space>
                                         }
                                     })} />

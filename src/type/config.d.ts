@@ -1,10 +1,14 @@
+import { Arch, OsType, Platform } from "@tauri-apps/api/os"
 import { ParametersType } from "./rclone/storage/defaults"
 
 interface NMConfig {
     mount: {
         lists: MountListItem[]
     },
-    task: TaskListItem
+    task: TaskListItem[],
+    api: {
+        url: string
+    }
 }
 
 interface MountListItem {
@@ -15,23 +19,41 @@ interface MountListItem {
 }
 
 interface TaskListItem {
-    [key: string]: {
-        taskType: 'copy' | 'move'| 'delete'| 'sync',
-        source: string,
-        target?: string,
-        parameters?: ParametersType,
-        autoRun: {
-            enable: boolean,
-            type: 'time' | 'interval'|'start',//start：软件启动时执行，time:定时执行，interval:周期执行
-            time?: {
-                intervalDay: number,//间隔天数
-                h: number,//小时
-                m: number,//分钟
-                s: number,//秒
-            },
-            interval?: number,
+    name: string,
+    taskType: 'copy' | 'move' | 'delete' | 'sync' | string,
+    source: {
+        storageName: string,
+        path: string,
+    },
+    target: {
+        storageName: string,
+        path: string,
+    },
+    parameters?: ParametersType,
+    enable: boolean
+    run: {
+        runId?: number,//任务id,setTimeout或setInterval的返回值
+        mode: 'time' | 'interval' | 'start' |'disposable'| string,//start：软件启动时执行，time:定时执行，interval:间隔执行 , disposable:一次性执行(执行后删除任务)
+        time: {
+            intervalDays: number,//间隔天数
+            h: number,//小时
+            m: number,//分钟
+            s: number,//秒
         },
-        exeId?:number,//任务id,setTimeout或setInterval的返回值
+        interval?: number,//周期执行，单位ms
+    },
+    runInfo?: {
+        error:boolean
+        mag: string,
     }
 }
-export { NMConfig, MountListItem,TaskListItem}
+
+interface OSInfo {
+    arch: Arch | 'unknown',
+    osType: OsType | 'unknown',
+    platform: Platform | 'unknown',
+    tempDir: string,
+    osVersion: string
+}
+
+export { NMConfig, MountListItem, TaskListItem, OSInfo }

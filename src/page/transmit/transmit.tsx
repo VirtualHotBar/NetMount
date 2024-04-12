@@ -3,7 +3,7 @@ import { rcloneInfo, rcloneStatsHistory } from '../../services/rclone'
 import { hooks } from '../../services/hook'
 import { RcloneTransferItem } from '../../type/rclone/stats'
 import { Card, Descriptions, List, Progress, Space, Statistic, Grid, Typography } from '@arco-design/web-react'
-import { formatETA, formatSize } from '../../utils/rclone/utils'
+import { formatETA, formatSize } from '../../utils/utils'
 import { Area } from '@ant-design/charts'
 import { NoData_module } from '../other/noData'
 import { useTranslation } from 'react-i18next'
@@ -37,7 +37,7 @@ function Transmit_page() {
           <Descriptions colon=' :' data={[
             {
               label:t('speed'),
-              value: `${formatSize(rcloneInfo.stats.speed)}/s`
+              value: `${formatSize(rcloneInfo.stats.realSpeed!)}/s`
             },
 
             {
@@ -47,7 +47,7 @@ function Transmit_page() {
 
             ...(rcloneInfo.stats.transferTime > 0 ? [
               {
-                label:t('time'),
+                label:t('used_time'),
                 value: formatETA(rcloneInfo.stats.transferTime)
               }
             ] : []),
@@ -77,7 +77,6 @@ function Transmit_page() {
       >
 
         <List noDataElement={ <NoData_module />}>
-
           {
             transmitList.map((item, index) => {
               return <List.Item key={index}>

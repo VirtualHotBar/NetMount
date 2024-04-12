@@ -27,18 +27,31 @@ function rclone_api_post(path: string, data?: object, ignoreError?: boolean) {
         body: JSON.stringify(data)
     }).then((response) => {
         if (!response.ok && !ignoreError) {
-            Message.error(`Request failed with status ${response.status}: ${response.statusText}`);
-            throw new Error(`Request failed with status ${response.status}: ${response.statusText}`);
+            printError(response);
         }
         return response.json();
     }).then((jsonResponse) => {
         return jsonResponse;
     }).catch((error) => {
         if (ignoreError) { return }
-        Message.error(error.message);
-        console.error("Error fetching from Rclone API:", error.message);
-        throw error;
+        printError(error);
     });
+}
+
+async function printError(error: Response) {
+    console.log(error);
+
+    let str = ''
+
+    if (error.status) {
+        str += `HTTP ${error.status} - ${error.statusText}\n`
+    }
+    if (error.body) {
+        str += "\n" + (await error.json()).error;
+    }
+    if (str) {
+        Message.error('Error:' + str);
+    }
 }
 
 /* export function rclone_api_get(path:string){

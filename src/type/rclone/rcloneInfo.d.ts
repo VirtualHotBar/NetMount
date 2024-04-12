@@ -1,6 +1,11 @@
+import { Child, Command } from "@tauri-apps/api/shell";
 import { RcloneStats } from "./stats";
 
 interface RcloneInfo {
+    process:{
+        command?:Command,
+        child?:Child
+    },
     endpoint: {
         url: string,
         isLocal: boolean,// 是否为本地地址

@@ -1,1 +1,0 @@
- rclone.exe rcd --rc-addr=:5572 --rc-user= --rc-pass= --rc-allow-origin=* --rc-no-auth

@@ -7,19 +7,26 @@ function listenWindow() {
         windowsHide()
     })
 
+    // 阻止F5或Ctrl+R（Windows/Linux）和Command+R（Mac）刷新页面
     document.addEventListener('keydown', function (event) {
-        // 阻止F5或Ctrl+R（Windows/Linux）和Command+R（Mac）刷新页面
         if (event.key === 'F5' || (event.ctrlKey && event.key === 'r') || (event.metaKey && event.key === 'r')) {
             event.preventDefault();
         }
     });
+
+    //禁止右键
+    document.oncontextmenu = () => {
+        return false;
+    }
+
+
 }
 
-function windowsHide(){
+function windowsHide() {
     appWindow.hide()
 }
 
-function windowsMini(){
+function windowsMini() {
     appWindow.minimize()
 }
 
@@ -27,4 +34,5 @@ listen('exit_app', async () => {
     await exit()
 });
 
-export { listenWindow,windowsHide,windowsMini }
+export { listenWindow, windowsHide, windowsMini }
+

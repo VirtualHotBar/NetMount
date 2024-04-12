@@ -51,6 +51,7 @@ interface RcloneStats {
     serverSideMoveBytes: number; // 通过服务器端移动传输的字节数
     serverSideMoves: number; // 服务器端移动操作的数量
     speed: number; // 当前速度（字节/秒）
+    realSpeed?: number; // 实时速度（字节/秒）
     totalBytes: number; // 总共处理的字节数
     totalChecks: number; // 总共完成的校验数
     totalTransfers: number; // 总共完成的传输操作数

@@ -1,7 +1,7 @@
 
 import { DefaultParams } from "../../type/rclone/storage/defaults";
 import { rclone_api_post } from "../../utils/rclone/request";
-import { isEmptyObject } from "../../utils/rclone/utils";
+import { isEmptyObject } from "../../utils/utils";
 import { reupStorage } from "./storage";
 
 

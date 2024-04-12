@@ -114,6 +114,7 @@ function formatPathRclone(path: string, isDir?: boolean): string {
         }
     }
 
+    path = path.replace(/\/+/g, '/');
     return path;
 }
 
@@ -128,13 +129,14 @@ async function copyFile(storageName: string, path: string, destStoragename: stri
     }, true)
 }
 
-async function moveFile(storageName: string, path: string, destStoragename: string, destPath: string) {
+async function moveFile(storageName: string, path: string, destStoragename: string, destPath: string, newNmae?: string) {
+
     const backData = await rclone_api_post(
         '/operations/movefile', {
         srcFs: storageName + ':',
         srcRemote: formatPathRclone(path),
         dstFs: destStoragename + ':',
-        dstRemote: formatPathRclone(destPath, true) + getFileName(path)
+        dstRemote: formatPathRclone(destPath, true) + (newNmae ? newNmae : getFileName(path))
     }, true)
 }
 
@@ -152,11 +154,11 @@ async function copyDir(storageName: string, path: string, destStoragename: strin
     }, true)
 }
 
-async function moveDir(storageName: string, path: string, destStoragename: string, destPath: string) {
+async function moveDir(storageName: string, path: string, destStoragename: string, destPath: string, newNmae?: string) {
     const backData = await rclone_api_post(
         '/sync/move', {
         srcFs: storageName + ':' + formatPathRclone(path, true),
-        dstFs: destStoragename + ':' + formatPathRclone(destPath, true) + getFileName(path)
+        dstFs: destStoragename + ':' + formatPathRclone(destPath, true) + (newNmae ? newNmae : getFileName(path))
     }, true)
 }
 

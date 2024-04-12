@@ -8,11 +8,11 @@
   },
   "package": {
     "productName": "NetMount",
-    "version": "0.1.0"
+    "version": "0.1.0-240410"
   },
   "tauri": {
     "systemTray": {
-      "iconPath": "icons/icon.png", 
+      "iconPath": "icons/icon.png",
       "iconAsTemplate": true
     },
     "allowlist": {
@@ -22,9 +22,45 @@
       },
       "process": {
         "all": true
+      },
+      "fs": {
+        "all": true,
+        "scope": [
+          "res/*"
+        ]
+      },
+      "os": {
+        "all": true
+      },
+      "shell": {
+        "all": false,
+        "execute": true,
+        "open": true,
+        "scope": [
+          {
+            "name": "ria2c",
+            "cmd": "res/bin/aria2c",
+            "args": true
+          },
+          {
+            "name": "rclone",
+            "cmd": "res/bin/rclone",
+            "args": true
+          },
+          {
+            "name": "msiexec",
+            "cmd": "msiexec.exe",
+            "args": true
+          },
+          {
+            "name": "curl",
+            "cmd": "curl",
+            "args": true
+          }
+        ],
+        "sidecar": false
       }
     },
-    
     "bundle": {
       "active": true,
       "category": "DeveloperTool",
@@ -56,7 +92,6 @@
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": ""
-
       }
     },
     "security": {
@@ -74,7 +109,7 @@
         "width": 800,
         "minHeight": 450,
         "minWidth": 700,
-        "transparent":true, 
+        "transparent": true,
         "decorations": false
       }
     ]
