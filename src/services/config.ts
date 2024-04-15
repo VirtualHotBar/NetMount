@@ -29,22 +29,22 @@ const setOsInfo = (osinfo: OSInfo) => {
 
 const roConfig = {
     options: {
-        task:{
+        task: {
             runMode: {
                 defIndex: 0,
-                select: [ 'start', 'time', 'interval','disposable']
+                select: ['start', 'time', 'interval', 'disposable']
             },
-            taskType:{
-                defIndex: 0,
-                select: [ 'sync', 'copy','move', 'delete']
+            taskType: {
+                defIndex: 3,
+                select: ['copy', 'move', 'delete', 'sync', 'bisync']
             },
-            dateMultiplier:{
+            dateMultiplier: {
                 defIndex: 0,
-                select: [{  name: 'day', value: 1 }, { name: 'week', value: 7 }, { name: 'month', value: 30 }]
+                select: [{ name: 'day', value: 1 }, { name: 'week', value: 7 }, { name: 'month', value: 30 }]
             },
-            intervalMultiplier:{
+            intervalMultiplier: {
                 defIndex: 0,
-                select: [{  name: 'hour', value: 60*60 }, { name: 'minute', value: 60 }, { name: 'second', value: 1 }]
+                select: [{ name: 'hour', value: 60 * 60 }, { name: 'minute', value: 60 }, { name: 'second', value: 1 }]
             },
         }
     }

@@ -114,5 +114,8 @@
     "minute":"分钟",
     "second":"秒",
     "the_task_name_is_illegal":"任务名称不合法",
-    "task_added_successfully":"任务添加成功"
+    "task_added_successfully":"任务添加成功",
+    "the_path_is_illegal":"路径不合法",
+    "same_source_and_target":"源和目标相同",
+    "bisync":"双向同步"
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useState } from 'react'
 
-import { Button, Card, Descriptions, Grid, Modal, Space, Typography } from "@arco-design/web-react"
+import { Button, Card, Descriptions, Grid, Link, Modal, Space, Typography } from "@arco-design/web-react"
 import { Test } from "../../controller/test"
 import { rcloneInfo } from '../../services/rclone'
 import { hooks } from '../../services/hook';
@@ -15,39 +15,47 @@ const Col = Grid.Col;
 
 let checkedUpdate: boolean = false;
 
+checkedUpdate = true;
+
 function Home_page() {
-    const { t } = useTranslation()
-    const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
-    const [modal, contextHolder] = Modal.useModal();
+  const { t } = useTranslation()
+  const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
+  const [modal, contextHolder] = Modal.useModal();
 
-    useEffect(() => {
-        hooks.upStats = forceUpdate;
+  useEffect(() => {
+    hooks.upStats = forceUpdate;
 
-        if (!checkedUpdate) {
-            checkUpdate(async (info) => {
-                modal.confirm!({
-                    title: '发现新版本',
-                    content: <>
-                        {`当前版本为${await getVersion()},最新版本为${info.name}`}
-                        <br />
-                        是否前往官网获取最新版？
-                    </>,
-                    onOk: () => {
-                        shell.open(info.website!)
-                    },
-                })
-            })
-            checkedUpdate = true;
-        }
+    if (!checkedUpdate) {
+      checkUpdate(async (info) => {
+        modal.confirm!({
+          title: '发现新版本',
+          content: <>
+            {`当前版本为${await getVersion()},最新版本为${info.name}`}
+            <br />
+            是否前往官网获取最新版？
+          </>,
+          onOk: () => {
+            shell.open(info.website!)
+          },
+        })
+      })
+      checkedUpdate = true;
+    }
 
-    }, [])
+  }, [])
 
-    return (
-        <div>
-            {contextHolder}
-            <Space direction='vertical' style={{ width: '100%' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>欢迎使用,统一管理和挂载云存储设施。</h2>
-                {/*<Row >
+  return (
+    <div>
+      {contextHolder}
+      <Space direction='vertical' style={{ width: '100%' }}>
+        {/* <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>欢迎使用,统一管理和挂载云存储设施。</h1> */}
+        <div style={{textAlign:'center',width:'100%'}}>
+          <h1 style={{ fontSize: '2.0rem', fontWeight: 'bold', marginBottom: '1.0rem', marginTop: '0.8rem' }}>NetMount</h1>
+          <span style={{ color: 'var(--td-text-color-placeholder)', fontSize: '1.1rem' }}>统一管理和挂载云存储设施</span>
+        </div>
+
+
+        {/*<Row >
                     <Col flex={'auto'}style={{ paddingLeft: '0rem', paddingRight: '0rem' }} >
                         <Card style={{padding:'1.5rem',textAlign:'center'}} bordered={false}>
                             <span style={{fontSize:'4.5rem',fontFamily:'emoji'}}>🧐</span>
@@ -55,25 +63,48 @@ function Home_page() {
                         </Card>
                     </Col>
             </Row> */}
-                <Card>
-                    状态概览
-                    <br />
-                    运行时间：{formatETA(rcloneInfo.stats.elapsedTime)}
-                </Card>
-                <Card>
-                  存储和挂载概览
-                  <br />
-                  存储数：{rcloneInfo.storageList.length}
-                  <br />
-                  挂载数：{nmConfig.mount.lists.length}
-                  <br />
-                  已挂载：{rcloneInfo.mountList.length}
-                </Card>
-                <Card>
-                  传输概览
-                <Descriptions colon=' :' data={[
+{/*         <Card title='状态概览' size='small'>
+          运行时间：{formatETA(rcloneInfo.stats.elapsedTime)}
+        </Card> */}
+
+        <Row gutter={10}>
+          <Col flex={'1'}>
+            <Card size='small'>
+            <Card
+        style={{ width: 360 }}
+        title='Arco Card'
+        hoverable
+        extra={<Link>More</Link>}
+      >
+        Card content
+        <br />
+        Card content
+      </Card>
+              存储
+                <br />
+                {rcloneInfo.storageList.length}
+            </Card>
+          </Col>
+          <Col flex={'1'}>
+            <Card size='small'>
+              挂载数：{nmConfig.mount.lists.length}
+            </Card>
+          </Col>
+        </Row>
+        <Card>
+          存储和挂载概览
+          <br />
+          存储数：{rcloneInfo.storageList.length}
+          <br />
+          挂载数：{nmConfig.mount.lists.length}
+          <br />
+          已挂载：{rcloneInfo.mountList.length}
+        </Card>
+        <Card>
+          传输概览
+          <Descriptions colon=' :' data={[
             {
-              label:t('speed'),
+              label: t('speed'),
               value: `${formatSize(rcloneInfo.stats.realSpeed!)}/s`
             },
 
@@ -84,7 +115,7 @@ function Home_page() {
 
             ...(rcloneInfo.stats.transferTime > 0 ? [
               {
-                label:t('used_time'),
+                label: t('used_time'),
                 value: formatETA(rcloneInfo.stats.transferTime)
               }
             ] : []),
@@ -108,12 +139,12 @@ function Home_page() {
             ] : []),
 
           ]} />
-                </Card>
+        </Card>
 
-            </Space>
-        </div>
+      </Space>
+    </div>
 
-    )
+  )
 }
 
 /* 软件名称:NetMount

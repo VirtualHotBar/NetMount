@@ -11,15 +11,21 @@ function saveTask(taskInfo: TaskListItem) {
 
     if (existingTaskIndex !== -1) {
         // 存在同名任务，更新已有任务
+        if(taskInfo.run.runId){taskScheduler.cancelTask(taskInfo.name)}
         nmConfig.task[existingTaskIndex] = taskInfo;
     } else {
         // 不存在同名任务，直接添加新任务
         nmConfig.task.push(taskInfo);
     }
+    if(taskInfo.run.mode!=='start'){
+        taskScheduler.addTask(taskInfo)
+    }
+    
     return true
 }
 
 function delTask(taskName: string) {
+    taskScheduler.cancelTask(taskName)
     nmConfig.task = nmConfig.task.filter((task) => task.name !== taskName);
     return true;
 }

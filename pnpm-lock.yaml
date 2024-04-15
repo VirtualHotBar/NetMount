@@ -9,8 +9,11 @@ dependencies:
     specifier: ^2.0.3
     version: 2.0.3(lodash-es@4.17.21)(react-dom@18.2.0)(react@18.2.0)
   '@arco-design/web-react':
-    specifier: ^2.61.0
-    version: 2.61.0(@types/react@18.2.67)(react-dom@18.2.0)(react@18.2.0)
+    specifier: ^2.61.3
+    version: 2.61.3(@types/react@18.2.67)(react-dom@18.2.0)(react@18.2.0)
+  '@arco-themes/react-vhbs':
+    specifier: ^0.0.1
+    version: 0.0.1(@arco-design/web-react@2.61.3)
   '@tauri-apps/api':
     specifier: ^1.5.3
     version: 1.5.3
@@ -361,8 +364,8 @@ packages:
       color: 3.2.1
     dev: false
 
-  /@arco-design/web-react@2.61.0(@types/react@18.2.67)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-QfZegYK1oNPMCRPEGogG5dvIqwBsyLB1h3key++NofFGaI5c0bo3ZebSCZYp9+lUcPh1g56ItCPw5mfX9bviHQ==}
+  /@arco-design/web-react@2.61.3(@types/react@18.2.67)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-YtJTqv/jya5UgPOAZJNtrr5KZjIhM7nNY5+yw6iEoo8yE+loMyZPUqc7jDtHhEYSyf/ejONfbjvTfXF0+Ins7g==}
     peerDependencies:
       react: '>=16'
       react-dom: '>=16'
@@ -385,6 +388,14 @@ packages:
       shallowequal: 1.1.0
     transitivePeerDependencies:
       - '@types/react'
+    dev: false
+
+  /@arco-themes/react-vhbs@0.0.1(@arco-design/web-react@2.61.3):
+    resolution: {integrity: sha512-1WWMKXfQfxagG4GlOwjddCbvW36Fky6kvjMMANoo4O7f+6DTC/rAu4APhKqMKihM/ptijLS77ddinLrC/XbtIg==}
+    peerDependencies:
+      '@arco-design/web-react': ^2.61.3
+    dependencies:
+      '@arco-design/web-react': 2.61.3(@types/react@18.2.67)(react-dom@18.2.0)(react@18.2.0)
     dev: false
 
   /@babel/code-frame@7.24.1:

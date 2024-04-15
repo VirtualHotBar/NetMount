@@ -277,6 +277,16 @@ function AddTask_page() {
                                 title: t('error'),
                                 content: t('the_task_name_is_illegal'),
                             })
+                        } else if(!taskInfo.source.storageName || !taskInfo.source.path|| (taskInfo.taskType!== 'delete' &&(!taskInfo.target.storageName || !taskInfo.target.path))){
+                            Notification.error({
+                                title: t('error'),
+                                content: t('the_path_is_illegal'),
+                            })
+                        }else if(taskInfo.taskType!== 'delete' && taskInfo.source.path===taskInfo.target.path&&taskInfo.source.storageName===taskInfo.target.storageName){
+                            Notification.error({
+                                title: t('error'),
+                                content: t('same_source_and_target'),
+                            })
                         } else {
                             if (saveTask(taskInfo)) {
                                 Notification.success({

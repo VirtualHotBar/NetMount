@@ -12,6 +12,7 @@ import { t } from "i18next"
 import { startRclone, stopRclone } from "../utils/rclone/process"
 import { getOsInfo } from "../utils/tauri/osInfo"
 import { startTaskScheduler } from "./task/task"
+import { autoMount } from "./task/autoMount"
 
 async function init(setStartStr: Function) {
     setStartStr(t('init'))
@@ -45,6 +46,9 @@ async function init(setStartStr: Function) {
     await reupRcloneVersion()
     await reupStorage()
     await reupMount()
+
+    //自动挂载
+    await autoMount()
 
     //开始任务队列
     await startTaskScheduler()

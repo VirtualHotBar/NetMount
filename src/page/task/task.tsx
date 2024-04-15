@@ -31,6 +31,7 @@ function Task_page() {
     {
       title: t('actions'),
       dataIndex: 'actions',
+      align:'right'
     }
   ];
   console.log(nmConfig.task);
@@ -49,7 +50,7 @@ function Task_page() {
             ...taskItem,
             state: taskItem.enable ? t('enabled') : t('disabled'),
             cycle: t('task_run_mode_' + taskItem.run.mode),
-            runInfo:taskItem.runInfo?.mag,
+            runInfo:taskItem.runInfo?.msg,
             actions: <>
               <Button onClick={()=>{delTask(taskItem.name);forceUpdate()}}>{t('delete')}</Button>
             </>

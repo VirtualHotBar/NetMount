@@ -119,24 +119,24 @@ function formatPathRclone(path: string, isDir?: boolean): string {
 }
 
 //copyFile
-async function copyFile(storageName: string, path: string, destStoragename: string, destPath: string) {
+async function copyFile(storageName: string, path: string, destStoragename: string, destPath: string, pathF2f: boolean = false) {//pathF2f:destPath为文件时需要设置为true。(默认false时为文件夹，文件名来自srcPath)
     const backData = await rclone_api_post(
         '/operations/copyfile', {
         srcFs: storageName + ':',
         srcRemote: formatPathRclone(path),
         dstFs: destStoragename + ':',
-        dstRemote: formatPathRclone(destPath, true) + getFileName(path)
+        dstRemote: formatPathRclone(destPath, !pathF2f) + (!pathF2f && getFileName(path))
     }, true)
 }
 
-async function moveFile(storageName: string, path: string, destStoragename: string, destPath: string, newNmae?: string) {
+async function moveFile(storageName: string, path: string, destStoragename: string, destPath: string, newNmae?: string,pathF2f: boolean = false) {
 
     const backData = await rclone_api_post(
         '/operations/movefile', {
         srcFs: storageName + ':',
         srcRemote: formatPathRclone(path),
         dstFs: destStoragename + ':',
-        dstRemote: formatPathRclone(destPath, true) + (newNmae ? newNmae : getFileName(path))
+        dstRemote: formatPathRclone(destPath, !pathF2f) + (!pathF2f && newNmae ? newNmae : getFileName(path))
     }, true)
 }
 
@@ -162,4 +162,13 @@ async function moveDir(storageName: string, path: string, destStoragename: strin
     }, true)
 }
 
-export { reupStorage, delStorage, getStorageParams, getFileList, delFile, delDir, mkDir, formatPathRclone, copyFile, copyDir, moveFile, moveDir }
+//sync,需完整path(pathF2f)
+async function sync(storageName: string, path: string, destStoragename: string, destPath: string, bisync?: boolean) {//bisync:双向同步
+    const backData = await rclone_api_post(
+        !bisync?'/sync/sync':'/sync/bisync', {
+        srcFs: storageName + ':' + formatPathRclone(path, true),
+        dstFs: destStoragename + ':' + formatPathRclone(destPath, true) 
+    }, true)
+}
+
+export { reupStorage, delStorage, getStorageParams, getFileList, delFile, delDir, mkDir, formatPathRclone, copyFile, copyDir, moveFile, moveDir,sync }

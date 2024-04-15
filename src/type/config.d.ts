@@ -20,7 +20,7 @@ interface MountListItem {
 
 interface TaskListItem {
     name: string,
-    taskType: 'copy' | 'move' | 'delete' | 'sync' | string,
+    taskType: 'copy' | 'move' | 'delete' | 'sync' |'bisync'| string,
     source: {
         storageName: string,
         path: string,
@@ -44,7 +44,7 @@ interface TaskListItem {
     },
     runInfo?: {
         error:boolean
-        mag: string,
+        msg: string,
     }
 }
 

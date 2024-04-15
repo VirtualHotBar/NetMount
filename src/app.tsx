@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Layout, Menu, Breadcrumb, Button, Message, Grid } from '@arco-design/web-react';
-import "@arco-design/web-react/dist/css/arco.css";
+import "@arco-themes/react-vhbs/css/arco.css";
+//import "@arco-design/web-react/dist/css/arco.css";
 import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 
@@ -15,7 +16,7 @@ import { Transmit_page } from './page/transmit/transmit';
 import { Task_page } from './page/task/task';
 import Setting_page from './page/setting/setting';
 import AddMount_page from './page/mount/add';
-import { IconClose, IconMinus } from '@arco-design/web-react/icon';
+import { IconAttachment, IconClose, IconHome, IconLink, IconMinus, IconSettings, IconStorage, IconSwap } from '@arco-design/web-react/icon';
 import { windowsHide, windowsMini } from './controller/window';
 import { rcloneInfo } from './services/rclone';
 import { AddTask_page } from './page/task/add';
@@ -24,6 +25,7 @@ const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content, Footer } = Layout;
 const Row = Grid.Row;
 const Col = Grid.Col;
+
 
 //递归查询对应的路由
 function searchRoute(
@@ -131,12 +133,12 @@ function App() {
 
     const routers: Array<Routers> = [
         {
-            title: t('home'),
+            title:<><IconHome /> {t('home')}</>,
             path: '/',
             component: <Home_page />,
         },
         {
-            title: t('storage'),
+            title:<><IconStorage /> {t('storage')}</>,
             path: '/storage',
             children: [
                 {
@@ -160,7 +162,7 @@ function App() {
                 }
             ]
         }, {
-            title: t('mount'),
+            title: <><IconLink />{t('mount')}</>,
             path: '/mount',
             component: <Mount_page />,
             hideChildren: true,
@@ -174,12 +176,12 @@ function App() {
             ]
         },
         {
-            title: t('transmit') /* +(rcloneInfo.stats.transferring? '(' + rcloneInfo.stats.transferring.length + ')': '') */,
+            title:<><IconSwap />{t('transmit')}</> /* +(rcloneInfo.stats.transferring? '(' + rcloneInfo.stats.transferring.length + ')': '') */,
             path: '/transmit',
             component: <Transmit_page />,
         },
         {
-            title: t('task'),
+            title: <><IconAttachment />{t('task')}</>,
             path: '/task',
             component: <Task_page />,
             hideChildren: true,
@@ -193,7 +195,7 @@ function App() {
             ]
         },
         {
-            title: t('setting'),
+            title: <><IconSettings /> {t('setting')}</>,
             path: '/setting',
             component: <Setting_page />,
         }
