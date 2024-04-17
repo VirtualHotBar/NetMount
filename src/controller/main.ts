@@ -13,6 +13,7 @@ import { startRclone, stopRclone } from "../utils/rclone/process"
 import { getOsInfo } from "../utils/tauri/osInfo"
 import { startTaskScheduler } from "./task/task"
 import { autoMount } from "./task/autoMount"
+import { setThemeMode } from "./setting/setting"
 
 async function init(setStartStr: Function) {
     setStartStr(t('init'))
@@ -20,7 +21,7 @@ async function init(setStartStr: Function) {
     listenWindow()
 
     await getOsInfo()
-    
+
     setStartStr(t('read_config'))
 
     await invoke('read_config_file').then(configData => {
@@ -29,18 +30,9 @@ async function init(setStartStr: Function) {
         console.log(err);
     })
 
-    await startRclone()
-    /*     const darkThemeMq = window.matchMedia("(prefers-color-scheme: dark)");
-    
-        darkThemeMq.addListener(e => {
-            if (e.matches) {
-                document.body.setAttribute('arco-theme', 'dark');
-            } else {
-                document.body.removeAttribute('arco-theme');
-            }
-        }); */
-    document.body.removeAttribute('arco-theme');
+    setThemeMode(nmConfig.settings.themeMode)
 
+    await startRclone()
 
     startUpdateCont()
     await reupRcloneVersion()

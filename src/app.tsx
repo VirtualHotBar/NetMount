@@ -16,10 +16,11 @@ import { Transmit_page } from './page/transmit/transmit';
 import { Task_page } from './page/task/task';
 import Setting_page from './page/setting/setting';
 import AddMount_page from './page/mount/add';
-import { IconAttachment, IconClose, IconHome, IconLink, IconMinus, IconSettings, IconStorage, IconSwap } from '@arco-design/web-react/icon';
+import { IconAttachment, IconClose, IconCloud, IconHome, IconLink, IconList, IconMinus, IconSettings, IconStorage, IconSwap } from '@arco-design/web-react/icon';
 import { windowsHide, windowsMini } from './controller/window';
 import { rcloneInfo } from './services/rclone';
 import { AddTask_page } from './page/task/add';
+import { hooks } from './services/hook';
 
 const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content, Footer } = Layout;
@@ -133,12 +134,12 @@ function App() {
 
     const routers: Array<Routers> = [
         {
-            title:<><IconHome /> {t('home')}</>,
+            title: <><IconHome />{t('home')}</>,
             path: '/',
             component: <Home_page />,
         },
         {
-            title:<><IconStorage /> {t('storage')}</>,
+            title: <><IconCloud />{t('storage')}</>,
             path: '/storage',
             children: [
                 {
@@ -162,7 +163,7 @@ function App() {
                 }
             ]
         }, {
-            title: <><IconLink />{t('mount')}</>,
+            title: <><IconStorage />{t('mount')}</>,
             path: '/mount',
             component: <Mount_page />,
             hideChildren: true,
@@ -176,12 +177,12 @@ function App() {
             ]
         },
         {
-            title:<><IconSwap />{t('transmit')}</> /* +(rcloneInfo.stats.transferring? '(' + rcloneInfo.stats.transferring.length + ')': '') */,
+            title: <><IconSwap style={{ transform: 'rotate(90deg)' }} />{t('transmit')}</> /* +(rcloneInfo.stats.transferring? '(' + rcloneInfo.stats.transferring.length + ')': '') */,
             path: '/transmit',
             component: <Transmit_page />,
         },
         {
-            title: <><IconAttachment />{t('task')}</>,
+            title: <><IconList />{t('task')}</>,
             path: '/task',
             component: <Task_page />,
             hideChildren: true,
@@ -195,7 +196,7 @@ function App() {
             ]
         },
         {
-            title: <><IconSettings /> {t('setting')}</>,
+            title: <><IconSettings />{t('setting')}</>,
             path: '/setting',
             component: <Setting_page />,
         }
@@ -203,6 +204,14 @@ function App() {
 
 
     useEffect(() => {
+
+        hooks.navigate = (path: string) => {
+            if (path != location.pathname) {
+                location.pathname.includes('add') && Message.warning(t('prompt_for_leaving_the_add_or_edit_page'))
+                navigate(path)
+            }
+        }
+
         //setRouter(searchRoute(location.pathname, routers));
         const route = searchRoute(location.pathname, routers);
         if (route) {
@@ -234,7 +243,7 @@ function App() {
             <Header style={{ width: '100%', height: '2.4rem', backgroundColor: 'var(--color-bg-2)', borderBlockEnd: '1px solid var(--color-border-2)' }}>
                 <Row >
                     <Col flex={'auto'} data-tauri-drag-region style={{ height: '2.4rem', display: 'flex' }}>
-                        <img src="../src-tauri/icons/128x128.png" style={{ width: '2.2rem', height: '2.2rem', marginTop: '0.1rem', marginLeft: '0.3rem' }} data-tauri-drag-region />
+                        <img src="../public/img/color.svg" style={{ width: '1.8rem', height: '1.8rem', marginTop: '0.3rem', marginLeft: '0.6rem' }} data-tauri-drag-region />
                         <span style={{ marginLeft: '0.3rem', fontSize: '1.2rem', marginTop: '0.3rem', color: 'var(--color-text-1)' }} data-tauri-drag-region>NetMount</span>
 
                     </Col>
@@ -252,10 +261,7 @@ function App() {
                         selectedKeys={selectedKeys}
                         style={{ height: '100%' }}
                         onClickMenuItem={(path) => {
-                            if (path != location.pathname) {
-                                location.pathname.includes('add')&&Message.warning(t('prompt_for_leaving_the_add_or_edit_page'))
-                                navigate(path)
-                            }
+                            hooks.navigate(path)
                         }}
                     >{mapMenuItem(routers)}</Menu>
                 </Sider>

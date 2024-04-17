@@ -111,6 +111,7 @@ function AddTask_page() {
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{t('add_task')}</h2>
             <Form style={{ paddingRight: '10%' }}>
                 <Form.Item label={t('task_name')}>
                     <Input

@@ -8,6 +8,9 @@ interface NMConfig {
     task: TaskListItem[],
     api: {
         url: string
+    },
+    settings: {
+        themeMode: 'dark' | 'light' | 'auto' | string,
     }
 }
 

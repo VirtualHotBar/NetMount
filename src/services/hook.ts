@@ -5,6 +5,7 @@ let hooks:Hooks = {
     upStats:()=>{},
     upStorage:()=>{},
     upMount:()=>{},
+    navigate:()=>{},
 }
 
 export {hooks}

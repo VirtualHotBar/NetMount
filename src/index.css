@@ -2,10 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-p {
+p,h1,h2,h3,h4,h5,h6 {
     color: var(--color-text-1);
 }
 
+.singe-line {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    word-break: break-all;
+    white-space: nowrap;
+  }
 
 /* 字体 */
 @font-face {

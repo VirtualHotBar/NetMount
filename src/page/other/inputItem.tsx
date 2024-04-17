@@ -40,7 +40,7 @@ function InputItem_module(props: InputItemProps) {
         width: '85%'
     }
 
-    return <FormItem label={t(props.data.key)}>
+    return <FormItem label={<div className="singe-line">{t(props.data.key)}</div>} title={props.data.key}>
 
         {
             valueType === 'string' &&/* 输入框，string */

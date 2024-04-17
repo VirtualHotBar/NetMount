@@ -52,6 +52,7 @@ export default function AddMount_page() {
 
     return (
         <div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{t('add_mount')}</h2>
             <Form>
                 <FormItem label={t('storage')}>
                     <Select /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) =>

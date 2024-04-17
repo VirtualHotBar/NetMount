@@ -69,7 +69,7 @@ function Transmit_page() {
 
         </Space>
       </Card>
-      {/* <Area data={rcloneStatsHistory} xField='elapsedTime' yField='speed' height={200} /> */}
+      {/* <Area data={rcloneStatsHistory} xField='elapsedTime' yField='speed' height={200} />  */}
 
       <Card style={{}}
         title={t('transferring')}
@@ -81,14 +81,12 @@ function Transmit_page() {
             transmitList.map((item, index) => {
               return <List.Item key={index}>
                 <Row >
-                  <Col flex={'5rem'}>
-
-                    <Progress type={'circle'} percent={item.percentage} style={{ marginTop: '0.5rem' }} />
+                  <Col flex={'3.5rem'}>
+                    <Progress type={'circle'} percent={item.percentage} style={{ marginTop: '0.5rem' }} size='small' />
                   </Col>
                   <Col flex={'auto'}>
                     <Typography.Ellipsis >{item.name}</Typography.Ellipsis>
                     <Descriptions
-
                       size='small'
                       labelStyle={{ textAlign: 'right' }}
                       colon=' :'

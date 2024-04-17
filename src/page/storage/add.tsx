@@ -71,6 +71,7 @@ function AddStorage_page() {
 
 
     return <>
+        <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{t('add_storage')}</h2>
         {step == 0 ?/* 选择类型 */
             <div className=" w-full h-full">
                 <Form autoComplete='off'>
