@@ -1,68 +1,84 @@
-name: Build and release app
+name: Release CI
 
 on:
-  push:
-    branches:
-      - main 
+    push:
+        # Sequence of patterns matched against refs/tags
+        tags:
+            - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+    workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    release:
+        permissions:
+            contents: write
+        strategy:
+            fail-fast: false
+            matrix:
+                # 选择编译平台
+                platform: [macos-latest, ubuntu-20.04, windows-latest]
+        runs-on: ${{ matrix.platform }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
 
-      - name: Install Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-        
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      
-      - name: Cache Rust dependencies
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      
-      - name: Install dependencies
-        run: yarn install
+            - name: Install dependencies (ubuntu only)
+              if: matrix.platform == 'ubuntu-20.04'
+              # You can remove libayatana-appindicator3-dev if you don't use the system tray feature.
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev
 
-      - name: Build app
-        run: yarn tauri build
+            - name: Rust setup
+              uses: dtolnay/rust-toolchain@stable
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: app
-          path: src-tauri/target/release/*.app
+            - name: Rust cache
+              uses: swatinem/rust-cache@v2
+              with:
+                  workspaces: './src-tauri -> target'
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.1.4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+            - name: Sync node version and insatll nodejs
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 16
 
-      - name: Upload Release Asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1.0.2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./src-tauri/target/release/app.dmg
-          asset_name: app.dmg
-          asset_content_type: application/dmg
+            # 使用 pnpm 作为包管理器
+            - name: Install pnpm
+              uses: pnpm/action-setup@v2
+              id: pnpm-install
+              with:
+                  version: 8
+                  run_install: false
+
+            - name: Get pnpm store directory
+              id: pnpm-cache
+              shell: bash
+              run: |
+                  echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+            - uses: actions/cache@v3
+              name: Setup pnpm cache
+              with:
+                  path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-
+
+            - name: Install app dependencies and build it
+              run: pnpm i && pnpm bundle
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+                  TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+
+            - name: Tauri Action
+              uses: tauri-apps/tauri-action@v0.3
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+                  TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+              with:
+                  tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
+                  releaseName: 'FileHub v__VERSION__' # 自定义release名称，__VERSION__将自动填写为软件版本信息
+                  releaseBody: 'See the assets to download and install this version.'
+                  releaseDraft: true
+                  prerelease: false
