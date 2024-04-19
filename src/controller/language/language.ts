@@ -20,24 +20,24 @@ function getLocale(locale:string):Locale {
       return enUS;
     case 'ja-jp':
       return jaJP;
-/*     case 'ko-kr':
-      return koKR;
+     case 'ko-kr':
+      return koKR as unknown as Locale;
     case 'id-id':
-      return idID;
+      return idID as unknown as Locale;
     case 'th-th':
-      return thTH;
+      return thTH as unknown as Locale;
     case 'zh-hk':
       return zhHK;
     case 'fr-fr':
-      return frFR;
+      return frFR as unknown as Locale;
     case 'es-es':
-      return esES;
+      return esES as unknown as Locale;
     case 'de-de':
-      return deDE;
+      return deDE as unknown as Locale;
     case 'it-it':
-      return itIT;
+      return itIT as unknown as Locale;
     case 'vi-vn':
-      return viVN; */
+      return viVN as unknown as Locale; 
      default:
       return zhCN; 
   }
