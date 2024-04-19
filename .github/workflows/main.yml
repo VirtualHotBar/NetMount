@@ -14,9 +14,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: 16  # Version can be tweak based on your use case
+          node-version: lts/*
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
