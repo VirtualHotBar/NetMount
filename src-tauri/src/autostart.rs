@@ -34,6 +34,7 @@ pub fn is_autostart() -> io::Result<bool> {
 }
 
 use std::process::Command;
+#[cfg(target_os = "windows")]
 fn set_autostart_windows(enabled: bool) -> io::Result<()> {
     let exe_path = env::current_exe()?;
     let exe_path_str = exe_path.to_string_lossy().into_owned();
@@ -116,6 +117,7 @@ WantedBy=multi-user.target
     }
 }
 
+#[cfg(target_os = "windows")]
 fn is_startup_key_set(app_name: &str) -> io::Result<bool> {
     let exe_path = env::current_exe()?;
     let exe_path_str = exe_path.to_string_lossy().into_owned();

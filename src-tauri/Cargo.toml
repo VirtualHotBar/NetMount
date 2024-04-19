@@ -24,7 +24,6 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.6.1", features = [ "shell-open", "fs-all", "os-all", "shell-execute", "process-all", "system-tray", "window-all"] }
 window-shadows = "0.2.2"
-winreg = "0.10"
 
 reqwest = { version = "0.11", features = ["json", "stream"] }
 tokio = { version = "1", features = ["full"] }
@@ -34,6 +33,10 @@ sysinfo = "0.30.10"
 once_cell = "1.19.0"
 
 lazy_static = "1.4.0"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.10.1"
+
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
 # If you use cargo directly instead of tauri's cli you can use this feature flag to switch between tauri's `dev` and `build` modes.
