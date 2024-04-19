@@ -3,7 +3,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 // 引入语言文件
-import cn from '../../public/language/zh-cn.json';
+import cn from '../assets/language/zh-cn.json';
 
 // 初始化资源文件，即各种语言的json文件
 const resources = {

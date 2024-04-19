@@ -243,9 +243,8 @@ function App() {
             <Header style={{ width: '100%', height: '2.4rem', backgroundColor: 'var(--color-bg-2)', borderBlockEnd: '1px solid var(--color-border-2)' }}>
                 <Row >
                     <Col flex={'auto'} data-tauri-drag-region style={{ height: '2.4rem', display: 'flex' }}>
-                        <img src="../public/img/color.svg" style={{ width: '1.8rem', height: '1.8rem', marginTop: '0.3rem', marginLeft: '0.6rem' }} data-tauri-drag-region />
+                        <img src='/img/color.svg' style={{ width: '1.8rem', height: '1.8rem', marginTop: '0.3rem', marginLeft: '0.6rem' }} data-tauri-drag-region />
                         <span style={{ marginLeft: '0.3rem', fontSize: '1.2rem', marginTop: '0.3rem', color: 'var(--color-text-1)' }} data-tauri-drag-region>NetMount</span>
-
                     </Col>
                     <Col flex={'5rem'} style={{ textAlign: 'right' }}>
                         <Button onClick={windowsMini} icon={<IconMinus style={{ fontSize: '1.1rem', color: 'var(--color-text-2)' }} />} type='text' style={{ width: '2.5rem', paddingTop: '0.5rem' }} />

@@ -5,6 +5,8 @@ use window_shadows::set_shadow;
 use std::fs;
 use std::io::{self, Write};
 
+//use tauri::AppHandle;
+
 pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
   let window = app.get_window("main").unwrap();
   set_shadow(&window, true).expect("Unsupported platform!");
@@ -53,4 +55,34 @@ where
     }
     
     Ok(())
+}
+
+extern crate winreg;
+use winreg::enums::*;
+use winreg::RegKey;
+
+use std::error::Error;
+
+pub  fn is_winfsp_installed() -> Result<bool, Box<dyn Error>> {
+    // 打开HKEY_LOCAL_MACHINE
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+
+    // 定义需要检查的注册表键路径
+    let registry_keys = [
+        "SOFTWARE\\WinFsp",
+        "SOFTWARE\\WOW6432Node\\WinFsp",
+        "SYSTEM\\CurrentControlSet\\Services\\WinFsp.Launcher"
+    ];
+
+    // 遍历每个注册表键路径
+    for &registry_key in registry_keys.iter() {
+        // 尝试打开指定键
+        match hklm.open_subkey(registry_key) {
+            Ok(_) => return Ok(true),  // 如果键存在（即WinFsp已安装），返回true
+            Err(_) => continue,  // 如果打开键失败（例如键不存在），忽略错误并继续
+        }
+    }
+
+    // 如果所有键都不存在（即WinFsp未安装），返回false
+    Ok(false)
 }

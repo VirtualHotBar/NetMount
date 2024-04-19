@@ -1,9 +1,10 @@
+import { invoke } from "@tauri-apps/api"
 import { NMConfig, OSInfo } from "../type/config"
 
 const roConfig = {
     url:{
         website:'https://www.netmount.cn/',
-        
+        rclone:'https://github.com/rclone/rclone',
     },
     options: {
         task: {
@@ -42,13 +43,28 @@ let nmConfig: NMConfig = {
         url: 'https://api.hotpe.top/test/NetMount',
     },
     settings: {
-        themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex]
-    }
+        themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex],
+        startHide:false
+    },
 }
 
 const setNmConfig = (config: NMConfig) => {
     nmConfig = config
 }
+
+const readNmConfig = async () => {
+    await invoke('read_config_file').then(configData => {
+        setNmConfig(configData as NMConfig)
+    }).catch(err => {
+        console.log(err);
+    })
+}
+const saveNmConfig = async () => {
+    await invoke('write_config_file', {
+        configData: nmConfig
+    });
+}
+
 
 
 let osInfo: OSInfo = {
@@ -66,4 +82,4 @@ const setOsInfo = (osinfo: OSInfo) => {
 
 
 
-export { nmConfig, setNmConfig, osInfo, setOsInfo, roConfig }
+export { nmConfig, setNmConfig, osInfo, setOsInfo, roConfig ,readNmConfig,saveNmConfig}

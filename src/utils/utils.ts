@@ -89,9 +89,17 @@ export function takeRightStr(str: string, taggedStr: string) {
 
 //下载文件
 export async function downloadFile(url: string, path: string) {
-        await invoke('download_file', {
-            url: url,
-            outPath: path
-        })
-        return await fs.exists(path)
+    await invoke('download_file', {
+        url: url,
+        outPath: path
+    })
+    return await fs.exists(path)
+}
+
+export async function getWinFspInstallState() {
+    return await invoke('get_winfsp_install_state') as boolean
+}
+
+export async function installWinFsp() {
+    await runCmd('msiexec',['/i', 'res\\bin\\winfsp.msi','/qn'])
 }

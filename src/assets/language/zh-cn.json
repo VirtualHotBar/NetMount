@@ -178,5 +178,13 @@
     "UID": "UID",
     "GID": "GID",
     "Umask": "文件权限掩码",
-    "about":"关于"
+    "about":"关于",
+    "autostart":"开机自启",
+    "install":"安装",
+    "winfsp_not_installed":"需要安装依赖(WinFsp)，才能挂载存储。",
+    "install_failed":"安装失败",
+    "install_success":"安装成功",
+    "components":"组件",
+    "log":"日志",
+    "start_start_hide":"启动时隐藏窗口"
 }

@@ -1,11 +1,11 @@
 import { invoke, process } from "@tauri-apps/api"
-import { nmConfig, setNmConfig } from "../services/config"
+import { nmConfig, readNmConfig, saveNmConfig, setNmConfig } from "../services/config"
 import { rcloneInfo } from "../services/rclone"
 import { rclone_api_post } from "../utils/rclone/request"
 import { startUpdateCont } from "./stats/continue"
 import { reupMount } from "./storage/mount/mount"
 import { reupStorage } from "./storage/storage"
-import { listenWindow } from "./window"
+import { listenWindow, windowsHide } from "./window"
 import { NMConfig } from "../type/config"
 import { randomString } from "../utils/utils"
 import { t } from "i18next"
@@ -23,12 +23,11 @@ async function init(setStartStr: Function) {
     await getOsInfo()
 
     setStartStr(t('read_config'))
+    await readNmConfig()
 
-    await invoke('read_config_file').then(configData => {
-        setNmConfig(configData as NMConfig)
-    }).catch(err => {
-        console.log(err);
-    })
+    if (nmConfig.settings.startHide) {
+        windowsHide()
+    }
 
     setThemeMode(nmConfig.settings.themeMode)
 
@@ -60,9 +59,7 @@ function main() {
 
 async function exit() {
     await stopRclone()
-    await invoke('write_config_file', {
-        configData: nmConfig
-    });
+    await saveNmConfig()
     await process.exit();
 }
 

@@ -11,6 +11,7 @@ interface NMConfig {
     },
     settings: {
         themeMode: 'dark' | 'light' | 'auto' | string,
+        startHide:boolean
     }
 }
 

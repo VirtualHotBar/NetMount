@@ -4,7 +4,8 @@ import { RcloneStats } from "./stats";
 interface RcloneInfo {
     process:{
         command?:Command,
-        child?:Child
+        child?:Child,
+        log?:string
     },
     endpoint: {
         url: string,

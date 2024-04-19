@@ -17,7 +17,7 @@ const { Meta } = Card;
 
 let checkedUpdate: boolean = false;
 
-checkedUpdate = true;
+//checkedUpdate = true;
 
 function Home_page() {
   const { t } = useTranslation()
