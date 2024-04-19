@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs_on: ubuntu-latest
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
