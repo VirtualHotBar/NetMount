@@ -24,6 +24,7 @@ import { hooks } from './services/hook';
 import { getLocale } from './controller/language/language';
 import { nmConfig } from './services/config';
 import { getLangCode } from './controller/language/localized';
+import { Locale } from '@arco-design/web-react/es/locale/interface';
 
 const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content, Footer } = Layout;

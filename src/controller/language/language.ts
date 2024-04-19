@@ -10,8 +10,9 @@ import esES from '@arco-design/web-react/es/locale/es-ES';
 import deDE from '@arco-design/web-react/es/locale/de-DE';
 import itIT from '@arco-design/web-react/es/locale/it-IT';
 import viVN from '@arco-design/web-react/es/locale/vi-VN';
+import { Locale } from '@arco-design/web-react/es/locale/interface';
 
-function getLocale(locale:string) {
+function getLocale(locale:string):Locale {
   switch (locale) {
     case 'zh-cn':
       return zhCN;
@@ -19,7 +20,7 @@ function getLocale(locale:string) {
       return enUS;
     case 'ja-jp':
       return jaJP;
-    case 'ko-kr':
+/*     case 'ko-kr':
       return koKR;
     case 'id-id':
       return idID;
@@ -36,7 +37,7 @@ function getLocale(locale:string) {
     case 'it-it':
       return itIT;
     case 'vi-vn':
-      return viVN;
+      return viVN; */
      default:
       return zhCN; 
   }
