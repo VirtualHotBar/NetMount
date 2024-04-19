@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Layout, Menu, Breadcrumb, Button, Message, Grid } from '@arco-design/web-react';
+import { Layout, Menu, Breadcrumb, Button, Message, Grid, ConfigProvider } from '@arco-design/web-react';
 import "@arco-themes/react-vhbs/css/arco.css";
 //import "@arco-design/web-react/dist/css/arco.css";
 import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
@@ -21,6 +21,9 @@ import { windowsHide, windowsMini } from './controller/window';
 import { rcloneInfo } from './services/rclone';
 import { AddTask_page } from './page/task/add';
 import { hooks } from './services/hook';
+import { getLocale } from './controller/language/language';
+import { nmConfig } from './services/config';
+import { getLangCode } from './controller/language/localized';
 
 const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content, Footer } = Layout;
@@ -128,7 +131,7 @@ function App() {
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation()
-
+    const [localeStr, setLocaleStr] = useState<string>(getLangCode(nmConfig.settings.language!))
     const [selectedKeys, setSelectedKeys] = useState<string[]>(['/']);
 
 
@@ -202,6 +205,9 @@ function App() {
         }
     ]
 
+    useEffect(() => {
+        hooks.setLocaleStr = setLocaleStr
+    }, [])
 
     useEffect(() => {
 
@@ -234,44 +240,43 @@ function App() {
         <Footer>Footer</Footer>
       </Layout> */
     return (
+        <ConfigProvider locale={getLocale(localeStr)}>
+            <Layout style={{
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'var(--color-bg-1)'
+            }}>
+                <Header style={{ width: '100%', height: '2.4rem', backgroundColor: 'var(--color-bg-2)', borderBlockEnd: '1px solid var(--color-border-2)' }}>
+                    <Row >
+                        <Col flex={'auto'} data-tauri-drag-region style={{ height: '2.4rem', display: 'flex' }}>
+                            <img src='/img/color.svg' style={{ width: '1.8rem', height: '1.8rem', marginTop: '0.3rem', marginLeft: '0.6rem' }} data-tauri-drag-region />
+                            <span style={{ marginLeft: '0.3rem', fontSize: '1.2rem', marginTop: '0.3rem', color: 'var(--color-text-1)' }} data-tauri-drag-region>NetMount</span>
+                        </Col>
+                        <Col flex={'5rem'} style={{ textAlign: 'right' }}>
+                            <Button onClick={windowsMini} icon={<IconMinus style={{ fontSize: '1.1rem', color: 'var(--color-text-2)' }} />} type='text' style={{ width: '2.5rem', paddingTop: '0.5rem' }} />
+                            <Button onClick={windowsHide} icon={<IconClose style={{ fontSize: '1.1rem' }} />} type='text' status='danger' style={{ width: '2.5rem', paddingTop: '0.5rem' }} />
+                        </Col>
+                    </Row>
+                </Header>
 
-        <Layout style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'var(--color-bg-1)'
-        }}>
-            <Header style={{ width: '100%', height: '2.4rem', backgroundColor: 'var(--color-bg-2)', borderBlockEnd: '1px solid var(--color-border-2)' }}>
-                <Row >
-                    <Col flex={'auto'} data-tauri-drag-region style={{ height: '2.4rem', display: 'flex' }}>
-                        <img src='/img/color.svg' style={{ width: '1.8rem', height: '1.8rem', marginTop: '0.3rem', marginLeft: '0.6rem' }} data-tauri-drag-region />
-                        <span style={{ marginLeft: '0.3rem', fontSize: '1.2rem', marginTop: '0.3rem', color: 'var(--color-text-1)' }} data-tauri-drag-region>NetMount</span>
-                    </Col>
-                    <Col flex={'5rem'} style={{ textAlign: 'right' }}>
-                        <Button onClick={windowsMini} icon={<IconMinus style={{ fontSize: '1.1rem', color: 'var(--color-text-2)' }} />} type='text' style={{ width: '2.5rem', paddingTop: '0.5rem' }} />
-                        <Button onClick={windowsHide} icon={<IconClose style={{ fontSize: '1.1rem' }} />} type='text' status='danger' style={{ width: '2.5rem', paddingTop: '0.5rem' }} />
-                    </Col>
-                </Row>
-            </Header>
-
-            <Layout style={{ maxHeight: 'calc(100% - 2.4rem)' }}>
-                <Sider style={{ width: '10rem' }} >
-                    <Menu
-                        defaultOpenKeys={['/storage']}
-                        selectedKeys={selectedKeys}
-                        style={{ height: '100%' }}
-                        onClickMenuItem={(path) => {
-                            hooks.navigate(path)
-                        }}
-                    >{mapMenuItem(routers)}</Menu>
-                </Sider>
-                <Content style={{ maxHeight: '100%', padding: '1.1rem' }}>
-                    {/* <Breadcrumb style={{ margin: '16px 0' }}>{generateBreadcrumb(location.pathname, routers)}</Breadcrumb> */}
-                    <Routes>{mapRouters(routers)}</Routes>
-                </Content>
+                <Layout style={{ maxHeight: 'calc(100% - 2.4rem)' }}>
+                    <Sider style={{ width: '10rem' }} >
+                        <Menu
+                            defaultOpenKeys={['/storage']}
+                            selectedKeys={selectedKeys}
+                            style={{ height: '100%' }}
+                            onClickMenuItem={(path) => {
+                                hooks.navigate(path)
+                            }}
+                        >{mapMenuItem(routers)}</Menu>
+                    </Sider>
+                    <Content style={{ maxHeight: '100%', padding: '1.1rem' }}>
+                        {/* <Breadcrumb style={{ margin: '16px 0' }}>{generateBreadcrumb(location.pathname, routers)}</Breadcrumb> */}
+                        <Routes>{mapRouters(routers)}</Routes>
+                    </Content>
+                </Layout>
             </Layout>
-        </Layout>
-
-
+        </ConfigProvider>
     )
 }
 

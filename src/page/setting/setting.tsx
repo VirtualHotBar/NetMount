@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { getVersion } from '@tauri-apps/api/app';
 import { shell } from '@tauri-apps/api';
 import { rcloneInfo } from '../../services/rclone';
+import { setLocalized } from '../../controller/language/localized';
 const CollapseItem = Collapse.Item;
 const FormItem = Form.Item;
 const Row = Grid.Row;
@@ -25,9 +26,9 @@ export default function Setting_page() {
 
   const showLog = (log: string) => {
     modal.info!({
-      
+
       title: t('log'),
-      content: <div style={{ width:'100%',height: '100%', overflow: 'auto' }}>
+      content: <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
         {log}
       </div>
     })
@@ -46,6 +47,22 @@ export default function Setting_page() {
       <Space direction='vertical' size='large' style={{ width: '100%' }}>
         <Card title={t('setting')} style={{}} size='small'>
           <Form autoComplete='off'>
+            <FormItem label={t('language')}>
+              <Select
+                defaultValue={nmConfig.settings.language}
+                onChange={async (value) => {
+                  nmConfig.settings.language = value
+                  await setLocalized(nmConfig.settings.language!)
+                }}
+                style={{ width: '8rem' }}
+              >
+                {roConfig.options.setting.language.select.map((item, index) => {
+                  return (
+                    <Select.Option key={index} value={item.value}>{item.name}</Select.Option>
+                  )
+                })}
+              </Select>
+            </FormItem>
             <FormItem label={t('theme_mode')}>
               <Select
                 defaultValue={nmConfig.settings.themeMode}
@@ -67,11 +84,11 @@ export default function Setting_page() {
                 await setAutostartState(value);
                 setAutostart(value)
               }} />
-              
+
             </FormItem>
-            <FormItem label={t('start_start_hide')}>
+            <FormItem label={t('start_hide')}>
               <Switch checked={nmConfig.settings.startHide} onChange={async (value) => {
-                nmConfig.settings.startHide=value
+                nmConfig.settings.startHide = value
                 forceUpdate()
               }} /></FormItem>
           </Form>
@@ -79,16 +96,16 @@ export default function Setting_page() {
         <Card title={t('about')} style={{}} size='small'>
           <Row >
             <Col flex={'auto'} >
-              由独立开发者 VirtualHotBar 开发并发布
+              {t('about_text')}
               <br />
-              技术栈:Tauri,TypeScript,Vite,React,Arco Design,Rust
+              {t('technology_stack')}:Tauri,TypeScript,Vite,React,Arco Design,Rust
               <br />
               Copyright © 2024-Present VirtualHotBar
             </Col>
             <Col flex={'10rem'} style={{ textAlign: 'right' }}>
-              <Link onClick={() => { shell.open(roConfig.url.website) }}> NetMount官网 </Link>
+              <Link onClick={() => { shell.open(roConfig.url.website) }}> NetMount </Link>
               <br />
-              <Link onClick={() => { open(roConfig.url.website + 'page/license') }}> 许可证 </Link>
+              <Link onClick={() => { open(roConfig.url.website + 'page/license') }}> {t('licence')} </Link>
               <br />
             </Col>
           </Row>

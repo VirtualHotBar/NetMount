@@ -18,3 +18,13 @@ export interface ResAsset {
     download_url: string;
 }
 
+export interface Notice {
+    state: 'success' | string; // 假设状态还有 'failure' 等其他可能值，这里仅作示例
+    data: {
+        title: string;
+        content: string;
+    };
+    manual_close: boolean;
+    language: string; // 添加更多可能的语言选项，此处仅为示例
+    displayed:boolean
+}

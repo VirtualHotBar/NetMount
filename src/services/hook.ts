@@ -6,6 +6,7 @@ let hooks:Hooks = {
     upStorage:()=>{},
     upMount:()=>{},
     navigate:()=>{},
+    setLocaleStr:()=>{}
 }
 
 export {hooks}

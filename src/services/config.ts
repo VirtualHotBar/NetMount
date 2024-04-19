@@ -2,9 +2,9 @@ import { invoke } from "@tauri-apps/api"
 import { NMConfig, OSInfo } from "../type/config"
 
 const roConfig = {
-    url:{
-        website:'https://www.netmount.cn/',
-        rclone:'https://github.com/rclone/rclone',
+    url: {
+        website: 'https://www.netmount.cn/',
+        rclone: 'https://github.com/rclone/rclone',
     },
     options: {
         task: {
@@ -29,6 +29,15 @@ const roConfig = {
             themeMode: {
                 defIndex: 0,
                 select: ['auto', 'light', 'dark']
+            }, language: {
+                defIndex: 0,
+                select: [
+                    { name: '简体中文', value: 'cn', langCode: 'zh-cn' },
+                    { name: 'English', value: 'en', langCode: 'en-us' },
+                    /*                     { name: '繁體中文(臺灣)', value: 'cht', langCode: 'zh-tw' },
+                                        { name: '繁體中文(香港)', value: 'cht', langCode: 'zh-hk' },
+                                        { name: 'Русский язык', value: 'ru', langCode: 'ru-RU' }, */
+                ]
             }
         }
     }
@@ -44,7 +53,7 @@ let nmConfig: NMConfig = {
     },
     settings: {
         themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex],
-        startHide:false
+        startHide: false,
     },
 }
 
@@ -82,4 +91,4 @@ const setOsInfo = (osinfo: OSInfo) => {
 
 
 
-export { nmConfig, setNmConfig, osInfo, setOsInfo, roConfig ,readNmConfig,saveNmConfig}
+export { nmConfig, setNmConfig, osInfo, setOsInfo, roConfig, readNmConfig, saveNmConfig }

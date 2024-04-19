@@ -1,5 +1,5 @@
 import { invoke, process } from "@tauri-apps/api"
-import { nmConfig, readNmConfig, saveNmConfig, setNmConfig } from "../services/config"
+import { nmConfig, readNmConfig, roConfig, saveNmConfig, setNmConfig } from "../services/config"
 import { rcloneInfo } from "../services/rclone"
 import { rclone_api_post } from "../utils/rclone/request"
 import { startUpdateCont } from "./stats/continue"
@@ -14,6 +14,8 @@ import { getOsInfo } from "../utils/tauri/osInfo"
 import { startTaskScheduler } from "./task/task"
 import { autoMount } from "./task/autoMount"
 import { setThemeMode } from "./setting/setting"
+import { setLocalized } from "./language/localized"
+import { checkNotice } from "./update/notice"
 
 async function init(setStartStr: Function) {
     setStartStr(t('init'))
@@ -28,8 +30,20 @@ async function init(setStartStr: Function) {
     if (nmConfig.settings.startHide) {
         windowsHide()
     }
+    
+    if (nmConfig.settings.language) {
+        await setLocalized(nmConfig.settings.language);
+    } else {
+        const matchingLang = roConfig.options.setting.language.select.find(
+            (lang) => lang.langCode === navigator.language.toLowerCase()
+        );
+        nmConfig.settings.language = matchingLang?.value || roConfig.options.setting.language.select[roConfig.options.setting.language.defIndex].value;
+        await setLocalized(nmConfig.settings.language);
+    }
 
     setThemeMode(nmConfig.settings.themeMode)
+
+    await checkNotice()
 
     await startRclone()
 

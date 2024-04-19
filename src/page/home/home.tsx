@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useState } from 'react'
 
-import { Alert, Avatar, Button, Card, Descriptions, Grid, Link, Modal, Space, Typography } from "@arco-design/web-react"
+import { Alert, Avatar, Button, Card, Descriptions, Grid, Link, Modal, Notification, Space, Typography } from "@arco-design/web-react"
 import { Test } from "../../controller/test"
 import { rcloneInfo } from '../../services/rclone'
 import { hooks } from '../../services/hook';
@@ -23,18 +23,29 @@ function Home_page() {
   const { t } = useTranslation()
   const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
   const [modal, contextHolder] = Modal.useModal();
+  const [notification, noticeContextHolder] = Notification.useNotification();
 
   useEffect(() => {
     hooks.upStats = forceUpdate;
+    console.log(nmConfig.notice);
+
+    if (nmConfig.notice && !nmConfig.notice.displayed && nmConfig.notice.data.content) {
+      notification.info!({
+        ...(nmConfig.notice.data.title && { title: nmConfig.notice.data.title }),
+        content: nmConfig.notice.data.content,
+        ...{ duration: nmConfig.notice.manual_close ? 1000*60*60*24*365 : 3000 },
+      })
+      nmConfig.notice.displayed = true
+    }
 
     if (!checkedUpdate) {
       checkUpdate(async (info) => {
         modal.confirm!({
-          title: '发现新版本',
+          title: t('update_available'),
           content: <>
-            {`当前版本为${await getVersion()},最新版本为${info.name}`}
+            {`${t('current_version')}:${await getVersion()} , ${t('latest_version')}:${info.name}`}
             <br />
-            是否前往官网获取最新版？
+            {t('goto_the_website_get_latest_version_ask')}
           </>,
           onOk: () => {
             shell.open(info.website!)
@@ -48,12 +59,12 @@ function Home_page() {
 
   return (
     <div>
-      {contextHolder}
+      {contextHolder}{noticeContextHolder}
       <Space direction='vertical' style={{ width: '100%' }}>
         {/* <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>欢迎使用,统一管理和挂载云存储设施。</h1> */}
         <div style={{ textAlign: 'center', width: '100%' }}>
           <h1 style={{ fontSize: '2.0rem', fontWeight: 'bold', marginBottom: '1.0rem', marginTop: '0.8rem' }}>NetMount</h1>
-          <span style={{ color: 'var(--color-text-2)', fontSize: '1.1rem' }}>统一管理和挂载云存储设施</span>
+          <span style={{ color: 'var(--color-text-2)', fontSize: '1.1rem' }}>{t('netmount_slogan')}</span>
         </div>
         {/*<Row >
                     <Col flex={'auto'}style={{ paddingLeft: '0rem', paddingRight: '0rem' }} >
@@ -67,15 +78,15 @@ function Home_page() {
           运行时间：{formatETA(rcloneInfo.stats.elapsedTime)}
         </Card> */}
         <div style={{ height: '1.5rem' }} />
-        {!rcloneInfo.storageList &&
+        {rcloneInfo.storageList && !(rcloneInfo.storageList.length > 0) &&
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Alert style={{ maxWidth: '20rem', marginBottom: '1.0rem' }} type='info' content={
               <Row >
                 <Col flex={'auto'} >
-                  <Typography.Ellipsis>当前无可用存储，请添加存储</Typography.Ellipsis>
+                  <Typography.Ellipsis>{t('please_add_storage_tip')}</Typography.Ellipsis>
                 </Col>
                 <Col flex={'4rem'} style={{ textAlign: 'right' }}>
-                  <Link type='text' onClick={() => { hooks.navigate('/storage/manage/add') }}> 添加 </Link>
+                  <Link type='text' onClick={() => { hooks.navigate('/storage/manage/add') }}> {t('add')} </Link>
                 </Col>
               </Row>
             } />
@@ -84,29 +95,29 @@ function Home_page() {
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Space style={{ height: '100%' }}>
             <Card style={{ width: '10rem', height: '6rem' }} hoverable >
-              <strong ><IconCloud /> 存储</strong>({rcloneInfo.storageList.length})<br />
+              <strong ><IconCloud /> {t('storage')}</strong>({rcloneInfo.storageList.length})<br />
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
-                  <Button type='text' onClick={() => { hooks.navigate('/storage/manage/add') }}> 添加 </Button>
-                  <Button type='text' onClick={() => { hooks.navigate('/storage/manage') }}> 管理 </Button>
+                  <Button type='text' onClick={() => { hooks.navigate('/storage/manage/add') }}> {t('add')} </Button>
+                  <Button type='text' onClick={() => { hooks.navigate('/storage/manage') }}> {t('manage')} </Button>
                 </Space>
               </div>
             </Card>
             <Card style={{ width: '10rem', height: '6rem' }} hoverable>
-              <strong ><IconStorage /> 挂载</strong>({rcloneInfo.mountList.length})
+              <strong ><IconStorage /> {t('mount')}</strong>({rcloneInfo.mountList.length})
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
-                  <Button type='text' onClick={() => { hooks.navigate('/mount/add') }} > 添加 </Button>
-                  <Button type='text' onClick={() => { hooks.navigate('/mount') }} > 管理 </Button>
+                  <Button type='text' onClick={() => { hooks.navigate('/mount/add') }} > {t('add')} </Button>
+                  <Button type='text' onClick={() => { hooks.navigate('/mount') }} >  {t('manage')} </Button>
                 </Space>
               </div>
             </Card>
             <Card style={{ width: '10rem', height: '6rem' }} hoverable>
-              <strong ><IconList /> 任务</strong>({nmConfig.task.length})
+              <strong ><IconList /> {t('task')}</strong>({nmConfig.task.length})
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
-                  <Button type='text' onClick={() => { hooks.navigate('/task/add') }} > 添加 </Button>
-                  <Button type='text' onClick={() => { hooks.navigate('/task') }}> 管理 </Button>
+                  <Button type='text' onClick={() => { hooks.navigate('/task/add') }} >{t('add')} </Button>
+                  <Button type='text' onClick={() => { hooks.navigate('/task') }}> {t('manage')}  </Button>
                 </Space>
               </div>
             </Card>
@@ -129,10 +140,10 @@ function Home_page() {
 
             <Row >
               <Col flex={'1'} >
-                <IconSwap style={{ transform: 'rotate(90deg)' }} /> 传输概览
+                <IconSwap style={{ transform: 'rotate(90deg)' }} /> {t('transmission_overview')}
               </Col>
               <Col flex={'1'} style={{ textAlign: 'right' }}>
-                <Button type='text' onClick={() => { hooks.navigate('/transmit') }} >详细</Button>
+                <Button type='text' onClick={() => { hooks.navigate('/transmit') }} >{t('view_more')}</Button>
               </Col>
             </Row>
 
@@ -178,8 +189,6 @@ function Home_page() {
             ]} />
           </Card>
         </div>
-
-
       </Space>
     </div>
 

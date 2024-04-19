@@ -12,12 +12,12 @@ pub fn menu() -> SystemTray {
     let tray_menu = SystemTrayMenu::new()
         .add_item(CustomMenuItem::new(
             "hide&show".to_string(),
-            get_localized_text("hide&show"),
+            "hide&show",
         ))
         .add_native_item(SystemTrayMenuItem::Separator) // 分割线
         .add_item(CustomMenuItem::new(
             "quit".to_string(),
-            get_localized_text("quit"),
+            "quit",
         )); // 退出
 
     // 设置在右键单击系统托盘时显示菜单
@@ -30,11 +30,22 @@ pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
     let window = app.get_window("main").unwrap();
     let _parent_window = Some(&window);
 
+    //更新文本(本地化)
+    let _= app.tray_handle().get_item("quit").set_title(get_localized_text("quit")+" (&E)");
+    let _= app.tray_handle().get_item("hide&show").set_title(get_localized_text(
+        if window.is_visible().expect("REASON"){
+            "hide"
+        }else {
+            "show"
+        }
+    )+" (&D)");
+
     let hide_or_show = || {
         if window.is_visible().expect("REASON") {
             window.hide().unwrap();
         } else {
             window.show().unwrap();
+            window.set_focus().unwrap()
         }
     };
 

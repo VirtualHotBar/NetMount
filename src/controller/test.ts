@@ -9,6 +9,7 @@ import { nmConfig, osInfo } from "../services/config";
 import { Aria2 } from "../utils/aria2/aria2";
 import { checkUpdate } from "./update/update";
 import { getWinFspInstallState, installWinFsp } from "../utils/utils";
+import { t } from "i18next";
 
 export async function Test() {
 
@@ -57,12 +58,5 @@ export async function Test() {
     
     //await installWinFsp()
     //console.log(await getWinFspInstallState());
-    await invoke('set_localized',{
-        localized_data:{
-            quit:"退出"
-        }
-    })
 
-
-    
 }

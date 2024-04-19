@@ -23,7 +23,7 @@ use crate::utils::set_window_shadow;
 use crate::utils::is_winfsp_installed;
 
 //use crate::localized::LANGUAGE_PACK;
-use crate::localized::get_localized_text;
+//use crate::localized::get_localized_text;
 use crate::localized::set_localized;
 
 const CONFIG_PATH: &str = "res/config.json";
@@ -36,8 +36,6 @@ use std::sync::Mutex;
 
 fn main() {
     ensure_single_instance();
-
-    println!("{:?}", get_localized_text("t"));
 
     tauri::Builder::default()
         .setup(|app| {

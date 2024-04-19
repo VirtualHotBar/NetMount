@@ -186,5 +186,21 @@
     "install_success":"安装成功",
     "components":"组件",
     "log":"日志",
-    "start_start_hide":"启动时隐藏窗口"
+    "start_hide":"启动时隐藏窗口",
+    "quit":"退出",
+    "tray_show":"显示主窗口",
+    "tray_hide":"隐藏主窗口",
+    "language":"语言",
+    "update_available":"发现新版本",
+    "current_version":"当前版本",
+    "latest_version":"最新版本",
+    "goto_the_website_get_latest_version_ask":"是否前往官网获取最新版？",
+    "netmount_slogan":"统一管理和挂载云存储设施",
+    "please_add_storage_tip":"当前无可用存储，请添加存储",
+    "transmission_overview":"传输概览",
+    "view_more":"详细",
+    "technology_stack":"技术栈",
+    "about_text":"由独立开发者 VirtualHotBar 开发并发布",
+    "licence":"许可证",
+    "error_tips":"请尝试重启程序，并记录控制台错误信息向开发者反馈"
 }

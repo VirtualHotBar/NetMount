@@ -6,8 +6,10 @@ import { App } from './app'
 import { BrowserRouter } from 'react-router-dom'
 import { init } from './controller/main';
 import ReactDOM from 'react-dom/client';
-import { Spin } from '@arco-design/web-react';
+import { ConfigProvider, Spin } from '@arco-design/web-react';
 import { hooks } from './services/hook';
+import './controller/errorHandling'
+
 
 function StartPage() {
   const { t } = useTranslation()
@@ -38,7 +40,7 @@ async function appStart(setStartStr: Function) {
   
   reactRoot.render(<React.StrictMode>
     <BrowserRouter>
-      <App></App>
+    <App></App>
     </BrowserRouter>
   </React.StrictMode>)//React.StrictMode:严格模式检查组件副作用
 }

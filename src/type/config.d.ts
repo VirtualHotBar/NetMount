@@ -1,5 +1,6 @@
 import { Arch, OsType, Platform } from "@tauri-apps/api/os"
 import { ParametersType } from "./rclone/storage/defaults"
+import { Notice } from "./controller/update"
 
 interface NMConfig {
     mount: {
@@ -11,9 +12,12 @@ interface NMConfig {
     },
     settings: {
         themeMode: 'dark' | 'light' | 'auto' | string,
-        startHide:boolean
-    }
+        startHide:boolean,
+        language?:string
+    },
+    notice?:Notice
 }
+
 
 interface MountListItem {
     storageName: string,
