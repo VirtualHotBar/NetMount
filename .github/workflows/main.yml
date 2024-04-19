@@ -1,61 +1,71 @@
-name: Release CI
+name: Build and release app with pnpm
 
 on:
-    push:
-        branches:
-             - main 
-
+  push:
+    branches:
+      - main 
 
 jobs:
-  publish-tauri:
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        settings:
-          - platform: "macos-latest" # for Arm based macs (M1 and above).
-            args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel based macs.
-            args: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
-            args: ""
-          - platform: "windows-latest"
-            args: ""
-
-    runs-on: ${{ matrix.settings.platform }}
+  build:
+    runs_on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: setup node
-        uses: actions/setup-node@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v2
         with:
-          node-version: lts/*
+          node-version: 16  # Version can be tweak based on your use case
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
         with:
-          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
-          targets: ${{ matrix.settings.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          profile: minimal
+          toolchain: stable
+          override: true
 
-      - name: install dependencies (ubuntu only)
-        if: matrix.settings.platform == 'ubuntu-22.04' # This must match the platform value defined above.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-        # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
-        # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
+      - name: Cache Rust dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: install frontend dependencies
-        run: yarn install # change this to npm, pnpm or bun depending on which one you use.
+      - name: Install pnpm
+        run: npm install -g pnpm
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build app
+        run: pnpm run tauri:build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: app
+          path: dist/*  # Your build folder
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: "App v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
-          prerelease: false
-          args: ${{ matrix.settings.args }}
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false 
+
+      - name: Upload Release Asset 
+        uses: actions/upload-release-asset@v1.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./dist/AppName.dmg  # This should match your build output file
+          asset_name: AppName.dmg
+          asset_content_type: application/dmg
