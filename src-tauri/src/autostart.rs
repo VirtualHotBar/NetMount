@@ -1,41 +1,9 @@
 use std::env;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::Path;
-
-extern crate winreg;
 use std::io;
-use winreg::enums::*;
-use winreg::RegKey;
 
-pub fn set_autostart(enabled: bool) -> io::Result<()> {
-    let os = env::consts::OS;
-    match os {
-        "windows" => set_autostart_windows(enabled),
-        "linux" => set_autostart_linux(enabled),
-        _ => Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Unsupported operating system",
-        )),
-    }
-}
-
-//is_autostart
-pub fn is_autostart() -> io::Result<bool> {
-    let os = env::consts::OS;
-    match os {
-        "windows" => Ok(is_startup_key_set("NetMount")?),
-        "linux" => Ok(service_file_exists("netmount")),
-        _ => Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Unsupported operating system",
-        )),
-    }
-}
-
-use std::process::Command;
 #[cfg(target_os = "windows")]
-fn set_autostart_windows(enabled: bool) -> io::Result<()> {
+pub fn set_autostart(enabled: bool) -> io::Result<()> {
+    use std::process::Command;
     let exe_path = env::current_exe()?;
     let exe_path_str = exe_path.to_string_lossy().into_owned();
 
@@ -67,7 +35,30 @@ fn set_autostart_windows(enabled: bool) -> io::Result<()> {
     }
 }
 
-fn set_autostart_linux(enabled: bool) -> io::Result<()> {
+#[cfg(target_os = "windows")]
+pub fn is_autostart() -> io::Result<bool> {
+    extern crate winreg;
+    use winreg::RegKey;
+    use winreg::enums::*;
+
+    let app_name = "NetMount";
+    let exe_path = env::current_exe()?;
+    let exe_path_str = exe_path.to_string_lossy().into_owned();
+    // 打开注册表的“Run”键
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let run_key = hkcu.open_subkey("Software\\Microsoft\\Windows\\CurrentVersion\\Run")?;
+
+    // 尝试获取传入的app_name的值
+    match run_key.get_value::<String, _>(app_name) {
+        Ok(path) => Ok(path == format!("\"{}\"", exe_path_str)), // 如果成功获取值，返回true
+        Err(_) => Ok(false),                                     // 如果获取失败，返回false
+    }
+}
+
+#[cfg(target_os = "linux")]
+pub fn is_autostart(enabled: bool) -> io::Result<()> {
+    use std::fs::File;
+    use std::io::prelude::*;
     let exe_path = env::current_exe()?;
     let exe_path_str = exe_path
         .to_str()
@@ -117,23 +108,9 @@ WantedBy=multi-user.target
     }
 }
 
-#[cfg(target_os = "windows")]
-fn is_startup_key_set(app_name: &str) -> io::Result<bool> {
-    let exe_path = env::current_exe()?;
-    let exe_path_str = exe_path.to_string_lossy().into_owned();
-    // 打开注册表的“Run”键
-    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-    let run_key = hkcu.open_subkey("Software\\Microsoft\\Windows\\CurrentVersion\\Run")?;
-
-    // 尝试获取传入的app_name的值
-    match run_key.get_value::<String, _>(app_name) {
-        Ok(path) => Ok(path==format!("\"{}\"", exe_path_str)), // 如果成功获取值，返回true
-        Err(_) => Ok(false),                  // 如果获取失败，返回false
-    }
-}
-
-fn service_file_exists(service_name: &str) -> bool {
+#[cfg(target_os = "linux")]
+pub fn is_autostart(service_name: &str) -> bool {
+    use std::path::Path;
     let file_path = format!("/etc/systemd/system/{}.service", service_name);
     Path::new(&file_path).exists()
 }
-

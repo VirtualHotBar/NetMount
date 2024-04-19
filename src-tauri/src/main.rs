@@ -35,27 +35,36 @@ use std::sync::Mutex;
 // 从语言包中获取指定键的翻译文本
 
 fn main() {
+    // 确保应用程序只有一个实例运行
     ensure_single_instance();
 
-    tauri::Builder::default()
+    // 根据不同的操作系统配置Tauri Builder
+    let builder = tauri::Builder::default()
         .setup(|app| {
-            set_window_shadow(app);
+            set_window_shadow(app); // 设置窗口阴影
             Ok(())
         })
-        .system_tray(tray::menu())
-        .on_system_tray_event(tray::handler)
+        .system_tray(tray::menu()) // 设置系统托盘菜单
+        .on_system_tray_event(tray::handler) // 设置系统托盘事件处理器
         .invoke_handler(tauri::generate_handler![
+            // 注册可以从前端调用的Rust函数
             read_config_file,
             write_config_file,
             download_file,
-            get_available_drive_letter,
             get_autostart_state,
             set_autostart_state,
-            get_winfsp_install_state,
-            set_localized
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+            set_localized,
+        ]);
+
+    // 针对Windows系统额外注册函数
+    #[cfg(target_os = "windows")]
+    let builder = builder.invoke_handler(tauri::generate_handler![
+        get_winfsp_install_state,
+        get_available_drive_letter
+    ]);
+
+    // 运行Tauri应用，使用`generate_context!()`来加载应用配置
+    builder.run(tauri::generate_context!()).expect("error while running tauri application");
 }
 
 use once_cell::sync::Lazy;
@@ -110,6 +119,7 @@ fn run_command(cmd: &str) -> Result<std::process::Child, Box<dyn Error>> {
 } */
 
 #[tauri::command]
+#[cfg(target_os = "windows")]
 fn get_winfsp_install_state() -> Result<bool, usize> {
     match is_winfsp_installed() {
         Ok(is_enabled) => Ok(is_enabled),
@@ -146,6 +156,7 @@ fn download_file(url: String, out_path: String) -> Result<bool, usize> {
 }
 
 #[tauri::command]
+#[cfg(target_os = "windows")]
 fn get_available_drive_letter() -> Result<String, String> {
     match find_first_available_drive_letter() {
         Ok(Some(drive)) => Ok(drive),

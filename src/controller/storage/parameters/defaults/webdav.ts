@@ -1,6 +1,7 @@
 
 import { DefaultParams, ParamsSelectType } from "../../../../type/rclone/storage/defaults";
 
+//
 interface WebdavParamsStandard {
     // 标准选项
     url: string;
@@ -10,7 +11,7 @@ interface WebdavParamsStandard {
     bearer_token?: string;
 }
 
-
+//
 interface WebdavParamsAdvanced {
     // 高级选项
     bearer_token_command?: string;
