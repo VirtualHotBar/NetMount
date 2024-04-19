@@ -7,8 +7,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "NetMount",
-    "version": "0.1.0-240410"
+    "productName": "NetMount"
   },
   "tauri": {
     "systemTray": {
