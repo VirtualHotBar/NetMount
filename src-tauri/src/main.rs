@@ -47,13 +47,12 @@ fn main() {
         .system_tray(tray::menu()) // 设置系统托盘菜单
         .on_system_tray_event(tray::handler) // 设置系统托盘事件处理器
         .invoke_handler(tauri::generate_handler![
-            // 注册可以从前端调用的Rust函数
+            set_localized,
             read_config_file,
             write_config_file,
             download_file,
             get_autostart_state,
             set_autostart_state,
-            set_localized,
         ]);
 
     // 针对Windows系统额外注册函数
@@ -118,8 +117,8 @@ fn run_command(cmd: &str) -> Result<std::process::Child, Box<dyn Error>> {
     Ok(child)
 } */
 
-#[tauri::command]
 #[cfg(target_os = "windows")]
+#[tauri::command]
 fn get_winfsp_install_state() -> Result<bool, usize> {
     match is_winfsp_installed() {
         Ok(is_enabled) => Ok(is_enabled),
@@ -155,8 +154,8 @@ fn download_file(url: String, out_path: String) -> Result<bool, usize> {
     Ok(true)
 }
 
-#[tauri::command]
 #[cfg(target_os = "windows")]
+#[tauri::command]
 fn get_available_drive_letter() -> Result<String, String> {
     match find_first_available_drive_letter() {
         Ok(Some(drive)) => Ok(drive),

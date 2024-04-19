@@ -56,7 +56,7 @@ pub fn is_autostart() -> io::Result<bool> {
 }
 
 #[cfg(target_os = "linux")]
-pub fn is_autostart(enabled: bool) -> io::Result<()> {
+pub fn set_autostart(enabled: bool) -> io::Result<()> {
     use std::fs::File;
     use std::io::prelude::*;
     let exe_path = env::current_exe()?;
