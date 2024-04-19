@@ -1,5 +1,5 @@
+import { WebdavParamsAdvanced, WebdavParamsStandard } from "../../../../type/rclone/storage/parameters/webdav";
 import { DefaultParams } from "../../../../type/rclone/storage/defaults";
-import { WebdavParamsAdvanced, WebdavParamsStandard } from "../../../../type/rclone/storage/parameters/webdav.ts";
 
 const standard: WebdavParamsStandard = {
     url: "",
