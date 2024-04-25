@@ -7,24 +7,36 @@ use std::fs;
 use std::io::{self, Write};
 //use tauri::AppHandle;
 
-#[cfg(target_os = "windows")]
 pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
-    let window = app.get_window("main").unwrap();
-    set_shadow(&window, true).expect("Unsupported platform!");
+    #[cfg(target_os = "linux")]
+    {
+        Ok(())
+    }
+    #[cfg(target_os = "windows")]
+    {
+        let window = app.get_window("main").unwrap();
+        set_shadow(&window, true).expect("Unsupported platform!");
+    }
 }
 
-#[cfg(target_os = "windows")]
 pub fn find_first_available_drive_letter() -> Result<Option<String>, io::Error> {
-    for drive in ('A'..='Z').rev().map(|c| format!("{}:", c)) {
-        let drive_path = format!("{}\\", drive);
-        if fs::metadata(&drive_path).is_err() {
-            // 如果检测到错误，假设盘符未被使用并返回
-            return Ok(Some(drive));
-        }
+    #[cfg(target_os = "linux")]
+    {
+        Ok(None)
     }
+    #[cfg(target_os = "windows")]
+    {
+        for drive in ('A'..='Z').rev().map(|c| format!("{}:", c)) {
+            let drive_path = format!("{}\\", drive);
+            if fs::metadata(&drive_path).is_err() {
+                // 如果检测到错误，假设盘符未被使用并返回
+                return Ok(Some(drive));
+            }
+        }
 
-    // 如果所有盘符都被占用，返回None
-    Ok(None)
+        // 如果所有盘符都被占用，返回None
+        Ok(None)
+    }
 }
 
 use futures_util::stream::StreamExt;
@@ -67,30 +79,36 @@ where
     Ok(())
 }
 
-#[cfg(target_os = "windows")]
 pub fn is_winfsp_installed() -> Result<bool, Box<dyn Error>> {
-    extern crate winreg;
-    use winreg::enums::*;
-    use winreg::RegKey;
-    // 打开HKEY_LOCAL_MACHINE
-    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-
-    // 定义需要检查的注册表键路径
-    let registry_keys = [
-        "SOFTWARE\\WinFsp",
-        "SOFTWARE\\WOW6432Node\\WinFsp",
-        "SYSTEM\\CurrentControlSet\\Services\\WinFsp.Launcher",
-    ];
-
-    // 遍历每个注册表键路径
-    for &registry_key in registry_keys.iter() {
-        // 尝试打开指定键
-        match hklm.open_subkey(registry_key) {
-            Ok(_) => return Ok(true), // 如果键存在（即WinFsp已安装），返回true
-            Err(_) => continue,       // 如果打开键失败（例如键不存在），忽略错误并继续
-        }
+    #[cfg(target_os = "linux")]
+    {
+        Ok(false)
     }
+    #[cfg(target_os = "windows")]
+    {
+        extern crate winreg;
+        use winreg::enums::*;
+        use winreg::RegKey;
+        // 打开HKEY_LOCAL_MACHINE
+        let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
 
-    // 如果所有键都不存在（即WinFsp未安装），返回false
-    Ok(false)
+        // 定义需要检查的注册表键路径
+        let registry_keys = [
+            "SOFTWARE\\WinFsp",
+            "SOFTWARE\\WOW6432Node\\WinFsp",
+            "SYSTEM\\CurrentControlSet\\Services\\WinFsp.Launcher",
+        ];
+
+        // 遍历每个注册表键路径
+        for &registry_key in registry_keys.iter() {
+            // 尝试打开指定键
+            match hklm.open_subkey(registry_key) {
+                Ok(_) => return Ok(true), // 如果键存在（即WinFsp已安装），返回true
+                Err(_) => continue,       // 如果打开键失败（例如键不存在），忽略错误并继续
+            }
+        }
+
+        // 如果所有键都不存在（即WinFsp未安装），返回false
+        Ok(false)
+    }
 }

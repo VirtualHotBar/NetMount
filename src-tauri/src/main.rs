@@ -11,19 +11,16 @@ use std::fs;
 use tauri::Manager;
 
 mod autostart;
+mod localized;
 mod tray;
 mod utils;
-mod localized;
 
 use crate::autostart::is_autostart;
 use crate::autostart::set_autostart;
 use crate::utils::download_with_progress;
-#[cfg(target_os = "windows")]
 use crate::utils::find_first_available_drive_letter;
-#[cfg(target_os = "windows")]
-use crate::utils::set_window_shadow;
-#[cfg(target_os = "windows")]
 use crate::utils::is_winfsp_installed;
+use crate::utils::set_window_shadow;
 
 //use crate::localized::LANGUAGE_PACK;
 //use crate::localized::get_localized_text;
@@ -32,10 +29,6 @@ use crate::localized::set_localized;
 const CONFIG_PATH: &str = "res/config.json";
 
 use std::sync::Mutex;
-
-// 从指定路径加载语言包 JSON 文件并解析为 Map<String, Value>
-
-// 从语言包中获取指定键的翻译文本
 
 fn main() {
     // 确保应用程序只有一个实例运行
@@ -52,20 +45,19 @@ fn main() {
             download_file,
             get_autostart_state,
             set_autostart_state,
-        ]);
-
-    // 针对Windows系统额外注册函数
-    #[cfg(target_os = "windows")]
-    let builder = builder.invoke_handler(tauri::generate_handler![
-        get_winfsp_install_state,
-        get_available_drive_letter
-    ]).setup(|app| {
-        set_window_shadow(app); // 设置窗口阴影
-        Ok(())
-    });
+            get_winfsp_install_state,
+            get_available_drive_letter
+        ])
+        .setup(|app| {
+            #[cfg(target_os = "windows")]
+            set_window_shadow(app); // 设置窗口阴影
+            Ok(())
+        });
 
     // 运行Tauri应用，使用`generate_context!()`来加载应用配置
-    builder.run(tauri::generate_context!()).expect("error while running tauri application");
+    builder
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
 
 use once_cell::sync::Lazy;
@@ -193,4 +185,3 @@ async fn write_config_file(config_data: Value) -> Result<(), String> {
 
     Ok(())
 }
-
