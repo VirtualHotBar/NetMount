@@ -18,8 +18,11 @@ mod localized;
 use crate::autostart::is_autostart;
 use crate::autostart::set_autostart;
 use crate::utils::download_with_progress;
+#[cfg(target_os = "windows")]
 use crate::utils::find_first_available_drive_letter;
+#[cfg(target_os = "windows")]
 use crate::utils::set_window_shadow;
+#[cfg(target_os = "windows")]
 use crate::utils::is_winfsp_installed;
 
 //use crate::localized::LANGUAGE_PACK;
@@ -40,10 +43,6 @@ fn main() {
 
     // 根据不同的操作系统配置Tauri Builder
     let builder = tauri::Builder::default()
-        .setup(|app| {
-            set_window_shadow(app); // 设置窗口阴影
-            Ok(())
-        })
         .system_tray(tray::menu()) // 设置系统托盘菜单
         .on_system_tray_event(tray::handler) // 设置系统托盘事件处理器
         .invoke_handler(tauri::generate_handler![
@@ -60,7 +59,10 @@ fn main() {
     let builder = builder.invoke_handler(tauri::generate_handler![
         get_winfsp_install_state,
         get_available_drive_letter
-    ]);
+    ]).setup(|app| {
+        set_window_shadow(app); // 设置窗口阴影
+        Ok(())
+    });
 
     // 运行Tauri应用，使用`generate_context!()`来加载应用配置
     builder.run(tauri::generate_context!()).expect("error while running tauri application");

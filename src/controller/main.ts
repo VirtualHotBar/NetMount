@@ -18,6 +18,7 @@ import { setLocalized } from "./language/localized"
 import { checkNotice } from "./update/notice"
 
 async function init(setStartStr: Function) {
+
     setStartStr(t('init'))
 
     listenWindow()
@@ -26,6 +27,7 @@ async function init(setStartStr: Function) {
 
     setStartStr(t('read_config'))
     await readNmConfig()
+
 
     if (nmConfig.settings.startHide) {
         windowsHide()

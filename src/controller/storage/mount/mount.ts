@@ -9,11 +9,10 @@ import { rclone_api_post } from "../../../utils/rclone/request"
 
 //列举存储
 async function reupMount(noRefreshUI?: boolean) {
-
     const mountPoints = (await rclone_api_post(
         '/mount/listmounts',
     )).mountPoints
-    rcloneInfo.mountList = []
+    rcloneInfo.mountList = [];
 
     if (mountPoints) {
         mountPoints.forEach((tiem: any) => {

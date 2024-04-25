@@ -7,6 +7,7 @@ use std::fs;
 use std::io::{self, Write};
 //use tauri::AppHandle;
 
+#[cfg(target_os = "windows")]
 pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
     let window = app.get_window("main").unwrap();
     set_shadow(&window, true).expect("Unsupported platform!");

@@ -26,8 +26,12 @@ async function startRclone() {
     rcloneInfo.process.command = new Command('rclone', args)
     
     rcloneInfo.process.log=''
-    rcloneInfo.process.command.stdout.on('data', (data) => { rcloneInfo.process.log += data })
-    rcloneInfo.process.command.stderr.on('data', (data) => { rcloneInfo.process.log += data })
+    const addLog= (data:string) => { rcloneInfo.process.log += data ;
+        console.log(data);
+    }
+    
+    rcloneInfo.process.command.stdout.on('data',(data) => addLog(data))
+    rcloneInfo.process.command.stderr.on('data', (data) => addLog(data))
 
     rcloneInfo.process.child = await rcloneInfo.process.command.spawn()
 

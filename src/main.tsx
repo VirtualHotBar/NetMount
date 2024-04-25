@@ -36,6 +36,7 @@ let appStarting = false
 async function appStart(setStartStr: Function) {
   if (appStarting) { return }//避免重新执行
   appStarting = true
+1
   await init(setStartStr)//初始化功能
   
   reactRoot.render(<React.StrictMode>

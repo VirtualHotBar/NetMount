@@ -59,6 +59,8 @@ pub fn is_autostart() -> io::Result<bool> {
 pub fn set_autostart(enabled: bool) -> io::Result<()> {
     use std::fs::File;
     use std::io::prelude::*;
+    use std::path::Path;
+
     let exe_path = env::current_exe()?;
     let exe_path_str = exe_path
         .to_str()
@@ -109,8 +111,8 @@ WantedBy=multi-user.target
 }
 
 #[cfg(target_os = "linux")]
-pub fn is_autostart(service_name: &str) -> bool {
+pub fn is_autostart() -> io::Result<bool> {
     use std::path::Path;
-    let file_path = format!("/etc/systemd/system/{}.service", service_name);
-    Path::new(&file_path).exists()
+    let file_path = format!("/etc/systemd/system/{}.service", "netmount");
+    Ok(Path::new(&file_path).exists())
 }
