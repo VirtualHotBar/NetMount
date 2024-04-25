@@ -11,7 +11,7 @@ use std::io::{self, Write};
 pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
     #[cfg(target_os = "linux")]
     {
-        Ok(_)
+        Ok()
     }
     #[cfg(target_os = "windows")]
     {
