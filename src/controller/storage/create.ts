@@ -42,9 +42,6 @@ function checkParams(storageName: string, parameters: { [key: string]: any }, de
         }
     }
 
-
-
-
     // 返回结果前清理末尾的换行符，避免多余的空白
     msg = msg.trimEnd();
 

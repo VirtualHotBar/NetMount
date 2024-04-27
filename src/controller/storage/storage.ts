@@ -40,15 +40,6 @@ async function getStorageParams(name: string): Promise<ParametersType> {
     return get
 }
 
-//挂载存储<dev>
-async function mountStorage(name: string) {
-    const get = await rclone_api_post(
-        '/mount/mount', {
-        remotePath: name,
-    })
-    console.log(get);
-}
-
 
 //获取文件列表
 async function getFileList(storageName: string, path: string): Promise<FileInfo[]> {

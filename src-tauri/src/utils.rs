@@ -7,7 +7,6 @@ use std::fs;
 use std::io::{self, Write};
 //use tauri::AppHandle;
 
-#[tauri::command]
 pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
     #[cfg(target_os = "linux")]
     {

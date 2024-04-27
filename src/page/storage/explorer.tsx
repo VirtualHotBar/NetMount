@@ -10,6 +10,7 @@ import { rcloneApiHeaders } from '../../utils/rclone/request';
 import { RequestOptions } from '@arco-design/web-react/es/Upload';
 import { NoData_module } from '../other/noData';
 import { clipListItem } from '../../type/page/storage/explorer';
+import { searchStorage } from '../../controller/storage/listAll';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const TabPane = Tabs.TabPane;
@@ -135,25 +136,19 @@ function ExplorerItem() {
         //页面加载时，从URL中获取存储名称和路径
         if (getURLSearchParam('name')) {
             setStorageName(getURLSearchParam('name'))
-            if (getURLSearchParam('path')) {
+/*             if (getURLSearchParam('path')) {
                 setPath(getURLSearchParam('path'))
-            }
+            } */
         }
 
 
-        if (!storageName && rcloneInfo.storageList.length > 0) {
+        if (!storageName && !getURLSearchParam('name')&& rcloneInfo.storageList.length > 0) {
             setStorageName(rcloneInfo.storageList[0].name)
         }
     }, []);
 
     useEffect(() => {
-        console.log(storageName);
-
         if (storageName && path) {
-            /*             if (path == '' || path == void 0) {
-                            updatePath('/')
-                            setPathTemp('/')
-                        } */
             fileInfo();
         }
     }, [path]);
@@ -163,11 +158,14 @@ function ExplorerItem() {
             updatePath('/')
             setPathTemp('/')
         }
+
+        if (storageName && path) {
+            fileInfo();
+        }
     }, [storageName])
 
 
     useEffect(() => {
-
     }, [clipList])
 
     function MakeDir() {
@@ -267,7 +265,7 @@ function ExplorerItem() {
                             {
                                 rcloneInfo.storageList.map((item) => {
                                     return (
-                                        <Select.Option key={item.name} value={item.name}>{item.name}({item.type})</Select.Option>
+                                        <Select.Option key={item.name} value={item.name}>{item.name}({searchStorage(item.type).name})</Select.Option>
                                     )
                                 })
                             }

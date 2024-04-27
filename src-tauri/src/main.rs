@@ -34,6 +34,14 @@ fn main() {
     // 确保应用程序只有一个实例运行
     ensure_single_instance();
 
+    //设置运行目录
+    let exe_dir = env::current_exe().unwrap().parent().unwrap().to_path_buf();
+    if !cfg!(debug_assertions) {
+        env::set_current_dir(&exe_dir).expect("更改工作目录失败");
+        //run_command(&format!("cd {}", exe_dir.display())).expect("运行cd命令失败");
+    }
+
+
     // 根据不同的操作系统配置Tauri Builder
     let builder = tauri::Builder::default()
         .system_tray(tray::menu()) // 设置系统托盘菜单
@@ -91,11 +99,13 @@ fn ensure_single_instance() {
     }
 }
 
+
+
+
 /*
 use std::error::Error;
 use std::process::Command;
-
-fn run_command(cmd: &str) -> Result<std::process::Child, Box<dyn Error>> {
+fn run_command(cmd: &str) -> Result<(), Box<dyn Error>> {
     let cmd_str = if cfg!(target_os = "windows") {
         format!("{}", cmd.replace("/", "\\"))
     } else {
@@ -107,8 +117,8 @@ fn run_command(cmd: &str) -> Result<std::process::Child, Box<dyn Error>> {
     } else {
         Command::new("sh").arg("-c").arg(cmd_str).spawn()?
     };
-
-    Ok(child)
+    child.wait_with_output()?;
+    Ok(())
 } */
 
 #[cfg(target_os = "windows")]

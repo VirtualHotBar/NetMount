@@ -1,6 +1,7 @@
 import { CSSProperties, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Checkbox, Form, Input, InputNumber, InputTag, Link, Message, Notification, Select, Space, Switch, Typography } from "@arco-design/web-react";
+import { rcloneInfo } from "../../services/rclone";
 
 const FormItem = Form.Item;
 
@@ -42,11 +43,24 @@ function InputItem_module(props: InputItemProps) {
 
     return <FormItem label={<div className="singe-line">{t(props.data.key)}</div>} title={props.data.key}>
 
-        {
-            valueType === 'string' &&/* 输入框，string */
-            <>{props.data.key != 'pass' ?
-                <Input style={style} allowClear key={props.data.key} defaultValue={props.data.value} onChange={(value) => setParams(value)} placeholder={t('please_input')} /> :
+        {/* 输入框，string */
+            valueType === 'string' &&
+            <>{props.data.key.includes('pass') ?//密码
                 <Input.Password style={style} allowClear key={props.data.key} defaultValue={props.data.value} onChange={(value) => setParams(value)} placeholder={t('please_input')} />
+                : props.data.key === 'remote' ?//选择存储（remote:）
+                    <Select
+                        defaultValue={props.data.value}
+                        placeholder={t('please_select')}
+                        onChange={(value) => setParams(value)}
+                        style={style}
+                    >
+                        {rcloneInfo.storageList.map((item) => (
+                            <Select.Option key={item.name} value={item.name+':'}>
+                                {item.name}
+                            </Select.Option>
+                        ))}
+                    </Select> 
+                    : <Input style={style} allowClear key={props.data.key} defaultValue={props.data.value} onChange={(value) => setParams(value)} placeholder={t('please_input')} />
             }</>
         }
 

@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Table, TableColumnProps } from '@arco-design/web-react';
 import { NoData_module } from "../other/noData";
+import { searchStorage } from "../../controller/storage/listAll";
 
 
 function Storage_page() {
@@ -47,10 +48,12 @@ function Storage_page() {
             </div>
             <div style={{ height: "calc(100% - 2rem)" }}>
                 <br />
-                <Table style={{ height: "100%" }} noDataElement={ <NoData_module />} columns={columns} pagination={false} data={
+                <Table style={{ height: "100%" }} noDataElement={<NoData_module />} columns={columns} pagination={false} data={
                     rcloneInfo.storageList.map((item) => {
                         return {
-                            ...item, actions: <Space>
+                            ...item,
+                            type: searchStorage(item.type).name,
+                            actions: <Space>
                                 <Popconfirm
                                     focusLock
                                     title={t('confirm_delete_question')}

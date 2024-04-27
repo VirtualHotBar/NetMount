@@ -3,7 +3,8 @@ use std::io;
 
 #[cfg(target_os = "windows")]
 pub fn set_autostart(enabled: bool) -> io::Result<()> {
-    use std::process::Command;
+    use std::{os::windows::process::CommandExt, process::Command};
+    
     let exe_path = env::current_exe()?;
     let exe_path_str = exe_path.to_string_lossy().into_owned();
 
@@ -17,7 +18,8 @@ pub fn set_autostart(enabled: bool) -> io::Result<()> {
             .to_string()
     };
 
-    let cmd = Command::new("cmd").arg("/C").arg(command.clone()).spawn();
+    let cmd = Command::new("cmd").arg("/C").arg(command.clone()).creation_flags(0x08000000).spawn();
+
 
     let output = cmd.unwrap().wait_with_output()?;
 

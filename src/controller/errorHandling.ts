@@ -11,10 +11,6 @@ window.onerror = async function (msg, url, lineNo, columnNo, error) {
         'Error object: ' + JSON.stringify(error)
     ].join(' - ');
 
-/* if(message.includes('Message: ResizeObserver loop limit exceeded')){
-    return
-} */
-
     await errorThrowToUser(message)
     return false;
 };
@@ -29,7 +25,7 @@ window.addEventListener('error', async (event) => {
 
 async function errorThrowToUser(message: string) {
     //排除这个错误
-    if (message.toString().includes('ResizeObserver loop limit exceeded')) { return }
+    if (message.toString().includes('ResizeObserver')) { return }
 
     let content = t('error_tips') + ',Error:' + message
 
@@ -37,7 +33,7 @@ async function errorThrowToUser(message: string) {
     await errorDialog(t('error'), content)
 }
 //错误对话框
-export function errorDialog(title: string, content: ReactNode) {
+function errorDialog(title: string, content: ReactNode) {
     return new Promise((resolve) => {
         Modal.error(
             {

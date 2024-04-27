@@ -1,4 +1,4 @@
-interface FtpParameters {
+interface FtpParamsStandard {
     // 标准选项
     host: string;
     user?: string;
@@ -6,7 +6,9 @@ interface FtpParameters {
     pass?: string;
     tls?: boolean;
     explicit_tls?: boolean;
-    
+}
+
+interface FtpParamsAdvanced{
     // 高级选项
     concurrency?: number;
     no_check_certificate?: boolean;
@@ -25,5 +27,5 @@ interface FtpParameters {
     encoding?: string; // 在 TypeScript 中，可能需要定义一个枚举类型来表示支持的编码格式
     description?: string;
 }
-
-export {FtpParameters}
+ 
+export {FtpParamsStandard,FtpParamsAdvanced}
