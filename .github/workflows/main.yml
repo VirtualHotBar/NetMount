@@ -3,7 +3,7 @@ name: "publish"
 on:
   push:
     branches:
-      - main 
+      - release
 
 
 # `tauri-action` can also upload app bundles to an existing GitHub release.
