@@ -49,7 +49,7 @@ let nmConfig: NMConfig = {
     },
     task: [],
     api: {
-        url: 'https://api.hotpe.top/test/NetMount',
+        url: 'https://api.hotpe.top/API/NetMount',
     },
     settings: {
         themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex],
