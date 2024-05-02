@@ -91,7 +91,7 @@ export default function Setting_page() {
                 nmConfig.settings.startHide = value
                 forceUpdate()
               }} /></FormItem>
-              <div style={{width:'100%',textAlign:'right'}}><Button onClick={async ()=>{
+              <div style={{width:'100%',textAlign:'right'}}><Button type='primary' onClick={async ()=>{
                 await saveNmConfig()
                 Message.success(t('saved'))
               }}>{t('save')}</Button></div>
