@@ -24,7 +24,8 @@ function AddStorage_page() {
     const [showAdvanced, setShowAdvanced] = useState(false)
 
     const [storageName, setStorageName] = useState('')//存储名称
-    const [isEditMode, setIsEditMode] = useState(false)
+    const isEditMode=(getURLSearchParam('edit') == 'true')
+
     let parameters: ParametersType = {};
 
     const setParams = (key: string, value: any) => {
@@ -67,7 +68,6 @@ function AddStorage_page() {
     }
 
     useEffect(() => {
-        setIsEditMode(Boolean(getURLSearchParam('edit')))
         if (isEditMode) {
             editMode()
         }
