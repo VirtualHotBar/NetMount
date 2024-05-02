@@ -1,6 +1,7 @@
 import { listen } from "@tauri-apps/api/event";
 import { appWindow } from "@tauri-apps/api/window"
 import { exit } from "./main";
+import { saveNmConfig } from "../services/config";
 
 function listenWindow() {
     appWindow.listen('tauri://close-requested', () => {
@@ -18,11 +19,10 @@ function listenWindow() {
     document.oncontextmenu = () => {
         return false;
     }
-
-
 }
 
 function windowsHide() {
+    saveNmConfig()
     appWindow.hide()
 }
 

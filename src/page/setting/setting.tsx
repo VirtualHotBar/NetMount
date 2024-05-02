@@ -1,8 +1,8 @@
 import React, { useEffect, useReducer, useState } from 'react'
 import { DevTips_module } from '../other/devTips'
-import { Button, Card, Collapse, Divider, Form, Grid, Link, Modal, Select, Space, Switch, Typography } from '@arco-design/web-react'
+import { Button, Card, Collapse, Divider, Form, Grid, Link, Message, Modal, Select, Space, Switch, Typography } from '@arco-design/web-react'
 import { Test } from '../../controller/test'
-import { nmConfig, roConfig } from '../../services/config';
+import { nmConfig, roConfig, saveNmConfig } from '../../services/config';
 import { getAutostartState, setAutostartState, setThemeMode } from '../../controller/setting/setting';
 import { useTranslation } from 'react-i18next';
 import { getVersion } from '@tauri-apps/api/app';
@@ -91,6 +91,10 @@ export default function Setting_page() {
                 nmConfig.settings.startHide = value
                 forceUpdate()
               }} /></FormItem>
+              <div style={{width:'100%',textAlign:'right'}}><Button onClick={async ()=>{
+                await saveNmConfig()
+                Message.success(t('saved'))
+              }}>{t('save')}</Button></div>
           </Form>
         </Card>
         <Card title={t('about')} style={{}} size='small'>

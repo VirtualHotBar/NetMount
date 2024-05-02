@@ -45,6 +45,8 @@ async function init(setStartStr: Function) {
 
     setThemeMode(nmConfig.settings.themeMode)
 
+    setStartStr(t('get_notice'))
+
     await checkNotice()
 
     await startRclone()

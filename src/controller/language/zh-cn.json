@@ -260,6 +260,8 @@
     "crypt_introduce": "加密，确保用户数据在云端存储时的安全性。",
     "alias_introduce": "别名，便于访问和管理。",
     "alist_introduce":"一个支持多种存储的文件列表程序，使用 Gin 和 Solidjs。",
-    "storage_name_already_exists":"存储名称已存在"
+    "storage_name_already_exists":"存储名称已存在",
 
+    "get_notice":"获取通知",
+    "saved":"已保存"
 }
