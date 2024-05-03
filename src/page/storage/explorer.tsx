@@ -136,13 +136,13 @@ function ExplorerItem() {
         //页面加载时，从URL中获取存储名称和路径
         if (getURLSearchParam('name')) {
             setStorageName(getURLSearchParam('name'))
-/*             if (getURLSearchParam('path')) {
-                setPath(getURLSearchParam('path'))
-            } */
+            /*             if (getURLSearchParam('path')) {
+                            setPath(getURLSearchParam('path'))
+                        } */
         }
 
 
-        if (!storageName && !getURLSearchParam('name')&& rcloneInfo.storageList.length > 0) {
+        if (!storageName && !getURLSearchParam('name') && rcloneInfo.storageList.length > 0) {
             setStorageName(rcloneInfo.storageList[0].name)
         }
     }, []);
@@ -316,7 +316,7 @@ function ExplorerItem() {
                 </Row>
             </div>
 
-            <div style={{ height: 'calc(100% - 2rem)', marginTop:'1rem',overflow: 'auto' }}>
+            <div style={{ height: 'calc(100% - 2rem)', marginTop: '1rem', overflow: 'auto' }}>
                 {storageName ?
                     <>{
                         fileList ?
@@ -355,7 +355,7 @@ function ExplorerItem() {
                                             </Space>
                                         }
                                     })} />
-                            : ''
+                            : <div style={{ textAlign: 'center', marginTop: '10rem', width: '100%' }}><p>{t('filelist_load_Fail')}</p></div>
                     }
                     </> :
                     !storageName && <Typography.Paragraph style={tipsStyle}>{t('please_select_storage')}</Typography.Paragraph>

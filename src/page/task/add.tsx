@@ -1,7 +1,7 @@
 import { Button, Divider, Form, Grid, Input, InputNumber, Notification, Select, Space, Tooltip } from '@arco-design/web-react';
 import React, { useReducer, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { nmConfig, roConfig } from '../../services/config';
+import { nmConfig, roConfig, saveNmConfig } from '../../services/config';
 import { TaskListItem } from '../../type/config';
 import { rcloneInfo } from '../../services/rclone';
 import { IconQuestionCircle } from '@arco-design/web-react/icon';
@@ -91,6 +91,9 @@ function AddTask_page() {
                 m: 30,
                 s: 0,
             }
+        },
+        runInfo:{
+
         },
         enable: true,
     });
@@ -224,7 +227,7 @@ function AddTask_page() {
                         </Col>
                         <Col flex={'2rem'}>
                             <Tooltip content={t('explain_for_task_path_format')}>
-                                <Button icon={<IconQuestionCircle />}></Button>
+                                <Button icon={<IconQuestionCircle />}/>
                             </Tooltip>
                         </Col>
                     </Row>
@@ -255,7 +258,7 @@ function AddTask_page() {
                             </Col>
                             <Col flex={'2rem'}>
                                 <Tooltip content={t('explain_for_task_path_format')}>
-                                    <Button icon={<IconQuestionCircle />}></Button>
+                                    <Button icon={<IconQuestionCircle />}/>
                                 </Tooltip>
                             </Col>
                         </Row>
@@ -267,7 +270,7 @@ function AddTask_page() {
                     <Button onClick={() => {
                         navigate('/task/')
                     }}>{t('step_back')}</Button>
-                    <Button type='primary' onClick={() => {
+                    <Button type='primary' onClick={async () => {
                         if (taskInfo.run.mode === 'time') {
                             taskInfo.run.time.intervalDays = timeMultiplier.multiplicand * timeMultiplier.value;
                         } else if (taskInfo.run.mode === 'interval') {
@@ -290,6 +293,7 @@ function AddTask_page() {
                             })
                         } else {
                             if (saveTask(taskInfo)) {
+                                
                                 Notification.success({
                                     title: t('success'),
                                     content: t('task_added_successfully'),

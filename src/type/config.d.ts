@@ -50,9 +50,9 @@ interface TaskListItem {
         },
         interval?: number,//周期执行，单位ms
     },
-    runInfo?: {
-        error:boolean
-        msg: string,
+    runInfo: {
+        error?:boolean
+        msg?: string,
     }
 }
 

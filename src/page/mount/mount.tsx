@@ -5,9 +5,10 @@ import { delMountStorage, isMounted, mountStorage, reupMount, unmountStorage } f
 import { useTranslation } from 'react-i18next'
 import { hooks } from '../../services/hook'
 import { useNavigate } from 'react-router-dom'
-import { nmConfig, osInfo } from '../../services/config'
+import { nmConfig, osInfo, roConfig } from '../../services/config'
 import { NoData_module } from '../other/noData'
-import { getWinFspInstallState, installWinFsp } from '../../utils/utils'
+import { getWinFspInstallState, installWinFsp, openUrlInBrowser } from '../../utils/utils'
+import { IconQuestionCircle } from '@arco-design/web-react/icon'
 const Row = Grid.Row;
 const Col = Grid.Col;
 
@@ -40,7 +41,7 @@ function Mount_page() {
 
   const getWinFspState = async () => {
     console.log(await getWinFspInstallState());
-    
+
     setWinFspInstallState(await getWinFspInstallState())
   }
 
@@ -53,31 +54,38 @@ function Mount_page() {
 
   return (
     <div style={{ width: "100%", height: "100%", }}>
-      <div style={{ width: "100%", height: "2rem", }}>
-        <Space>
-          <Button onClick={() => { navigate('./add') }} type='primary'>{t('add')}</Button>
-          <Button onClick={() => { reupMount() }}>{t('refresh')}</Button>
-        </Space>
-      </div>
-      <div style={{ height: "calc(100% - 2rem)" }}>
+
+        <Row style={{ width: "100%", height: "2rem", }}>
+          <Col flex={'auto'}>
+            <Space>
+              <Button onClick={() => { navigate('./add') }} type='primary'>{t('add')}</Button>
+              <Button onClick={() => { reupMount() }}>{t('refresh')}</Button>
+            </Space>
+          </Col>
+          <Col flex={'4rem'} style={{ textAlign: 'right' }}>
+            <Button title={t('help')} icon={<IconQuestionCircle />} onClick={() => { openUrlInBrowser(roConfig.url.docs + '/docs/storage-mount') }} />
+          </Col>
+        </Row>
+
+      <div style={{ height: "calc(100% - 3rem)" }}>
         <br />
         {
-            winFspInstallState !== undefined && !winFspInstallState && <>
-              <Alert type='warning' content={t('winfsp_not_installed')} action={<>
-              <Button type='primary' onClick={async ()=>{
+          winFspInstallState !== undefined && !winFspInstallState && <>
+            <Alert type='warning' content={t('winfsp_not_installed')} action={<>
+              <Button type='primary' onClick={async () => {
                 setWinFspInstalling(true)
-                await installWinFsp().catch(()=>{
-                  Message.error(t('install_failed'))
-                }).then(()=>{
+                if (await installWinFsp()) {
                   Message.success(t('install_success'))
-                })
+                } else {
+                  Message.error(t('install_failed'))
+                }
                 setWinFspInstalling(false)
                 await getWinFspState()
-                }} loading={winFspInstalling}>{t('install')}</Button>
-              </>}/>
-              <br />
-            </>
-          }
+              }} loading={winFspInstalling}>{t('install')}</Button>
+            </>} />
+            <br />
+          </>
+        }
         <Table style={{ height: "100%" }} noDataElement={<NoData_module />} columns={columns} pagination={false} data={
           nmConfig.mount.lists.map((item) => {
             const mounted = isMounted(item.mountPath)

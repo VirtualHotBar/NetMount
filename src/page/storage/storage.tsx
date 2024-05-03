@@ -1,4 +1,4 @@
-import { Button, Popconfirm, Space } from "@arco-design/web-react"
+import { Button, Grid, Popconfirm, Space } from "@arco-design/web-react"
 import { useTranslation } from 'react-i18next';
 import { delStorage, reupStorage } from "../../controller/storage/storage"
 import { rcloneInfo } from "../../services/rclone"
@@ -9,7 +9,12 @@ import { useNavigate } from "react-router-dom";
 import { Table, TableColumnProps } from '@arco-design/web-react';
 import { NoData_module } from "../other/noData";
 import { searchStorage } from "../../controller/storage/listAll";
+import { IconQuestionCircle } from "@arco-design/web-react/icon";
+import { openUrlInBrowser } from "../../utils/utils";
+import { roConfig } from "../../services/config";
 
+const Row = Grid.Row;
+const Col = Grid.Col;
 
 function Storage_page() {
     const { t } = useTranslation()
@@ -39,14 +44,18 @@ function Storage_page() {
 
     return (
         <div style={{ width: "100%", height: "100%", }}>
-            <div style={{ width: "100%", height: "2rem", }}>
-                <Space>
-                    <Button onClick={() => { navigate('./add') }} type='primary'>{t('add')}</Button>
-                    <Button onClick={reupStorage} >{t('refresh')}</Button>
-                </Space>
-
-            </div>
-            <div style={{ height: "calc(100% - 2rem)" }}>
+            <Row style={{ width: "100%", height: "2rem", }}>
+                <Col flex={'auto'}>
+                    <Space>
+                        <Button onClick={() => { navigate('./add') }} type='primary'>{t('add')}</Button>
+                        <Button onClick={reupStorage} >{t('refresh')}</Button>
+                    </Space>
+                </Col>
+                <Col flex={'4rem'} style={{ textAlign: 'right' }}>
+                    <Button title={t('help')} icon={<IconQuestionCircle />} onClick={() => { openUrlInBrowser(roConfig.url.docs + '/docs/storage-mgr') }} />
+                </Col>
+            </Row>
+            <div style={{ height: "calc(100% - 3rem)" }}>
                 <br />
                 <Table style={{ height: "100%" }} noDataElement={<NoData_module />} columns={columns} pagination={false} data={
                     rcloneInfo.storageList.map((item) => {

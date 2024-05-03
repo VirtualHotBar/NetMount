@@ -1,12 +1,13 @@
+import { t } from "i18next";
 import { TaskListItem } from "../../type/config";
 import { copyDir, copyFile, delDir, delFile, moveDir, moveFile, sync } from "../storage/storage";
 
 async function runTask(task: TaskListItem): Promise<TaskListItem> {
-    let taskMsg = ''
+    let taskMsg:string = task.runInfo.msg||''
 
     const executeTask = (task: TaskListItem) => {
         console.log(`Executing ${task.taskType} task: ${task.name}`);
-
+        
         const srcIsDir = task.source.path.endsWith('/');
         const targetIsDir = task.target.path.endsWith('/');
 
@@ -83,7 +84,8 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
         }
     } catch (error) {
         console.error(`Error executing task ${task.name}:`, error);
-        task.runInfo = { ...task.runInfo, error: true, msg: taskMsg + (error instanceof Error ? error.message : String(error)) };
+        taskMsg+='\r\n'+t('runtime_error')+':'+ (error instanceof Error ? error.message : String(error)) 
+        task.runInfo = { ...task.runInfo, error: true, msg: taskMsg };
     }
 
     return task;

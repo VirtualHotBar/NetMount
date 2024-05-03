@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api"
-import { nmConfig } from "../../../services/config"
+import { nmConfig, saveNmConfig } from "../../../services/config"
 import { hooks } from "../../../services/hook"
 import { rcloneInfo } from "../../../services/rclone"
 import { MountListItem } from "../../../type/config"
@@ -49,6 +49,7 @@ async function addMountStorage(storageName: string, mountPath: string, parameter
     }
     nmConfig.mount.lists.push(mountInfo)
 
+    await saveNmConfig()
     await reupMount()
 }
 
@@ -63,23 +64,27 @@ async function delMountStorage(mountPath: string) {
         }
     })
 
+    await saveNmConfig()
     await reupMount()
 }
 
 async function editMountStorage(mountInfo: MountListItem) {
 
     await reupMount()
-    rcloneInfo.mountList.forEach((item) => {
-        if (item.mountPath === mountInfo.mountPath) {
-            return false
-        }
-    })
+    //觉得这里是不必要的，就注释了
+    /*rcloneInfo.mountList.forEach((item) => {
+            if (item.mountPath === mountInfo.mountPath) {
+                return false
+            }
+        }) */
 
     const index = nmConfig.mount.lists.findIndex((item) => item.mountPath === mountInfo.mountPath)
 
     if (index !== -1) {
         nmConfig.mount.lists[index] = mountInfo
     }
+
+    await saveNmConfig()
 }
 
 async function mountStorage(mountInfo: MountListItem) {
@@ -107,4 +112,4 @@ async function getAvailableDriveLetter(): Promise<string> {
 }
 
 
-export { reupMount, mountStorage, unmountStorage, addMountStorage, delMountStorage, editMountStorage, getMountStorage, isMounted,getAvailableDriveLetter }
+export { reupMount, mountStorage, unmountStorage, addMountStorage, delMountStorage, editMountStorage, getMountStorage, isMounted, getAvailableDriveLetter }

@@ -263,5 +263,16 @@
     "storage_name_already_exists":"存储名称已存在",
 
     "get_notice":"获取通知",
-    "saved":"已保存"
+    "saved":"已保存",
+    "warning":"警告",
+    "help":"帮助",
+    "docs":"文档",
+    "help_for_this_storage":"该存储的帮助",
+    "none":"无",
+    "next_run_at":"下次运行时间",
+    "trigger_task":"触发任务",
+    "runtime_error":"运行错误",
+    "view_log":"查看日志",
+    "version":"版本",
+    "filelist_load_Fail":"文件列表加载失败，请检查网络或存储配置"
 }

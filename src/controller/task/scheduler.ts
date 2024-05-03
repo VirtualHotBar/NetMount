@@ -1,3 +1,4 @@
+import { t } from "i18next";
 import { TaskListItem } from "../../type/config";
 import { runTask } from "./runner";
 import { delTask } from "./task";
@@ -10,6 +11,7 @@ class TaskScheduler {
     }
 
     public async addTask(task: TaskListItem) {
+        if(!task.runInfo.msg){task.runInfo.msg=''}
         if (task.enable) {
             this.tasks.push(task);
             this.scheduleTask(task);
@@ -47,11 +49,15 @@ class TaskScheduler {
                             executeTaskInterval();
                         }, timeout);
                     }
+
+                    task.runInfo.msg += '\r\n'+`${t('next_run_at')}: ${scheduledTime.toLocaleString()}`;
                 };
                 executeTaskInterval();
                 break;
             case 'interval':
-                task.run.runId = window.setInterval(async () => await this.executeTask(task), task.run.interval);
+                const intervalMs = task.run.interval!*1000;
+                task.run.runId = window.setInterval(async () => await this.executeTask(task), intervalMs);
+                //task.runInfo.msg += '\r\n'+`${t('next_run_at')}: ${new Date(Date.now() + intervalMs).toLocaleString()}`;
                 break;
             default:
                 console.error('Invalid task mode:', task.run.mode);
@@ -59,6 +65,7 @@ class TaskScheduler {
     }
 
     public async executeTask(task: TaskListItem) {
+        task.runInfo.msg += '\r\n'+`${(new Date(Date.now())).toLocaleString()}: ${t('trigger_task')}`;
         const updatedTask = await runTask(task)
         this.tasks = this.tasks.map(t => t.name === updatedTask.name ? updatedTask : t);
     }

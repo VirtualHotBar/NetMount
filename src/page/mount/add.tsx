@@ -3,11 +3,12 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom';
 import { ParametersType } from '../../type/rclone/storage/defaults';
-import { getProperties, getURLSearchParam } from '../../utils/utils';
+import { getProperties, getURLSearchParam, getWinFspInstallState } from '../../utils/utils';
 import { defaultMountConfig, defaultVfsConfig } from '../../controller/storage/mount/parameters/defaults';
 import { InputItem_module } from '../other/inputItem';
 import { rcloneInfo } from '../../services/rclone';
 import { addMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage } from '../../controller/storage/mount/mount';
+import { osInfo } from '../../services/config';
 
 const FormItem = Form.Item;
 
@@ -21,6 +22,7 @@ export default function AddMount_page() {
     const [mountPath, setMountPath] = useState<string>('')
     const [autoMount, setAutoMount] = useState(true)
     //const [autoMountPath, setAutoMountPath] = useState(true)//自动分配盘符
+    //const [notification, contextHolder] = Notification.useNotification();
 
     const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows');
 
@@ -35,6 +37,26 @@ export default function AddMount_page() {
         parameters.vfsOpt[key] = value;
     };
 
+    const checkWinFspState = async () => {
+        if (osInfo.osType === 'Windows_NT' && rcloneInfo.endpoint.isLocal) {
+            const winFspInstallState = await getWinFspInstallState();
+            if (!winFspInstallState) {
+                navigate('/mount')
+                Notification.warning({
+                    id: 'winfsp_not_installed',
+                    title: t('warning'),
+                    content: t('winfsp_not_installed'),
+                })
+            }
+        } else {
+
+        }
+    }
+
+    useEffect(() => {
+        checkWinFspState()
+    }, [osInfo.osType, rcloneInfo.endpoint.isLocal])
+
     useEffect(() => {
         if (getURLSearchParam('name')) {
             setStorageName(getURLSearchParam('name'))
@@ -48,10 +70,12 @@ export default function AddMount_page() {
         } else {
             setMountPath('/netmount/' + storageName)
         }
+
     }, [])
 
     return (
         <div>
+           
             <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{t('add_mount')}</h2>
             <Form>
                 <FormItem label={t('storage')}>

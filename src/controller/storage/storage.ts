@@ -42,14 +42,21 @@ async function getStorageParams(name: string): Promise<ParametersType> {
 
 
 //获取文件列表
-async function getFileList(storageName: string, path: string): Promise<FileInfo[]> {
+async function getFileList(storageName: string, path: string): Promise<FileInfo[]|undefined> {
 
     const fileList = await rclone_api_post(
         '/operations/list', {
         fs: storageName + ':',
         remote: formatPathRclone(path, false)
     })
-    return fileList.list
+    console.log(fileList);
+    
+    if (fileList&&fileList.list) {
+        return fileList.list
+    }else{
+        return undefined
+    }
+    
 }
 
 //删除存储

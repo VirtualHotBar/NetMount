@@ -1,4 +1,5 @@
-import { StorageListAll } from "../../type/rclone/storage/storageListAll";
+import { DefaultParams } from "../../type/rclone/storage/defaults";
+import { StorageList } from "../../type/rclone/storage/storageListAll";
 import { aliasDefaults } from "./parameters/defaults/alias";
 import { alistDefaults } from "./parameters/defaults/alist";
 import { boxDefaults } from "./parameters/defaults/box";
@@ -21,7 +22,9 @@ import { swiftDefaults } from "./parameters/defaults/swift";
 import { webdavDefaults } from "./parameters/defaults/webdav";
 import { yandexDefaults } from "./parameters/defaults/yandex";
 
-const storageListAll = [
+
+
+const storageListAll:StorageList[] = [
     {
         name: 'Alist',
         type: 'webdav',
@@ -152,7 +155,7 @@ const storageListAll = [
 
 
 //根据标识返回StorageListAll
-function searchStorage(v: string | undefined, displayType: boolean=false): StorageListAll {
+function searchStorage(v: string | undefined, displayType: boolean=false): StorageList {
     for (const storageItem of storageListAll) {
         if(!displayType){
             if (( storageItem.introduce === v|| storageItem.name === v||storageItem.type === v )&&!storageItem.displayType) {

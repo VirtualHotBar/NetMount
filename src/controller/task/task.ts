@@ -1,4 +1,4 @@
-import { nmConfig } from "../../services/config";
+import { nmConfig, saveNmConfig } from "../../services/config";
 import { TaskListItem } from "../../type/config";
 import { TaskScheduler } from "./scheduler";
 
@@ -21,12 +21,15 @@ function saveTask(taskInfo: TaskListItem) {
         taskScheduler.addTask(taskInfo)
     }
     
+    saveNmConfig()
     return true
 }
 
 function delTask(taskName: string) {
     taskScheduler.cancelTask(taskName)
     nmConfig.task = nmConfig.task.filter((task) => task.name !== taskName);
+
+    saveNmConfig()
     return true;
 }
 

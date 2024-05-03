@@ -3,7 +3,8 @@ import { NMConfig, OSInfo } from "../type/config"
 
 const roConfig = {
     url: {
-        website: 'https://www.netmount.cn/',
+        website: 'https://www.netmount.cn',
+        docs: 'https://docs.netmount.cn',
         rclone: 'https://github.com/rclone/rclone',
     },
     options: {

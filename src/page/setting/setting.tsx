@@ -9,6 +9,8 @@ import { getVersion } from '@tauri-apps/api/app';
 import { shell } from '@tauri-apps/api';
 import { rcloneInfo } from '../../services/rclone';
 import { setLocalized } from '../../controller/language/localized';
+import { openUrlInBrowser } from '../../utils/utils';
+import { showLog } from '../other/modal';
 const CollapseItem = Collapse.Item;
 const FormItem = Form.Item;
 const Row = Grid.Row;
@@ -19,24 +21,17 @@ export default function Setting_page() {
   const [autostart, setAutostart] = useState<boolean>()
   const [modal, contextHolder] = Modal.useModal();
   const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
+  const [version, setVersion]=useState<string>()
 
-  const getAutostart = async () => {
+  const getInfo = async () => {
     setAutostart(await getAutostartState());
+    setVersion(await getVersion())
   }
 
-  const showLog = (log: string) => {
-    modal.info!({
 
-      title: t('log'),
-      content: <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
-        {log}
-      </div>
-    })
-
-  }
 
   useEffect(() => {
-    getAutostart()
+    getInfo()
   }, [])
 
 
@@ -100,23 +95,27 @@ export default function Setting_page() {
         <Card title={t('about')} style={{}} size='small'>
           <Row >
             <Col flex={'auto'} >
+              {t('version')}: {version}
+              <br/>
               {t('about_text')}
               <br />
-              {t('technology_stack')}:Tauri,TypeScript,Vite,React,Arco Design,Rust
-              <br />
+              {/* {t('technology_stack')}:Tauri,TypeScript,Vite,React,Arco Design,Rust
+              <br /> */}
               Copyright © 2024-Present VirtualHotBar
             </Col>
             <Col flex={'10rem'} style={{ textAlign: 'right' }}>
-              <Link onClick={() => { shell.open(roConfig.url.website) }}> NetMount </Link>
+              <Link onClick={() => { openUrlInBrowser(roConfig.url.website) }}> NetMount </Link>
               <br />
-              <Link onClick={() => { open(roConfig.url.website + 'page/license') }}> {t('licence')} </Link>
+              <Link onClick={() => { openUrlInBrowser(roConfig.url.docs ) }}> {t('docs')} </Link>
+              <br />
+              <Link onClick={() => { open(roConfig.url.docs + '/license') }}> {t('licence')} </Link>
               <br />
             </Col>
           </Row>
         </Card>
         <Card title={t('components')} style={{}} size='small'>
           <Link onClick={() => { shell.open(roConfig.url.rclone) }}>Rclone</Link>(<Link onClick={() => {
-            rcloneInfo.process.log && showLog(rcloneInfo.process.log)
+            rcloneInfo.process.log && showLog(modal,rcloneInfo.process.log)
           }}>{t('log')}</Link>): {rcloneInfo.version.version}
           <br />
         </Card>

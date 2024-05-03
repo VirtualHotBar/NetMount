@@ -1,4 +1,4 @@
-import { fs, invoke } from "@tauri-apps/api";
+import { fs, invoke, shell } from "@tauri-apps/api";
 import { runCmd } from "./tauri/cmd";
 
 export function isEmptyObject(back: any): boolean {
@@ -100,6 +100,15 @@ export async function getWinFspInstallState() {
     return await invoke('get_winfsp_install_state') as boolean
 }
 
-export async function installWinFsp() {
-    await runCmd('msiexec',['/i', 'res\\bin\\winfsp.msi','/qn'])
+export async function installWinFsp(): Promise<boolean> {
+    try {
+        await runCmd('msiexec', ['/i', 'res\\bin\\winfsp.msi', '/passive'])
+        return true
+    } catch {
+        return false
+    }
+}
+
+export async function openUrlInBrowser(url: string) {
+    await shell.open(url) 
 }
