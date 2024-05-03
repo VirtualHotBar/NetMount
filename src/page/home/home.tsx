@@ -77,6 +77,7 @@ function Home_page() {
         {/*         <Card title='状态概览' size='small'>
           运行时间：{formatETA(rcloneInfo.stats.elapsedTime)}
         </Card> */}
+
         <div style={{ height: '1.5rem' }} />
         {rcloneInfo.storageList && !(rcloneInfo.storageList.length > 0) &&
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
