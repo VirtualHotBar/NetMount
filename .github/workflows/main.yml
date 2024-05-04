@@ -33,6 +33,9 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            const lastSegment = process.env.PACKAGE_VERSION.split('.').pop();
+            const releaseTag = `${lastSegment}`;
+    
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
