@@ -144,18 +144,26 @@ jobs:
         run: echo "::set-output name=changelog::$(cat CHANGELOG.md)"
 
       - name: publish release
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         env:
           release_id: ${{ needs.create-release.outputs.release_id }}
           changelog: ${{ needs.generate-changelog.outputs.changelog }}
         with:
           script: |
             const changelog = process.env.changelog
+            const { pull_request } = context.payload;
+            
+            // Check if the event payload contains a pull request
+            let prBody = '';
+            if (pull_request) {
+              prBody = pull_request.body || '';
+            }
+
             github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: process.env.release_id,
               draft: false,
               prerelease: false,
-              body: `${changelog}\n\n${context.github.event.pull_request.body}`
+              body: `${changelog}\n\n${prBody}`
             })
