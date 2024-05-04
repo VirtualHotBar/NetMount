@@ -39,11 +39,11 @@ function Home_page() {
     }
 
     if (!checkedUpdate) {
-      checkUpdate(async (info) => {
+      checkUpdate(async (info,localVersions) => {
         modal.confirm!({
           title: t('update_available'),
           content: <>
-            {`${t('current_version')}:${await getVersion()} , ${t('latest_version')}:${info.name}`}
+            {`${t('current_version')}:${localVersions} , ${t('latest_version')}:${info.name}`}
             <br />
             {t('goto_the_website_get_latest_version_ask')}
           </>,
