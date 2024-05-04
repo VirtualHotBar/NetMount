@@ -2,7 +2,7 @@ import React, { useEffect, useReducer, useState } from 'react'
 import { DevTips_module } from '../other/devTips'
 import { Button, Card, Collapse, Divider, Form, Grid, Link, Message, Modal, Select, Space, Switch, Typography } from '@arco-design/web-react'
 import { Test } from '../../controller/test'
-import { nmConfig, roConfig, saveNmConfig } from '../../services/config';
+import { nmConfig, osInfo, roConfig, saveNmConfig } from '../../services/config';
 import { getAutostartState, setAutostartState, setThemeMode } from '../../controller/setting/setting';
 import { useTranslation } from 'react-i18next';
 import { getVersion } from '@tauri-apps/api/app';
@@ -75,7 +75,7 @@ export default function Setting_page() {
               </Select>
             </FormItem>
             <FormItem label={t('autostart')}>
-              <Switch checked={autostart} onChange={async (value) => {
+              <Switch checked={autostart} disabled={osInfo.osType==='Darwin'} onChange={async (value) => {
                 await setAutostartState(value);
                 setAutostart(value)
               }} />
