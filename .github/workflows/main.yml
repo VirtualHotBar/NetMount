@@ -129,7 +129,7 @@ jobs:
         uses: TriPSs/conventional-changelog-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          output-file: CHANGELOG.md
+          output-file: false
 
 
 
@@ -139,10 +139,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Get Changelog
-        id: get-changelog
-        run: echo "::set-output name=changelog::$(cat CHANGELOG.md)"
-
       - name: publish release
         uses: actions/github-script@v7
         env:
