@@ -4,7 +4,7 @@ name: "publish"
 on: 
    workflow_dispatch:
 
-    
+
 # `tauri-action` can also upload app bundles to an existing GitHub release.
 # This workflow uses different actions to create and publish the release.
 # `tauri-action` will only build and upload the app bundles to the specified release.
@@ -36,8 +36,8 @@ jobs:
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: `app-v${process.env.PACKAGE_VERSION}`,
-              name: `Desktop App v${process.env.PACKAGE_VERSION}`,
+              tag_name: `v${process.env.PACKAGE_VERSION}`,
+              name: `NetMonut v${process.env.PACKAGE_VERSION}`,
               body: 'Take a look at the assets to download and install this app.',
               draft: true,
               prerelease: false
@@ -45,7 +45,7 @@ jobs:
             return data.id
 
   build-tauri:
-    needs: create-release
+    needs: [create-release, generate-changelog]
     permissions:
       contents: write
     strategy:
@@ -97,24 +97,40 @@ jobs:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.settings.args }}
 
-  publish-release:
-    permissions:
-      contents: write
+
+  generate-changelog:
     runs-on: ubuntu-latest
-    needs: [create-release, build-tauri]
+    outputs:
+      changelog: ${{ steps.generate-changelog.outputs.changelog }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate Changelog
+        id: generate-changelog
+        uses: TriPSs/conventional-changelog-action@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          output-file: false
+
+
+
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: [create-release, build-tauri, generate-changelog]
 
     steps:
       - name: publish release
-        id: publish-release
         uses: actions/github-script@v6
         env:
           release_id: ${{ needs.create-release.outputs.release_id }}
+          changelog: ${{ needs.generate-changelog.outputs.changelog }}
         with:
           script: |
+            const changelog = process.env.changelog
             github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: process.env.release_id,
               draft: false,
-              prerelease: false
+              prerelease: false,
+              body: changelog
             })
