@@ -20,9 +20,11 @@ use crate::autostart::set_autostart;
 use crate::utils::download_with_progress;
 #[cfg(target_os = "windows")]
 use crate::utils::find_first_available_drive_letter;
+#[cfg(target_os = "windows")]
 use crate::utils::is_winfsp_installed;
 #[cfg(target_os = "windows")]
 use crate::utils::set_window_shadow;
+
 
 //use crate::localized::LANGUAGE_PACK;
 //use crate::localized::get_localized_text;
@@ -59,9 +61,9 @@ fn main() {
             get_winfsp_install_state,
             get_available_drive_letter
         ])
-        .setup(|app| {
+        .setup(|_app| {
             #[cfg(target_os = "windows")]
-            set_window_shadow(app); // 设置窗口阴影
+            set_window_shadow(_app); // 设置窗口阴影
             Ok(())
         });
 

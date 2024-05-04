@@ -1,8 +1,11 @@
+#[cfg(target_os = "windows")]
 use tauri::{Manager, Runtime};
-
+#[cfg(target_os = "windows")]
 use window_shadows::set_shadow;
 
+#[cfg(target_os = "windows")]
 use std::error::Error;
+#[cfg(target_os = "windows")]
 use std::fs;
 use std::io::{self, Write};
 //use tauri::AppHandle;
@@ -14,7 +17,7 @@ pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
         set_shadow(&window, true).expect("Unsupported platform!");
     }
 }
-
+#[cfg(target_os = "windows")]
 #[tauri::command]
 pub fn find_first_available_drive_letter() -> Result<Option<String>, io::Error> {
     #[cfg(target_os = "linux")]
@@ -76,6 +79,7 @@ where
     Ok(())
 }
 
+#[cfg(target_os = "windows")]
 pub fn is_winfsp_installed() -> Result<bool, Box<dyn Error>> {
     #[cfg(target_os = "linux")]
     {
