@@ -131,6 +131,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           output-file: false
           skip-tag: true
+          skip-commit: true
 
 
 
