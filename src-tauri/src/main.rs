@@ -133,7 +133,7 @@ fn run_command(cmd: &str) -> Result<(), Box<dyn Error>> {
 fn get_winfsp_install_state() -> Result<bool, usize> {
     #[cfg(not(target_os = "windows"))]
     return Ok(false);
-    
+
     #[cfg(target_os = "windows")]
     match is_winfsp_installed() {
         Ok(is_enabled) => Ok(is_enabled),
@@ -144,7 +144,7 @@ fn get_winfsp_install_state() -> Result<bool, usize> {
 #[tauri::command]
 fn get_autostart_state() -> Result<bool, usize> {
     #[cfg(target_os = "macos")]
-    Ok(false);
+    return Ok(false);
 
     #[cfg(not(target_os = "macos"))]
     match is_autostart() {
