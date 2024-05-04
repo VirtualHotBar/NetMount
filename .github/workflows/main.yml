@@ -34,12 +34,11 @@ jobs:
         with:
           script: |
             const lastSegment = process.env.PACKAGE_VERSION.split('.').pop();
-            const releaseTag = `${lastSegment}`;
-    
+
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: `v${process.env.PACKAGE_VERSION}`,
+              tag_name: `v${lastSegment}`,
               name: `NetMonut v${process.env.PACKAGE_VERSION}`,
               body: 'Take a look at the assets to download and install this app.',
               draft: true,
