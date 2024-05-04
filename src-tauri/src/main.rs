@@ -15,7 +15,9 @@ mod localized;
 mod tray;
 mod utils;
 
+#[cfg(not(target_os = "macos"))]
 use crate::autostart::is_autostart;
+#[cfg(not(target_os = "macos"))]
 use crate::autostart::set_autostart;
 use crate::utils::download_with_progress;
 #[cfg(target_os = "windows")]
@@ -140,14 +142,18 @@ fn get_winfsp_install_state() -> Result<bool, usize> {
 
 #[tauri::command]
 fn get_autostart_state() -> Result<bool, usize> {
+
+    #[cfg(not(target_os = "macos"))]
     match is_autostart() {
         Ok(is_enabled) => Ok(is_enabled),
         Err(_) => Ok(false),
     }
+    Ok(false)
 }
 
 #[tauri::command]
 fn set_autostart_state(enabled: bool) -> Result<(), ()> {
+    #[cfg(not(target_os = "macos"))]
     let _ = set_autostart(enabled);
     Ok(())
 }
