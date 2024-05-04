@@ -129,7 +129,7 @@ jobs:
         uses: TriPSs/conventional-changelog-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          output-file: false
+          output-file: CHANGELOG.md
 
 
 
