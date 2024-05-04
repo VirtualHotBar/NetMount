@@ -61,7 +61,7 @@
       }
     },
     "bundle": {
-      "targets": ["nsis"],
+      "targets": ["nsis","deb","appimage","app","dmg"],
       "active": true,
       "category": "DeveloperTool",
       "copyright": "",
