@@ -11,7 +11,7 @@
   },
   "tauri": {
     "systemTray": {
-      "iconPath": "icons/icon.png",
+      "iconPath": "img/icons/icon.png",
       "iconAsTemplate": true
     },
     "allowlist": {
@@ -61,6 +61,7 @@
       }
     },
     "bundle": {
+      "targets": ["nsis"],
       "active": true,
       "category": "DeveloperTool",
       "copyright": "",
@@ -69,9 +70,9 @@
       },
       "externalBin": [],
       "icon": [
-        "icons/icon.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
+        "img/icons/icon.png",
+        "img/icons/icon.icns",
+        "img/icons/icon.ico"
       ],
       "identifier": "com.vhbs.netmount",
       "longDescription": "",
@@ -82,15 +83,30 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
+      "resources": [
+        "res/bin/**/*"
+      ],
       "shortDescription": "",
-      "targets": [],
       "windows": {
+        
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": "",
         "webviewInstallMode": {
           "type": "embedBootstrapper"
+        },
+        "wix":{
+          "bannerPath": "img/wix/banner.png",
+          "dialogImagePath":"img/wix/dialog.png",
+          "language": ["zh-CN","en-US"],
+          "template": "pack/wix.wxs"
+        },
+        "nsis":{
+          "sidebarImage":"img/nsis/sidebar.bmp",
+          "headerImage": "img/nsis/header.bmp",
+          "languages":["SimpChinese","English"],
+          "installerIcon": "img/icons/icon.ico"
+          
         }
       }
     },
