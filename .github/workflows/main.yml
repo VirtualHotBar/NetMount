@@ -1,4 +1,4 @@
-name: "publish"
+name: "Publish Release"
 
 
 on: 
@@ -33,12 +33,10 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const lastSegment = process.env.PACKAGE_VERSION.split('.').pop();
-
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: `v${lastSegment}`,
+              tag_name: `v${process.env.PACKAGE_VERSION}`,
               name: `NetMonut v${process.env.PACKAGE_VERSION}`,
               body: 'Take a look at the assets to download and install this app.',
               draft: true,
@@ -118,7 +116,8 @@ jobs:
   publish-release:
     runs-on: ubuntu-latest
     needs: [create-release, build-tauri, generate-changelog]
-
+    permissions:
+      contents: write
     steps:
       - name: publish release
         uses: actions/github-script@v6
