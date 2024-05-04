@@ -145,8 +145,8 @@ fn get_autostart_state() -> Result<bool, usize> {
 
     #[cfg(not(target_os = "macos"))]
     match is_autostart() {
-        Ok(is_enabled) => Ok(is_enabled),
-        Err(_) => Ok(false),
+        Ok(is_enabled) => is_enabled,
+        Err(_) => false,
     }
     Ok(false)
 }
