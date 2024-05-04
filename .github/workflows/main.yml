@@ -132,6 +132,7 @@ jobs:
           output-file: false
           skip-tag: true
           skip-commit: true
+          skip-git-pull: true
 
 
 
