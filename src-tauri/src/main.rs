@@ -156,7 +156,7 @@ fn get_autostart_state() -> Result<bool, usize> {
 #[tauri::command]
 fn set_autostart_state(enabled: bool) -> Result<(), ()> {
     #[cfg(target_os = "macos")]
-    Ok(());
+    return Ok(());
     
     #[cfg(not(target_os = "macos"))]
     let _ = set_autostart(enabled);
