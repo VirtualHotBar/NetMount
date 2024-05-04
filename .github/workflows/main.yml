@@ -130,6 +130,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           output-file: false
+          skip-tag: true
 
 
 
