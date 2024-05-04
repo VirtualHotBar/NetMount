@@ -144,7 +144,7 @@ jobs:
         run: echo "::set-output name=changelog::$(cat CHANGELOG.md)"
 
       - name: publish release
-        uses: actions/github-script@v7
+        uses: actions/github-script@v6
         env:
           release_id: ${{ needs.create-release.outputs.release_id }}
           changelog: ${{ needs.generate-changelog.outputs.changelog }}
