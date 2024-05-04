@@ -93,9 +93,9 @@ jobs:
           path: |
             ~/.pnpm-store
             node_modules
-          key: ${{ runner.os }}-${{ runner.arch}}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: pnpm-${{ runner.os }}-${{ runner.arch}}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch}}-pnpm-
+            pnpm-${{ runner.os }}-${{ runner.arch}}-
 
       - name: install frontend dependencies
         run: pnpm install
@@ -106,9 +106,9 @@ jobs:
           path: |
             ~/.cargo/registry
             src-tauri/target
-          key: ${{ runner.os }}-${{ runner.arch}}cargo-${{ hashFiles('**/src-tauri/Cargo.lock') }}
+          key: cargo-${{ runner.os }}-${{ runner.arch}}-${{ hashFiles('**/src-tauri/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch}}-cargo-
+            cargo-${{ runner.os }}-${{ runner.arch}}-
 
       - uses: tauri-apps/tauri-action@v0
         env:
