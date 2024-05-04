@@ -18,8 +18,10 @@ mod utils;
 use crate::autostart::is_autostart;
 use crate::autostart::set_autostart;
 use crate::utils::download_with_progress;
+#[cfg(target_os = "windows")]
 use crate::utils::find_first_available_drive_letter;
 use crate::utils::is_winfsp_installed;
+#[cfg(target_os = "windows")]
 use crate::utils::set_window_shadow;
 
 //use crate::localized::LANGUAGE_PACK;
@@ -53,6 +55,7 @@ fn main() {
             download_file,
             get_autostart_state,
             set_autostart_state,
+
             get_winfsp_install_state,
             get_available_drive_letter
         ])
@@ -121,9 +124,12 @@ fn run_command(cmd: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 } */
 
-#[cfg(target_os = "windows")]
+
 #[tauri::command]
 fn get_winfsp_install_state() -> Result<bool, usize> {
+    #[cfg(not(target_os = "windows"))]
+    return Ok(false);
+    #[cfg(target_os = "windows")]
     match is_winfsp_installed() {
         Ok(is_enabled) => Ok(is_enabled),
         Err(_) => Ok(false),
@@ -158,9 +164,11 @@ fn download_file(url: String, out_path: String) -> Result<bool, usize> {
     Ok(true)
 }
 
-#[cfg(target_os = "windows")]
 #[tauri::command]
 fn get_available_drive_letter() -> Result<String, String> {
+    #[cfg(not(target_os = "windows"))]
+    return Ok(String::from(""));
+    #[cfg(target_os = "windows")]
     match find_first_available_drive_letter() {
         Ok(Some(drive)) => Ok(drive),
         Ok(None) => Ok(String::from("")),
