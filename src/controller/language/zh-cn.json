@@ -274,5 +274,7 @@
     "runtime_error":"运行错误",
     "view_log":"查看日志",
     "version":"版本",
-    "filelist_load_Fail":"文件列表加载失败，请检查网络或存储配置"
+    "filelist_load_Fail":"文件列表加载失败，请检查网络或存储配置",
+
+    "devtools":"开发者工具"
 }

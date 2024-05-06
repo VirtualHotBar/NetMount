@@ -32,7 +32,6 @@ async function startRclone() {
 
     console.log(args);
     rcloneInfo.process.command = new Command('rclone', args)
-console.log(rcloneInfo.process.command);
 
     rcloneInfo.process.log = ''
     const addLog = (data: string) => {
@@ -44,8 +43,6 @@ console.log(rcloneInfo.process.command);
     rcloneInfo.process.command.stderr.on('data', (data) => addLog(data))
 
     rcloneInfo.process.child = await rcloneInfo.process.command.spawn()
-console.log(rcloneInfo.process);
-
 }
 
 async function stopRclone() {

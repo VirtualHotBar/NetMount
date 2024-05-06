@@ -2,6 +2,7 @@
 import { Modal } from "@arco-design/web-react";
 import { t } from "i18next";
 import { ReactNode } from "react";
+import { set_devtools_state } from "../utils/utils";
 window.onerror = async function (msg, url, lineNo, columnNo, error) {
     let message = [
         'Message: ' + msg,
@@ -27,6 +28,8 @@ async function errorThrowToUser(message: string) {
     //排除这个错误
     if (message.toString().includes('ResizeObserver')) { return }
 
+    await set_devtools_state(true)
+    
     let content = t('error_tips') + ',Error:' + message
 
     //提示错误

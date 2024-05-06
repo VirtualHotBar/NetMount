@@ -8,17 +8,22 @@ function listenWindow() {
         windowsHide()
     })
 
-    // 阻止F5或Ctrl+R（Windows/Linux）和Command+R（Mac）刷新页面
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'F5' || (event.ctrlKey && event.key === 'r') || (event.metaKey && event.key === 'r')) {
-            event.preventDefault();
-        }
-    });
+
 
     //禁止右键
-    document.oncontextmenu = () => {
-        return false;
+    if (process.env.NODE_ENV != 'development') {
+        // 阻止F5或Ctrl+R（Windows/Linux）和Command+R（Mac）刷新页面
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'F5' || (event.ctrlKey && event.key === 'r') || (event.metaKey && event.key === 'r')) {
+                event.preventDefault();
+            }
+        });
+
+        document.oncontextmenu = () => {
+            return false;
+        }
     }
+
 }
 
 function windowsHide() {

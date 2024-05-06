@@ -76,9 +76,14 @@ function main() {
 }
 
 async function exit() {
-    await stopRclone()
-    await saveNmConfig()
-    await process.exit();
+    try{
+        await stopRclone()
+        await saveNmConfig()
+    }finally{
+        await process.exit();
+    }
+
+    
 }
 
 export { init, main, exit }

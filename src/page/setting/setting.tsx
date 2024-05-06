@@ -9,7 +9,7 @@ import { getVersion } from '@tauri-apps/api/app';
 import { shell } from '@tauri-apps/api';
 import { rcloneInfo } from '../../services/rclone';
 import { setLocalized } from '../../controller/language/localized';
-import { openUrlInBrowser } from '../../utils/utils';
+import { openUrlInBrowser, set_devtools_state } from '../../utils/utils';
 import { showLog } from '../other/modal';
 const CollapseItem = Collapse.Item;
 const FormItem = Form.Item;
@@ -120,7 +120,11 @@ export default function Setting_page() {
           <br />
         </Card>
         <Card title={t('tools')} style={{}} size='small'>
+          <Space>
+          <Button onClick={async () => {await set_devtools_state(true)}}>{t('devtools')}</Button>
           <Button onClick={Test}>Test</Button>
+          </Space>
+
         </Card>
       </Space>
     </div>

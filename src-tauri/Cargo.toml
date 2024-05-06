@@ -35,6 +35,7 @@ tauri = { version = "1.6.1", features = [ "macos-private-api",
     "process-all",
     "system-tray",
     "window-all",
+    "devtools",
 ] }
 window-shadows = "0.2.2"
 

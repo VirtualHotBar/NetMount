@@ -1,4 +1,6 @@
 use std::process::exit;
+#[cfg(not(target_os = "windows"))]
+use std::os::unix::fs::PermissionsExt;
 use std::{env, path::Path};
 // 获取操作系统类型
 const OS_TYPE: &str = env::consts::OS;
@@ -82,7 +84,8 @@ fn check_rclone() {
 
     // 复制 rclone
     let _ = std::fs::copy(temp_file_path, format!("{}{}", rclone_path, rclone_name));
-
+    //chmod 755
+    let _ = std::fs::set_permissions(format!("{}{}", rclone_path, rclone_name), std::fs::Permissions::from_mode(0o755));
     //清理
     let _ = std::fs::remove_dir_all(temp_dir);
     println!("rclone 检查完成");

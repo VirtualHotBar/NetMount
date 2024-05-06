@@ -136,3 +136,9 @@ export function compareVersions(v1:string, v2:string) {
 
     return 0;
 }
+
+export async function set_devtools_state(state: boolean) {
+    await invoke('set_devtools_state', {
+        state: state
+    })
+}

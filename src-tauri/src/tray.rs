@@ -57,6 +57,7 @@ pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
             size: _,
             ..
         } => {
+            hide_or_show();
             println!("system tray received a left click");
         }
         // 右键点击
@@ -66,6 +67,7 @@ pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
             ..
         } => {
             println!("system tray received a right click");
+            
         }
         // 双击，macOS / Linux 不支持
         SystemTrayEvent::DoubleClick {
@@ -73,7 +75,7 @@ pub fn handler(app: &AppHandle, event: SystemTrayEvent) {
             size: _,
             ..
         } => {
-            hide_or_show();
+            
             println!("system tray received a double click");
         }
         // 根据菜单 id 进行事件匹配

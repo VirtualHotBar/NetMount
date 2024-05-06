@@ -27,7 +27,6 @@ use crate::utils::is_winfsp_installed;
 #[cfg(target_os = "windows")]
 use crate::utils::set_window_shadow;
 
-
 //use crate::localized::LANGUAGE_PACK;
 //use crate::localized::get_localized_text;
 use crate::localized::set_localized;
@@ -42,11 +41,10 @@ fn main() {
 
     //设置运行目录
     let exe_dir = env::current_exe().unwrap().parent().unwrap().to_path_buf();
-    if !cfg!(debug_assertions)&&cfg!(target_os = "windows") {
+    if !cfg!(debug_assertions) && cfg!(target_os = "windows") {
         env::set_current_dir(&exe_dir).expect("更改工作目录失败");
         //run_command(&format!("cd {}", exe_dir.display())).expect("运行cd命令失败");
     }
-
 
     // 根据不同的操作系统配置Tauri Builder
     let builder = tauri::Builder::default()
@@ -59,9 +57,9 @@ fn main() {
             download_file,
             get_autostart_state,
             set_autostart_state,
-
             get_winfsp_install_state,
-            get_available_drive_letter
+            get_available_drive_letter,
+            set_devtools_state
         ])
         .setup(|_app| {
             #[cfg(target_os = "windows")]
@@ -106,9 +104,15 @@ fn ensure_single_instance() {
     }
 }
 
-
-
-
+#[tauri::command]
+fn set_devtools_state(app: tauri::AppHandle, state: bool) {
+    let window = app.get_window("main").unwrap();
+    if state {
+        window.open_devtools();
+    } else {
+        window.close_devtools();
+    }
+}
 
 use std::error::Error;
 use std::process::Command;
@@ -126,8 +130,7 @@ fn run_command(cmd: &str) -> Result<(), Box<dyn Error>> {
     };
     child.wait_with_output()?;
     Ok(())
-} 
-
+}
 
 #[tauri::command]
 fn get_winfsp_install_state() -> Result<bool, usize> {
@@ -157,7 +160,7 @@ fn get_autostart_state() -> Result<bool, usize> {
 fn set_autostart_state(enabled: bool) -> Result<(), ()> {
     #[cfg(target_os = "macos")]
     return Ok(());
-    
+
     #[cfg(not(target_os = "macos"))]
     let _ = set_autostart(enabled);
     Ok(())
