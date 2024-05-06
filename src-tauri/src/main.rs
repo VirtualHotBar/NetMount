@@ -42,7 +42,7 @@ fn main() {
 
     //设置运行目录
     let exe_dir = env::current_exe().unwrap().parent().unwrap().to_path_buf();
-    if !cfg!(debug_assertions) {
+    if !cfg!(debug_assertions)&&cfg!(target_os = "windows") {
         env::set_current_dir(&exe_dir).expect("更改工作目录失败");
         //run_command(&format!("cd {}", exe_dir.display())).expect("运行cd命令失败");
     }
@@ -109,7 +109,7 @@ fn ensure_single_instance() {
 
 
 
-/*
+
 use std::error::Error;
 use std::process::Command;
 fn run_command(cmd: &str) -> Result<(), Box<dyn Error>> {
@@ -126,7 +126,7 @@ fn run_command(cmd: &str) -> Result<(), Box<dyn Error>> {
     };
     child.wait_with_output()?;
     Ok(())
-} */
+} 
 
 
 #[tauri::command]

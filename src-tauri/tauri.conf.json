@@ -56,6 +56,7 @@
             "cmd": "curl",
             "args": true
           }
+          
         ],
         "sidecar": false
       }
@@ -77,8 +78,8 @@
       "identifier": "com.vhbs.netmount",
       "longDescription": "",
       "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
+        "entitlements": "pack/macos/entitlements.plist",
+        "exceptionDomain": "localhost",
         "frameworks": [],
         "providerShortName": null,
         "signingIdentity": null
@@ -116,6 +117,7 @@
     "updater": {
       "active": false
     },
+    "macOSPrivateApi": true,
     "windows": [
       {
         "fullscreen": false,
@@ -126,8 +128,7 @@
         "minHeight": 450,
         "minWidth": 700,
         "transparent": true,
-        "decorations": false
-      }
+        "decorations": false      }
     ]
   }
 }
