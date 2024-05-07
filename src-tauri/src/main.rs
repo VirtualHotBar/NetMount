@@ -6,6 +6,7 @@ use serde_json::{to_string_pretty, Value};
 use std::env;
 //use std::error::Error;
 use std::fs;
+use std::path::Path;
 
 //use std::io::Read;
 //use std::path::Path;
@@ -45,23 +46,34 @@ fn main() {
         .expect("无法获取父目录")
         .to_path_buf();
     println!("exe_dir: {}", exe_dir.display());
-    if !cfg!(debug_assertions) && cfg!(target_os = "macos") {
-        // 在macOS上，进一步定位到.app内部的Contents/Resources目录
-        let resources_dir = exe_dir
-            .parent()
-            .expect("无法获取父目录")
-            .join("Resources");
-        println!("resources_dir: {}", resources_dir.display());
-        // 设置运行目录到Resources
-        if let Err(e) = env::set_current_dir(&resources_dir) {
-            eprintln!("更改工作目录到Resources失败: {}", e);
-            // 根据实际情况处理错误，如返回错误信息或终止程序
-        }
-    }
 
-    if !cfg!(debug_assertions) && cfg!(target_os = "windows") {
-        env::set_current_dir(&exe_dir).expect("更改工作目录失败");
-        //run_command(&format!("cd {}", exe_dir.display())).expect("运行cd命令失败");
+    let binding = env::current_exe().expect("Failed to get the current executable path");
+    let exe_flie_name =
+        Path::new(&binding)
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap();
+
+    if !cfg!(debug_assertions) {
+        if cfg!(target_os = "linux") {
+            let resources_dir = exe_dir.parent().expect("无法获取父目录").join("lib").join(exe_flie_name);
+            env::set_current_dir(&resources_dir).expect("更改工作目录失败");
+        }
+
+        if cfg!(target_os = "windows") {
+            env::set_current_dir(&exe_dir).expect("更改工作目录失败");
+        }
+
+        if cfg!(target_os = "macos") {
+            // 在macOS上，进一步定位到.app内部的Contents/Resources目录
+            let resources_dir = exe_dir.parent().expect("无法获取父目录").join("Resources");
+            println!("resources_dir: {}", resources_dir.display());
+            // 设置运行目录到Resources
+            if let Err(e) = env::set_current_dir(&resources_dir) {
+                eprintln!("更改工作目录到Resources失败: {}", e);
+                // 根据实际情况处理错误，如返回错误信息或终止程序
+            }
+        }
     }
 
     run_command("ls").expect("运行ls命令失败");
