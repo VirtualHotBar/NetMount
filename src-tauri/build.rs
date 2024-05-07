@@ -1,6 +1,6 @@
-use std::process::exit;
 #[cfg(not(target_os = "windows"))]
 use std::os::unix::fs::PermissionsExt;
+use std::process::exit;
 use std::{env, path::Path};
 // 获取操作系统类型
 const OS_TYPE: &str = env::consts::OS;
@@ -13,19 +13,10 @@ fn main() {
 }
 
 fn check_rclone() {
-    let rclone_path = "res/bin/";
+    let bin_path = "res/bin/";
 
-    if !Path::new(rclone_path).exists() {
-        std::fs::create_dir(rclone_path).expect("Failed to create rclone directory");
-    };
-
-    let rclone_name = match OS_TYPE {
-        "windows" => "rclone.exe",
-        _ => "rclone",
-    };
-
-    if Path::new(format!("{}{}", rclone_path, rclone_name).as_str()).exists() {
-        return;
+    if !Path::new(bin_path).exists() {
+        std::fs::create_dir(bin_path).expect("Failed to create rclone directory");
     };
 
     let temp_dir = Path::new("res/temp/");
@@ -33,65 +24,105 @@ fn check_rclone() {
         std::fs::create_dir_all(temp_dir).expect("Failed to create temp directory");
     }
 
-    let rclone_url = match OS_TYPE {
-        "windows" => match ARCH {
-            "x86_64" => "https://downloads.rclone.org/rclone-current-windows-amd64.zip",
-            "aarch64" => "https://downloads.rclone.org/rclone-current-windows-386.zip",
-            _ => "",
-        },
-        "linux" => match ARCH {
-            "x86_64" => "https://downloads.rclone.org/rclone-current-linux-amd64.zip",
-            "aarch64" => "https://downloads.rclone.org/rclone-current-linux-arm64.zip",
-            _ => "",
-        },
-        "macos" => match ARCH {
-            "x86_64" => "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
-            "aarch64" => "https://downloads.rclone.org/rclone-current-osx-arm64.zip",
-            _ => "",
-        },
-        _ => "",
-    };
-
-    if rclone_url.is_empty() {
-        panic!("Unsupported OS or architecture: {} {}", OS_TYPE, ARCH);
+    if OS_TYPE == "windows" {
+        //下载winfsp
+        let winfsp_url =
+            "https://github.com/winfsp/winfsp/releases/download/v2.0/winfsp-2.0.23075.msi";
+        let winfsp_path = &format!("{}winfsp.msi", bin_path);
+        if !Path::new(winfsp_path).exists() {
+            let _ = download_with_progress(winfsp_url, winfsp_path, |total_size, downloaded| {
+                println!(
+                    "下载进度: {}/{}  {}%",
+                    total_size,
+                    downloaded,
+                    (100 * downloaded / total_size)
+                );
+            });
+        };
     }
 
-    // 下载 rclone
-    let zip_name: &str = "rclone.zip";
+    let rclone_name = match OS_TYPE {
+        "windows" => "rclone.exe",
+        _ => "rclone",
+    };
 
-    let _ = download_with_progress(
-        rclone_url,
-        temp_dir.join(zip_name).to_str().unwrap(),
-        |total_size, downloaded| {
-            println!(
-                "下载进度: {}/{}  {}%",
-                total_size,
-                downloaded,
-                (100 * downloaded / total_size)
-            );
-        },
-    );
+    let reclone_path = &format!("{}{}", bin_path, rclone_name);
+    if !Path::new(reclone_path).exists() {
+        let rclone_url = match OS_TYPE {
+            "windows" => match ARCH {
+                "x86_64" => "https://downloads.rclone.org/rclone-current-windows-amd64.zip",
+                "aarch64" => "https://downloads.rclone.org/rclone-current-windows-386.zip",
+                _ => "",
+            },
+            "linux" => match ARCH {
+                "x86_64" => "https://downloads.rclone.org/rclone-current-linux-amd64.zip",
+                "aarch64" => "https://downloads.rclone.org/rclone-current-linux-arm64.zip",
+                _ => "",
+            },
+            "macos" => match ARCH {
+                "x86_64" => "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
+                "aarch64" => "https://downloads.rclone.org/rclone-current-osx-arm64.zip",
+                _ => "",
+            },
+            _ => "",
+        };
 
-    // 解压 rclone
-    let _ =unzip_file(
-        temp_dir.join(zip_name).to_str().unwrap(),
-        temp_dir.to_str().unwrap(),
-    );
-    let _ = std::fs::remove_file(temp_dir.join(zip_name));
-    let temp_file_path = temp_dir
-        .join(get_first_entry(temp_dir).unwrap())
-        .join(rclone_name);
+        if rclone_url.is_empty() {
+            panic!("Unsupported OS or architecture: {} {}", OS_TYPE, ARCH);
+        }
 
-    // 复制 rclone
-    let _ = std::fs::copy(temp_file_path, format!("{}{}", rclone_path, rclone_name));
-    //chmod 755
-    let _ = std::fs::set_permissions(format!("{}{}", rclone_path, rclone_name), std::fs::Permissions::from_mode(0o755));
+        // 下载 rclone
+        let zip_name: &str = "rclone.zip";
+
+        let _ = download_with_progress(
+            rclone_url,
+            temp_dir.join(zip_name).to_str().unwrap(),
+            |total_size, downloaded| {
+                println!(
+                    "下载进度: {}/{}  {}%",
+                    total_size,
+                    downloaded,
+                    (100 * downloaded / total_size)
+                );
+            },
+        );
+
+        // 解压 rclone
+        let _ = unzip_file(
+            temp_dir.join(zip_name).to_str().unwrap(),
+            temp_dir.to_str().unwrap(),
+        );
+        let _ = std::fs::remove_file(temp_dir.join(zip_name));
+        let temp_file_path = temp_dir
+            .join(get_first_entry(temp_dir).unwrap())
+            .join(rclone_name);
+
+        // 复制 rclone
+
+        let _ = std::fs::copy(temp_file_path, reclone_path);
+        // 尝试设置权限
+        #[cfg(not(target_os = "windows"))]
+        match fs::metadata(&reclone_path) {
+            Ok(metadata) => {
+                let mut permissions = metadata.permissions();
+                // 直接设置权限位
+                permissions.set_mode(0o755); // 设置为所有者可读写执行，同组用户可读执行，其他用户可读执行
+                if let Err(e) = fs::set_permissions(&reclone_path, permissions) {
+                    eprintln!("设置文件权限时出错: {}", e);
+                }
+            }
+            Err(e) => {
+                eprintln!("无法获取文件元数据: {}", e);
+            }
+        }
+    };
+
     //清理
     let _ = std::fs::remove_dir_all(temp_dir);
 
-    if Path::new(format!("{}{}", rclone_path, rclone_name).as_str()).exists(){
+    if Path::new(format!("{}{}", bin_path, rclone_name).as_str()).exists() {
         println!("添加成功 rclone ");
-    }else{
+    } else {
         println!("添加失败 rclone ");
         exit(1);
     }
