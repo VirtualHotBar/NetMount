@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri-dev": "tauri dev",
-    "tauri-build": "tauri build "
+    "tauri-build": "tauri build"
   },
   "dependencies": {
     "@ant-design/charts": "^2.0.3",
