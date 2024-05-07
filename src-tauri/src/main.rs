@@ -57,7 +57,7 @@ fn main() {
     if !cfg!(debug_assertions) {
         if cfg!(target_os = "linux") {
             let resources_dir = exe_dir.parent().expect("无法获取父目录").join("lib").join(exe_flie_name);
-            env::set_current_dir(&resources_dir).expect("更改工作目录失败");
+            env::set_current_dir(&resources_dir ).expect("更改工作目录失败");
         }
 
         if cfg!(target_os = "windows") {
