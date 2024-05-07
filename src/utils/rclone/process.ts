@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api";
 import { Command } from "@tauri-apps/api/shell";
 import { rcloneInfo } from "../../services/rclone";
-import { rclone_api_post } from "./request";
+import { rclone_api_noop, rclone_api_post } from "./request";
 import { randomString } from "../utils";
 
 
@@ -26,7 +26,7 @@ async function startRclone() {
         '--rc-allow-origin=*',
     ];
 
-    if (rcloneInfo.endpoint.auth.user==='') {
+    if (rcloneInfo.endpoint.auth.user === '') {
         args.push('--rc-no-auth')
     }
 
@@ -43,6 +43,14 @@ async function startRclone() {
     rcloneInfo.process.command.stderr.on('data', (data) => addLog(data))
 
     rcloneInfo.process.child = await rcloneInfo.process.command.spawn()
+
+    while (true) {
+        await setTimeout( () => {}, 1000);
+        if (await rclone_api_noop().catch(() => { })) {
+            return;
+        }
+    }
+
 }
 
 async function stopRclone() {

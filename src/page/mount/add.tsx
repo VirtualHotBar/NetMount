@@ -9,6 +9,7 @@ import { InputItem_module } from '../other/inputItem';
 import { rcloneInfo } from '../../services/rclone';
 import { addMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage } from '../../controller/storage/mount/mount';
 import { osInfo } from '../../services/config';
+import { homeDir } from '@tauri-apps/api/path';
 
 const FormItem = Form.Item;
 
@@ -25,7 +26,6 @@ export default function AddMount_page() {
     //const [notification, contextHolder] = Notification.useNotification();
 
     const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows');
-
 
     let parameters: ParametersType = { mountOpt: {}, vfsOpt: {} }
 
@@ -55,27 +55,42 @@ export default function AddMount_page() {
 
     useEffect(() => {
         checkWinFspState()
-    }, [osInfo.osType, rcloneInfo.endpoint.isLocal])
+    }, [])
 
     useEffect(() => {
-        if (getURLSearchParam('name')) {
+        if (rcloneInfo.storageList.length === 0) {
+            navigate('/mount')
+            Notification.warning({
+                id: 'no_storage',
+                title: t('warning'),
+                content: t('not_add_storage'),
+            })
+            return
+        } else if (getURLSearchParam('name')) {
             setStorageName(getURLSearchParam('name'))
-        } else if (!storageName && rcloneInfo.storageList.length > 0) {
+        } else if (!storageName) {
             setStorageName(rcloneInfo.storageList[0].name)
         }
+    }, [])
 
-
+    useEffect(() => {
+        //默认挂载路径
         if (isWindows) {
             setMountPath('*')
         } else {
-            setMountPath('/netmount/' + storageName)
+            if (storageName) {
+                if(rcloneInfo.version.os.toLowerCase().includes('darwin')){
+                    setMountPath('~/Desktop/' + storageName)
+                }else{
+                    setMountPath('/mnt/' + storageName)
+                }
+            }
         }
-
-    }, [])
+    }, [storageName])
 
     return (
         <div>
-           
+
             <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{t('add_mount')}</h2>
             <Form>
                 <FormItem label={t('storage')}>
@@ -148,6 +163,12 @@ export default function AddMount_page() {
                             let mountPathTemp = mountPath
                             if (mountPath === "*") {
                                 mountPathTemp = await getAvailableDriveLetter()
+                            }else if(!isWindows &&  mountPath.startsWith('~/')){
+                                let homeDirStr = await homeDir()
+                                if(!homeDirStr.endsWith('/')){
+                                    homeDirStr = homeDirStr + '/'
+                                }
+                                mountPathTemp = mountPath.replace('~/', homeDirStr)
                             }
 
                             await addMountStorage(storageName!, mountPathTemp, parameters, autoMount)

@@ -6,6 +6,7 @@ use serde_json::{to_string_pretty, Value};
 use std::env;
 //use std::error::Error;
 use std::fs;
+
 //use std::io::Read;
 //use std::path::Path;
 use tauri::Manager;
@@ -15,9 +16,7 @@ mod localized;
 mod tray;
 mod utils;
 
-#[cfg(not(target_os = "macos"))]
 use crate::autostart::is_autostart;
-#[cfg(not(target_os = "macos"))]
 use crate::autostart::set_autostart;
 use crate::utils::download_with_progress;
 #[cfg(target_os = "windows")]
@@ -40,11 +39,33 @@ fn main() {
     ensure_single_instance();
 
     //设置运行目录
-    let exe_dir = env::current_exe().unwrap().parent().unwrap().to_path_buf();
+    let exe_dir = env::current_exe()
+        .expect("无法获取当前可执行文件路径")
+        .parent()
+        .expect("无法获取父目录")
+        .to_path_buf();
+    println!("exe_dir: {}", exe_dir.display());
+    if !cfg!(debug_assertions) && cfg!(target_os = "macos") {
+        // 在macOS上，进一步定位到.app内部的Contents/Resources目录
+        let resources_dir = exe_dir
+            .parent()
+            .expect("无法获取父目录")
+            .join("Resources");
+        println!("resources_dir: {}", resources_dir.display());
+        // 设置运行目录到Resources
+        if let Err(e) = env::set_current_dir(&resources_dir) {
+            eprintln!("更改工作目录到Resources失败: {}", e);
+            // 根据实际情况处理错误，如返回错误信息或终止程序
+        }
+    }
+
     if !cfg!(debug_assertions) && cfg!(target_os = "windows") {
         env::set_current_dir(&exe_dir).expect("更改工作目录失败");
         //run_command(&format!("cd {}", exe_dir.display())).expect("运行cd命令失败");
     }
+
+    run_command("ls").expect("运行ls命令失败");
+    run_command("dir").expect("运行ls命令失败");
 
     // 根据不同的操作系统配置Tauri Builder
     let builder = tauri::Builder::default()
@@ -59,7 +80,9 @@ fn main() {
             set_autostart_state,
             get_winfsp_install_state,
             get_available_drive_letter,
-            set_devtools_state
+            set_devtools_state,
+            fs_exist_dir,
+            fs_make_dir
         ])
         .setup(|_app| {
             #[cfg(target_os = "windows")]
@@ -114,6 +137,73 @@ fn set_devtools_state(app: tauri::AppHandle, state: bool) {
     }
 }
 
+use std::io::ErrorKind;
+use std::path::PathBuf;
+
+#[tauri::command]
+fn fs_exist_dir(path: &str) -> bool {
+    // 替换路径中的波浪线 (~) 为用户家目录
+    let mut resolved_path = PathBuf::new();
+    if path.starts_with("~") {
+        if let Some(home_dir) = env::home_dir() {
+            resolved_path.push(home_dir);
+            resolved_path.push(&path[1..]); // 跳过波浪线
+        } else {
+            eprintln!("Failed to determine home directory.");
+            return false;
+        }
+    } else {
+        resolved_path.push(path);
+    }
+    is_directory(path)
+}
+
+#[tauri::command]
+fn fs_make_dir(path: &str) -> bool {
+    // 替换路径中的波浪线 (~) 为用户家目录
+    let mut resolved_path = PathBuf::new();
+    if path.starts_with("~") {
+        if let Some(home_dir) = env::home_dir() {
+            resolved_path.push(home_dir);
+            resolved_path.push(&path[1..]); // 跳过波浪线
+        } else {
+            eprintln!("Failed to determine home directory.");
+            return false;
+        }
+    } else {
+        resolved_path.push(path);
+    }
+
+    // 创建所有必要的父目录
+    if let Some(parent) = resolved_path.parent() {
+        if let Err(e) = fs::create_dir_all(parent) {
+            match e.kind() {
+                ErrorKind::NotFound => (),
+                _ => {
+                    eprintln!("Error preparing directory structure: {}", e);
+                    return false;
+                }
+            }
+        }
+    }
+
+    // 尝试创建目标目录
+    match fs::create_dir(&resolved_path) {
+        Ok(_) => true,
+        Err(e) => {
+            eprintln!("Error creating directory: {}", e);
+            false
+        }
+    }
+}
+
+fn is_directory(path: &str) -> bool {
+    match fs::metadata(path) {
+        Ok(metadata) => metadata.is_dir(),
+        Err(_) => false,
+    }
+}
+
 use std::error::Error;
 use std::process::Command;
 fn run_command(cmd: &str) -> Result<(), Box<dyn Error>> {
@@ -146,10 +236,6 @@ fn get_winfsp_install_state() -> Result<bool, usize> {
 
 #[tauri::command]
 fn get_autostart_state() -> Result<bool, usize> {
-    #[cfg(target_os = "macos")]
-    return Ok(false);
-
-    #[cfg(not(target_os = "macos"))]
     match is_autostart() {
         Ok(is_enabled) => Ok(is_enabled),
         Err(_) => Ok(false),
@@ -158,10 +244,6 @@ fn get_autostart_state() -> Result<bool, usize> {
 
 #[tauri::command]
 fn set_autostart_state(enabled: bool) -> Result<(), ()> {
-    #[cfg(target_os = "macos")]
-    return Ok(());
-
-    #[cfg(not(target_os = "macos"))]
     let _ = set_autostart(enabled);
     Ok(())
 }

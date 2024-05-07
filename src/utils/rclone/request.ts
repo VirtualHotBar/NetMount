@@ -6,10 +6,24 @@ let rcloneApiHeaders = {
     'Content-Type': 'application/json'
 };
 
+async function rclone_api_noop(): Promise<boolean> {
+    try{
+        const data= await rclone_api_post('/rc/noop').finally(()=>{
+            return true;
+        })
+        
+        if(data){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    catch(e){
+        return false;
+    }
+}
 
 function rclone_api_post(path: string, data?: object, ignoreError?: boolean) {
-
-
     if (!data) data = {}
 
     // 以 base64 编码的方式来设置账密字符串
@@ -54,6 +68,8 @@ async function printError(error: Response) {
     }
 }
 
+
+
 /* export function rclone_api_get(path:string){
     return fetch(rcloneApiEndpoint + path,{
         method: 'GET',
@@ -63,4 +79,4 @@ async function printError(error: Response) {
     })
 } */
 
-export { rclone_api_post, rcloneApiHeaders }
+export { rclone_api_post, rcloneApiHeaders ,rclone_api_noop}

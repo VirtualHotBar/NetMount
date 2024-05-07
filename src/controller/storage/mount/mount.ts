@@ -5,32 +5,27 @@ import { rcloneInfo } from "../../../services/rclone"
 import { MountListItem } from "../../../type/config"
 import { ParametersType } from "../../../type/rclone/storage/defaults"
 import { rclone_api_post } from "../../../utils/rclone/request"
+import { fs_exist_dir, fs_make_dir } from "../../../utils/utils"
 
 
 //列举存储
 async function reupMount(noRefreshUI?: boolean) {
-    const data = await rclone_api_post(
+
+    const mountPoints: any[] = (await rclone_api_post(
         '/mount/listmounts',
-    )
-    
-    let mountPoints: any[]=[]
+    )).mountPoints || []
 
-    if(data&&data.MountPoints){
-        mountPoints = data.MountPoints
-    }
-    
     rcloneInfo.mountList = [];
+    
+    mountPoints.forEach((tiem: any) => {
+        const name = tiem.Fs
+        rcloneInfo.mountList.push({
+            storageName: name.substring(0, name.length - 1),
+            mountPath: tiem.MountPoint,
+            mountedTime: new Date(tiem.MountedOn),
+        })
+    });
 
-    if (mountPoints) {
-        mountPoints.forEach((tiem: any) => {
-            const name = tiem.Fs
-            rcloneInfo.mountList.push({
-                storageName: name.substring(0, name.length - 1),
-                mountPath: tiem.MountPoint,
-                mountedTime: new Date(tiem.MountedOn),
-            })
-        });
-    }
     !noRefreshUI && hooks.upMount()
 }
 
@@ -95,6 +90,10 @@ async function editMountStorage(mountInfo: MountListItem) {
 }
 
 async function mountStorage(mountInfo: MountListItem) {
+
+    if (!rcloneInfo.version.os.toLowerCase().includes('windows') && !await fs_exist_dir(mountInfo.mountPath)) {
+        await fs_make_dir(mountInfo.mountPath)
+    }
 
     const back = await rclone_api_post('/mount/mount', {
         fs: mountInfo.storageName + ":",

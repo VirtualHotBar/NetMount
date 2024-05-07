@@ -59,7 +59,7 @@ fn check_rclone() {
     // 下载 rclone
     let zip_name: &str = "rclone.zip";
 
-    download_with_progress(
+    let _ = download_with_progress(
         rclone_url,
         temp_dir.join(zip_name).to_str().unwrap(),
         |total_size, downloaded| {
@@ -73,7 +73,7 @@ fn check_rclone() {
     );
 
     // 解压 rclone
-    unzip_file(
+    let _ =unzip_file(
         temp_dir.join(zip_name).to_str().unwrap(),
         temp_dir.to_str().unwrap(),
     );
@@ -88,11 +88,16 @@ fn check_rclone() {
     let _ = std::fs::set_permissions(format!("{}{}", rclone_path, rclone_name), std::fs::Permissions::from_mode(0o755));
     //清理
     let _ = std::fs::remove_dir_all(temp_dir);
-    println!("rclone 检查完成");
+
+    if Path::new(format!("{}{}", rclone_path, rclone_name).as_str()).exists(){
+        println!("添加成功 rclone ");
+    }else{
+        println!("添加失败 rclone ");
+        exit(1);
+    }
 }
 
 use std::fs;
-use std::io::ErrorKind;
 
 fn get_first_entry<P: AsRef<Path>>(path: P) -> Result<String, String> {
     let path = path.as_ref();

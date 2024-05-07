@@ -276,5 +276,6 @@
     "version":"版本",
     "filelist_load_Fail":"文件列表加载失败，请检查网络或存储配置",
 
-    "devtools":"开发者工具"
+    "devtools":"开发者工具",
+    "not_add_storage":"未添加存储"
 }

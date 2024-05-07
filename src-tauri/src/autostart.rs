@@ -1,6 +1,88 @@
 use std::env;
 use std::io;
 
+#[cfg(target_os = "macos")]
+pub fn set_autostart(enabled: bool) -> io::Result<()> {
+    use std::io::prelude::*;
+    use std::fs::File;
+    use std::path::Path;
+    use std::fs::OpenOptions;
+
+    let label = "com.vhbs.netmount"; // 你的程序标识符
+    let exe_path = env::current_exe()?;
+    let exe_path_str = exe_path.to_string_lossy().into_owned();
+
+    let plist_content = if enabled {
+        let program_arguments = format!("\"{}\"", exe_path_str);
+        format!(
+            r#"
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+                <key>Label</key>
+                <string>{}</string>
+                <key>ProgramArguments</key>
+                <array>
+                    <string>{}</string>
+                </array>
+                <key>RunAtLoad</key>
+                <true/>
+                <key>KeepAlive</key>
+                <true/>
+            </dict>
+            </plist>
+            "#,
+            label, program_arguments
+        )
+    } else {
+        "".to_string() // 如果禁用自启动，则不需要创建plist文件
+    };
+
+    let plist_path_str = format!(
+        "{}/Library/LaunchAgents/{}.plist",
+        std::env::var("HOME").expect("HOME is not set"),
+        label
+    );
+
+    if !plist_content.is_empty() {
+        let plist_path = Path::new(&plist_path_str);
+
+        // 创建或覆盖plist文件
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(plist_path)?;
+
+        // 使用let绑定创建一个较长生命周期的变量
+        let mut file = file; // 重新绑定以保持借用有效
+
+        file.write_all(plist_content.as_bytes())?;
+
+        std::process::Command::new("launchctl")
+            .arg("load")
+            .arg(plist_path_str)
+            .status()?;
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub fn is_autostart() -> io::Result<bool> {
+    let label = "com.vhbs.netmount"; // 你的程序标识符
+    let output = std::process::Command::new("launchctl")
+        .arg("list")
+        .arg(label)
+        .output()?;
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).contains(label))
+    } else {
+        Ok(false)
+    }
+}
+
 #[cfg(target_os = "windows")]
 pub fn set_autostart(enabled: bool) -> io::Result<()> {
     use std::{os::windows::process::CommandExt, process::Command};

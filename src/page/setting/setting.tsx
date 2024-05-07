@@ -75,7 +75,7 @@ export default function Setting_page() {
               </Select>
             </FormItem>
             <FormItem label={t('autostart')}>
-              <Switch checked={autostart} disabled={osInfo.osType==='Darwin'} onChange={async (value) => {
+              <Switch checked={autostart} /* disabled={osInfo.osType==='Darwin'} */ onChange={async (value) => {
                 await setAutostartState(value);
                 setAutostart(value)
               }} />

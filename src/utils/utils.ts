@@ -142,3 +142,15 @@ export async function set_devtools_state(state: boolean) {
         state: state
     })
 }
+
+export async function fs_exist_dir(path: string) {
+    return await invoke('fs_exist_dir', {
+        path: path
+    }) as boolean
+}
+
+export async function fs_make_dir(path: string) {
+    return await invoke('fs_make_dir', {
+        path: path
+    }) as boolean
+}

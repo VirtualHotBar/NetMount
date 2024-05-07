@@ -67,6 +67,7 @@ async function reupRcloneVersion() {
     const ver = await rclone_api_post(
         '/core/version',
     )
+
     rcloneInfo.version = ver
     console.log(rcloneInfo.version);
 }
