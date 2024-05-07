@@ -16,7 +16,7 @@ fn check_rclone() {
     let bin_path = "res/bin/";
 
     if !Path::new(bin_path).exists() {
-        std::fs::create_dir(bin_path).expect("Failed to create rclone directory");
+        std::fs::create_dir_all(bin_path).expect("Failed to create rclone directory");
     };
 
     let temp_dir = Path::new("res/temp/");
