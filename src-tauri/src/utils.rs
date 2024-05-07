@@ -113,3 +113,10 @@ pub fn is_winfsp_installed() -> Result<bool, Box<dyn Error>> {
         Ok(false)
     }
 }
+
+
+pub fn get_home_dir()-> std::path::PathBuf {
+    use directories::{UserDirs};
+    let user_dirs = UserDirs::new().expect("Failed to get user dirs");
+    user_dirs.home_dir().to_path_buf()
+}

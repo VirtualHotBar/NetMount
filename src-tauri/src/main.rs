@@ -22,6 +22,7 @@ use crate::autostart::set_autostart;
 use crate::utils::download_with_progress;
 #[cfg(target_os = "windows")]
 use crate::utils::find_first_available_drive_letter;
+use crate::utils::get_home_dir;
 #[cfg(target_os = "windows")]
 use crate::utils::is_winfsp_installed;
 #[cfg(target_os = "windows")]
@@ -31,7 +32,7 @@ use crate::utils::set_window_shadow;
 //use crate::localized::get_localized_text;
 use crate::localized::set_localized;
 
-const CONFIG_PATH: &str = "res/config.json";
+const CONFIG_PATH: &str = ".netmount_config.json";
 
 use std::sync::Mutex;
 
@@ -48,16 +49,19 @@ fn main() {
     println!("exe_dir: {}", exe_dir.display());
 
     let binding = env::current_exe().expect("Failed to get the current executable path");
-    let exe_flie_name =
-        Path::new(&binding)
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap();
+    let exe_flie_name = Path::new(&binding)
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap();
 
     if !cfg!(debug_assertions) {
         if cfg!(target_os = "linux") {
-            let resources_dir = exe_dir.parent().expect("无法获取父目录").join("lib").join(exe_flie_name);
-            env::set_current_dir(&resources_dir ).expect("更改工作目录失败");
+            let resources_dir = exe_dir
+                .parent()
+                .expect("无法获取父目录")
+                .join("lib")
+                .join(exe_flie_name);
+            env::set_current_dir(&resources_dir).expect("更改工作目录失败");
         }
 
         if cfg!(target_os = "windows") {
@@ -154,16 +158,14 @@ use std::path::PathBuf;
 
 #[tauri::command]
 fn fs_exist_dir(path: &str) -> bool {
-    // 替换路径中的波浪线 (~) 为用户家目录
+    let home_dir = get_home_dir();
+    // 替换路径中的波浪线 (~) 为用home目录
     let mut resolved_path = PathBuf::new();
     if path.starts_with("~") {
-        if let Some(home_dir) = env::home_dir() {
+
             resolved_path.push(home_dir);
             resolved_path.push(&path[1..]); // 跳过波浪线
-        } else {
-            eprintln!("Failed to determine home directory.");
-            return false;
-        }
+
     } else {
         resolved_path.push(path);
     }
@@ -172,16 +174,14 @@ fn fs_exist_dir(path: &str) -> bool {
 
 #[tauri::command]
 fn fs_make_dir(path: &str) -> bool {
-    // 替换路径中的波浪线 (~) 为用户家目录
+    let home_dir = get_home_dir();
+    // 替换路径中的波浪线 (~) 为用home目录
     let mut resolved_path = PathBuf::new();
     if path.starts_with("~") {
-        if let Some(home_dir) = env::home_dir() {
+
             resolved_path.push(home_dir);
             resolved_path.push(&path[1..]); // 跳过波浪线
-        } else {
-            eprintln!("Failed to determine home directory.");
-            return false;
-        }
+
     } else {
         resolved_path.push(path);
     }
@@ -293,7 +293,8 @@ fn exit_app(app_handle: tauri::AppHandle) {
 
 #[tauri::command]
 fn read_config_file() -> Result<Value, String> {
-    let content_result = fs::read_to_string(CONFIG_PATH);
+    let home_dir = get_home_dir();
+    let content_result = fs::read_to_string(home_dir.join(CONFIG_PATH));
     match content_result {
         Ok(content) => match serde_json::from_str(&content) {
             Ok(config) => Ok(config),
@@ -305,10 +306,11 @@ fn read_config_file() -> Result<Value, String> {
 
 #[tauri::command]
 async fn write_config_file(config_data: Value) -> Result<(), String> {
+    let home_dir = get_home_dir();
     let pretty_config = to_string_pretty(&config_data)
         .map_err(|json_error| format!("Failed to serialize JSON: {}", json_error))?;
 
-    fs::write(CONFIG_PATH, pretty_config)
+    fs::write(home_dir.join(CONFIG_PATH), pretty_config)
         .map_err(|io_error| format!("Failed to write file: {}", io_error))?;
 
     Ok(())
