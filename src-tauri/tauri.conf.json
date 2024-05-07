@@ -68,9 +68,10 @@
       "targets":"all",
       "active": true,
       "category": "DeveloperTool",
-      "copyright": "",
+      "copyright": "(C) 2024-Present  VirtualHotBar",
+      "shortDescription": "Cloud storage management tools",
+      "longDescription": "Unified management and mounting of cloud storage facilities",
       "deb": {
-        "depends": []
       },
       "externalBin": [],
       "icon": [
@@ -79,7 +80,6 @@
         "img/icons/icon.ico"
       ],
       "identifier": "com.vhbs.netmount",
-      "longDescription": "",
       "macOS": {
         "entitlements": "pack/macos/entitlements.plist",
         "exceptionDomain": "localhost",
@@ -90,7 +90,7 @@
       "resources": [
         "res/bin/**/*"
       ],
-      "shortDescription": "",
+      
       "windows": {
         
         "certificateThumbprint": null,
@@ -131,7 +131,8 @@
         "minHeight": 450,
         "minWidth": 700,
         "transparent": true,
-        "decorations": false      }
+        "decorations": false
+      }
     ]
   }
 }
