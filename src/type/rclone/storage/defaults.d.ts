@@ -1,5 +1,13 @@
+
+
 interface ParametersType {
     [key: string]: any
+}
+
+
+interface ParamsSelectType {
+    select: string | number,
+    values: Array<string | number> | { [key: string | number]: string | number }
 }
 
 interface DefaultParams {
@@ -7,11 +15,6 @@ interface DefaultParams {
     "standard": ParametersType,
     "advanced": ParametersType,
     "required": Array<string>
-}
-
-interface ParamsSelectType {
-    select: string | number,
-    values: Array<string | number> | { [key: string | number]: string | number }
 }
 
 export { DefaultParams, ParametersType, ParamsSelectType }

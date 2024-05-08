@@ -3,7 +3,7 @@ import { DefaultParams } from "./defaults";
 interface StorageList{
     name:string;
     type:string;
-    introduce:string;
+    description:string;
     defaultParams:DefaultParams;
     displayType?:string;
 }

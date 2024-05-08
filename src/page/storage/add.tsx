@@ -1,7 +1,7 @@
 import { Button, Checkbox, Form, Grid, Input, InputNumber, InputTag, Link, Message, Notification, Select, Space, Switch, Typography } from "@arco-design/web-react";
 import { DefaultParams, ParametersType } from "../../type/rclone/storage/defaults";
 import { useTranslation } from "react-i18next";
-import { searchStorage, storageListAll } from "../../controller/storage/listAll";
+import { searchStorage, storageListAll } from "../../controller/storage/allList";
 import { CSSProperties, useEffect, useState } from "react";
 import { checkParams, createStorage } from "../../controller/storage/create";
 import { useNavigate, useParams } from "react-router-dom";
@@ -108,7 +108,7 @@ function AddStorage_page() {
 
                     {/* 存储介绍 */}
                     {storageTypeName ? <FormItem label={t('storage_introduce')}>
-                        <Typography.Text>{t(searchStorage(storageTypeName).introduce!)}</Typography.Text>
+                        <Typography.Text>{t(searchStorage(storageTypeName).description!)}</Typography.Text>
                     </FormItem> : ''}
 
                     <br />

@@ -16,6 +16,7 @@ import { autoMount } from "./task/autoMount"
 import { setThemeMode } from "./setting/setting"
 import { setLocalized } from "./language/localized"
 import { checkNotice } from "./update/notice"
+import { updateStorageInfoList } from "./storage/allList"
 
 async function init(setStartStr: Function) {
 
@@ -52,6 +53,7 @@ async function init(setStartStr: Function) {
     await startRclone()
 
     startUpdateCont()
+    await updateStorageInfoList()
     await reupRcloneVersion()
     await reupStorage()
     await reupMount()

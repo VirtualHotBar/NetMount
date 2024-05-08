@@ -10,7 +10,7 @@ import { rcloneApiHeaders } from '../../utils/rclone/request';
 import { RequestOptions } from '@arco-design/web-react/es/Upload';
 import { NoData_module } from '../other/noData';
 import { clipListItem } from '../../type/page/storage/explorer';
-import { searchStorage } from '../../controller/storage/listAll';
+import { searchStorage } from '../../controller/storage/allList';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const TabPane = Tabs.TabPane;

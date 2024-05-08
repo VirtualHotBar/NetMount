@@ -24,6 +24,8 @@ interface RcloneInfo {
     mountList: Array<MountList>
 }
 
+
+
 // 定义 RcloneVersion 接口
 interface RcloneVersion {
     arch: string; // CPU 架构，例如："386"

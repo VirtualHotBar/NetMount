@@ -10,10 +10,10 @@ import { Aria2 } from "../utils/aria2/aria2";
 import { checkUpdate } from "./update/update";
 import { getWinFspInstallState, installWinFsp } from "../utils/utils";
 import { t } from "i18next";
+import { FilterType, StorageInfoType, StorageParamItemType } from "../type/controller/storage/info";
+import { updateStorageInfoList } from "./storage/allList";
 
 export async function Test() {
-
-
     console.log(await rclone_api_post('/options/get'));
 
     console.log(nmConfig);
@@ -38,25 +38,27 @@ export async function Test() {
         })); */
 
 
-
-
-        
-
-/*     const aria2Test = new Aria2('https://down.hotpe.top/d/Package/HotPE-V2.7.240201.exe',
-        'F:/',
-        'test1.7z',
-        8, (back) => {
-            console.log(back);
-        })
-
-
-
-    aria2Test.start() */
+    /*     const aria2Test = new Aria2('https://down.hotpe.top/d/Package/HotPE-V2.7.240201.exe',
+            'F:/',
+            'test1.7z',
+            8, (back) => {
+                console.log(back);
+            })
+    
+    
+    
+        aria2Test.start() */
     //console.log(await runCmd('curl', [url,'-o', path]));
 
     console.log(osInfo);
-    
+
     //await installWinFsp()
     //console.log(await getWinFspInstallState());
 
+    //
+
+
+    //console.log(typeList);
+
+    //updateStorageInfoList();
 }
