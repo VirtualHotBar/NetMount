@@ -28,7 +28,8 @@
 - 构建可执行文件：pnpm tauri-build
 
 ## 截图
-![](https://p0.hotpe.top/i/p/1/663cb1f29c934.png)
+![image](https://github.com/VirtualHotBar/NetMount/assets/96966978/a919b68e-a165-411f-a99b-d184b3f264b0)
+
 
 ## 许可证
 
