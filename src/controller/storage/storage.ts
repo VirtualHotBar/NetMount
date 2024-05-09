@@ -1,11 +1,11 @@
 import { invoke } from "@tauri-apps/api"
 import { hooks } from "../../services/hook"
 import { rcloneInfo } from "../../services/rclone"
-import { FileInfo } from "../../type/rclone/rcloneInfo"
+import { FileInfo, StorageSpace } from "../../type/rclone/rcloneInfo"
 import { ParametersType } from "../../type/defaults"
 import { rclone_api_post } from "../../utils/rclone/request"
 
-//列举存储
+//列举存储信息
 async function reupStorage() {
     const dump = await rclone_api_post(
         '/config/dump',
@@ -15,11 +15,25 @@ async function reupStorage() {
         rcloneInfo.storageList.push({
             name: storageName,
             type: dump[storageName].type,
+            space:await setStorageSpace(storageName)
         })
     }
+
     hooks.upStorage()
 }
 
+async function setStorageSpace(name: string): Promise<StorageSpace> {
+
+    const back = await rclone_api_post(
+        '/operations/about', {
+        fs: name + ':'
+    })
+    if (back && back.total > 0) {
+        return { total: Number(back.total), free: Number(back.free), used: Number(back.used) }
+    }else{
+        return { total: -1, free: -1, used: -1 }
+    }
+}
 
 //删除存储
 async function delStorage(name: string) {
@@ -42,7 +56,7 @@ async function getStorageParams(name: string): Promise<ParametersType> {
 
 
 //获取文件列表
-async function getFileList(storageName: string, path: string): Promise<FileInfo[]|undefined> {
+async function getFileList(storageName: string, path: string): Promise<FileInfo[] | undefined> {
 
     const fileList = await rclone_api_post(
         '/operations/list', {
@@ -50,13 +64,13 @@ async function getFileList(storageName: string, path: string): Promise<FileInfo[
         remote: formatPathRclone(path, false)
     })
     console.log(fileList);
-    
-    if (fileList&&fileList.list) {
+
+    if (fileList && fileList.list) {
         return fileList.list
-    }else{
+    } else {
         return undefined
     }
-    
+
 }
 
 //删除存储
@@ -127,7 +141,7 @@ async function copyFile(storageName: string, path: string, destStoragename: stri
     }, true)
 }
 
-async function moveFile(storageName: string, path: string, destStoragename: string, destPath: string, newNmae?: string,pathF2f: boolean = false) {
+async function moveFile(storageName: string, path: string, destStoragename: string, destPath: string, newNmae?: string, pathF2f: boolean = false) {
 
     const backData = await rclone_api_post(
         '/operations/movefile', {
@@ -163,10 +177,10 @@ async function moveDir(storageName: string, path: string, destStoragename: strin
 //sync,需完整path(pathF2f)
 async function sync(storageName: string, path: string, destStoragename: string, destPath: string, bisync?: boolean) {//bisync:双向同步
     const backData = await rclone_api_post(
-        !bisync?'/sync/sync':'/sync/bisync', {
+        !bisync ? '/sync/sync' : '/sync/bisync', {
         srcFs: storageName + ':' + formatPathRclone(path, true),
-        dstFs: destStoragename + ':' + formatPathRclone(destPath, true) 
+        dstFs: destStoragename + ':' + formatPathRclone(destPath, true)
     }, true)
 }
 
-export { reupStorage, delStorage, getStorageParams, getFileList, delFile, delDir, mkDir, formatPathRclone, copyFile, copyDir, moveFile, moveDir,sync }
+export { reupStorage, delStorage, getStorageParams, getFileList, delFile, delDir, mkDir, formatPathRclone, copyFile, copyDir, moveFile, moveDir, sync }

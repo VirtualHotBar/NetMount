@@ -12,13 +12,18 @@ import { getWinFspInstallState, installWinFsp } from "../utils/utils";
 import { t } from "i18next";
 import { FilterType, StorageInfoType, StorageParamItemType } from "../type/controller/storage/info";
 import { updateStorageInfoList } from "./storage/allList";
+import { rcloneInfo } from "../services/rclone";
 
 export async function Test() {
-    console.log(await rclone_api_post('/options/get'));
-
     console.log(nmConfig);
+    console.log(osInfo);
+    console.log(rcloneInfo);
 
 
+    console.log(await rclone_api_post('/options/get'));
+    console.log(await rclone_api_post('/rc/list'),);
+
+    
     /*     let data = await invoke('read_config_file') as any;
         console.log(data);
         console.log(await invoke('write_config_file', {
@@ -50,7 +55,6 @@ export async function Test() {
         aria2Test.start() */
     //console.log(await runCmd('curl', [url,'-o', path]));
 
-    console.log(osInfo);
 
     //await installWinFsp()
     //console.log(await getWinFspInstallState());

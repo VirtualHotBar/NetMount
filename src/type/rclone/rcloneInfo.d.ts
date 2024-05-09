@@ -41,7 +41,15 @@ interface RcloneVersion {
 
 interface StorageList {
     name: string,
-    type: 'webdav' | string
+    type: 'webdav' | string,
+    space?:StorageSpace
+}
+
+interface StorageSpace {
+    used: number,
+    total: number,
+    free: number,
+    trashed?:number
 }
 
 interface MountList {
@@ -59,4 +67,4 @@ interface FileInfo {
     IsDir: boolean;
 }
 
-export { RcloneInfo, FileInfo }
+export { RcloneInfo, FileInfo,StorageSpace }
