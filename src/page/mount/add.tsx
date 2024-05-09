@@ -2,10 +2,9 @@ import { Button, Checkbox, Collapse, Form, Input, Notification, Select, Space, S
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom';
-import { ParametersType } from '../../type/rclone/storage/defaults';
+import { ParametersType } from '../../type/defaults';
 import { getProperties, getURLSearchParam, getWinFspInstallState } from '../../utils/utils';
 import { defaultMountConfig, defaultVfsConfig } from '../../controller/storage/mount/parameters/defaults';
-import { InputItem_module } from '../other/inputItem';
 import { rcloneInfo } from '../../services/rclone';
 import { addMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage } from '../../controller/storage/mount/mount';
 import { osInfo } from '../../services/config';
@@ -79,9 +78,9 @@ export default function AddMount_page() {
             setMountPath('*')
         } else {
             if (storageName) {
-                if(rcloneInfo.version.os.toLowerCase().includes('darwin')){
+                if (rcloneInfo.version.os.toLowerCase().includes('darwin')) {
                     setMountPath('~/Desktop/' + storageName)
-                }else{
+                } else {
                     setMountPath('/mnt/' + storageName)
                 }
             }
@@ -128,7 +127,7 @@ export default function AddMount_page() {
 
                 {
                     <div style={{ display: showAllOptions ? 'block' : 'none' }}>
-                        {
+                        {/*{
                             getProperties(defaultMountConfig).map((item) => {
                                 return (
                                     <InputItem_module key={item.key} data={item} setParams={setMountParams} />
@@ -141,7 +140,7 @@ export default function AddMount_page() {
                                     <InputItem_module key={item.key} data={item} setParams={setVfsParams} />
                                 )
                             })
-                        }
+                        } */}
                     </div>
                 }
 
@@ -163,9 +162,9 @@ export default function AddMount_page() {
                             let mountPathTemp = mountPath
                             if (mountPath === "*") {
                                 mountPathTemp = await getAvailableDriveLetter()
-                            }else if(!isWindows &&  mountPath.startsWith('~/')){
+                            } else if (!isWindows && mountPath.startsWith('~/')) {
                                 let homeDirStr = await homeDir()
-                                if(!homeDirStr.endsWith('/')){
+                                if (!homeDirStr.endsWith('/')) {
                                     homeDirStr = homeDirStr + '/'
                                 }
                                 mountPathTemp = mountPath.replace('~/', homeDirStr)

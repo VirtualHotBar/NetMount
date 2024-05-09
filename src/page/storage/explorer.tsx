@@ -10,7 +10,7 @@ import { rcloneApiHeaders } from '../../utils/rclone/request';
 import { RequestOptions } from '@arco-design/web-react/es/Upload';
 import { NoData_module } from '../other/noData';
 import { clipListItem } from '../../type/page/storage/explorer';
-import { searchStorage } from '../../controller/storage/allList';
+import { searchStorageInfo } from '../../controller/storage/allList';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const TabPane = Tabs.TabPane;
@@ -265,7 +265,7 @@ function ExplorerItem() {
                             {
                                 rcloneInfo.storageList.map((item) => {
                                     return (
-                                        <Select.Option key={item.name} value={item.name}>{item.name}({searchStorage(item.type).name})</Select.Option>
+                                        <Select.Option key={item.name} value={item.name}>{item.name}({searchStorageInfo(item.type).label})</Select.Option>
                                     )
                                 })
                             }

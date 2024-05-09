@@ -1,5 +1,5 @@
 import { Arch, OsType, Platform } from "@tauri-apps/api/os"
-import { ParametersType } from "./rclone/storage/defaults"
+import { ParametersType } from "./defaults"
 import { Notice } from "./controller/update"
 
 interface NMConfig {

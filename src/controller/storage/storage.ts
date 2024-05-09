@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api"
 import { hooks } from "../../services/hook"
 import { rcloneInfo } from "../../services/rclone"
 import { FileInfo } from "../../type/rclone/rcloneInfo"
-import { ParametersType } from "../../type/rclone/storage/defaults"
+import { ParametersType } from "../../type/defaults"
 import { rclone_api_post } from "../../utils/rclone/request"
 
 //列举存储

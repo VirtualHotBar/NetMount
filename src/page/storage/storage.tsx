@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Table, TableColumnProps } from '@arco-design/web-react';
 import { NoData_module } from "../other/noData";
-import { searchStorage } from "../../controller/storage/allList";
+import { searchStorageInfo } from "../../controller/storage/allList";
 import { IconQuestionCircle } from "@arco-design/web-react/icon";
 import { openUrlInBrowser } from "../../utils/utils";
 import { roConfig } from "../../services/config";
@@ -61,7 +61,7 @@ function Storage_page() {
                     rcloneInfo.storageList.map((item) => {
                         return {
                             ...item,
-                            type: searchStorage(item.type).name,
+                            type: searchStorageInfo(item.type).label,
                             actions: <Space>
                                 <Popconfirm
                                     focusLock

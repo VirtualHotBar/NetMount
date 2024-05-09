@@ -3,7 +3,7 @@ import { nmConfig, saveNmConfig } from "../../../services/config"
 import { hooks } from "../../../services/hook"
 import { rcloneInfo } from "../../../services/rclone"
 import { MountListItem } from "../../../type/config"
-import { ParametersType } from "../../../type/rclone/storage/defaults"
+import { ParametersType } from "../../../type/defaults"
 import { rclone_api_post } from "../../../utils/rclone/request"
 import { fs_exist_dir, fs_make_dir } from "../../../utils/utils"
 

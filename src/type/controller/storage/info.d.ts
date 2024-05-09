@@ -1,15 +1,17 @@
 
-interface StorageInfoType {
-    label: string;//存储名称(显示)
-    type: string;//存储类型
-    description: string;//存储描述
-    defaultParams: StorageParamsType;//默认参数
-    displayType?: string;
+//过滤器
+interface FilterType {
+    name: string,//匹配参数名
+    value: any,//匹配值
+    state: boolean,//是否过滤
 }
 
-interface StorageParamsType {
-    name: string,//存储名称
-    parameters: StorageParamItemType[],//参数列表
+interface ParamItemOptionType {
+    label: string,//选项名称(显示名称)
+    value: string | number,//选项值
+    help: string,//选项帮助信息
+
+    filters?: FilterType[],//过滤自己
 }
 
 interface StorageParamItemType {
@@ -26,27 +28,22 @@ interface StorageParamItemType {
 
     filters?: FilterType[],
 
-    mark?: ('StorageSelector' | '?')[],//参数标记,StorageSelector:存储选择器
+    mark?: ('StorageAndPathInputer' | 'PathInputer')[],//参数标记,StorageSelector:存储选择器
     //formatRules:''
 }
 
-interface ParamItemOptionType {
-    label: string,//选项名称(显示名称)
-    value: string | number,//选项值
-    help: string,//选项帮助信息
 
-    filters?: FilterType[],//过滤自己
+interface StorageParamsType {
+    name: string,//存储名称
+    parameters: StorageParamItemType[],//参数列表
 }
 
-//过滤器
-interface FilterType {
-    name: string,//匹配参数名
-    value: any,//匹配值
-    state: boolean,//是否过滤
+interface StorageInfoType {
+    label: string;//存储名称(显示)
+    type: string;//存储类型
+    description: string;//存储描述
+    defaultParams: StorageParamsType;//默认参数
+    displayType?: string;
 }
 
-
-
-
-
-export{StorageInfoType, StorageParamsType, StorageParamItemType, ParamItemOptionType, FilterType}
+export { StorageInfoType, StorageParamsType, StorageParamItemType, ParamItemOptionType, FilterType }
