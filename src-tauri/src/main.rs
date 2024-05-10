@@ -32,13 +32,20 @@ use crate::utils::set_window_shadow;
 //use crate::localized::get_localized_text;
 use crate::localized::set_localized;
 
-const CONFIG_PATH: &str = ".netmount_config.json";
+const USER_DATA_PATH: &str = ".netmount";
+const CONFIG_FILE: &str = "config.json";
 
 use std::sync::Mutex;
 
 fn main() {
     // 确保应用程序只有一个实例运行
     ensure_single_instance();
+
+    let home_dir = get_home_dir();
+
+    if home_dir.join(USER_DATA_PATH).exists(){
+        fs::create_dir_all(home_dir.join(USER_DATA_PATH)).unwrap()
+    }
 
     //设置运行目录
     let exe_dir = env::current_exe()
@@ -47,6 +54,8 @@ fn main() {
         .expect("无法获取父目录")
         .to_path_buf();
     println!("exe_dir: {}", exe_dir.display());
+
+
 
     let binding = env::current_exe().expect("Failed to get the current executable path");
     let exe_flie_name = Path::new(&binding)
@@ -98,7 +107,8 @@ fn main() {
             get_available_drive_letter,
             set_devtools_state,
             fs_exist_dir,
-            fs_make_dir
+            fs_make_dir,
+            restart_self
         ])
         .setup(|_app| {
             #[cfg(target_os = "windows")]
@@ -216,6 +226,11 @@ fn is_directory(path: &str) -> bool {
     }
 }
 
+#[tauri::command]
+fn restart_self(){
+    utils::restart_self()
+}
+
 use std::error::Error;
 use std::process::Command;
 fn run_command(cmd: &str) -> Result<(), Box<dyn Error>> {
@@ -292,9 +307,10 @@ fn exit_app(app_handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-fn read_config_file() -> Result<Value, String> {
+fn read_config_file(path:Option<&str>) -> Result<Value, String> {
+    let path = path.unwrap_or(CONFIG_FILE);
     let home_dir = get_home_dir();
-    let content_result = fs::read_to_string(home_dir.join(CONFIG_PATH));
+    let content_result = fs::read_to_string(if path == CONFIG_FILE{home_dir.join(USER_DATA_PATH).join(path)} else {PathBuf::from(path)});
     match content_result {
         Ok(content) => match serde_json::from_str(&content) {
             Ok(config) => Ok(config),
@@ -305,12 +321,13 @@ fn read_config_file() -> Result<Value, String> {
 }
 
 #[tauri::command]
-async fn write_config_file(config_data: Value) -> Result<(), String> {
+async fn write_config_file(config_data: Value,path:Option<&str>) -> Result<(), String> {
+    let path = path.unwrap_or(CONFIG_FILE);
     let home_dir = get_home_dir();
     let pretty_config = to_string_pretty(&config_data)
         .map_err(|json_error| format!("Failed to serialize JSON: {}", json_error))?;
 
-    fs::write(home_dir.join(CONFIG_PATH), pretty_config)
+    fs::write(if path == CONFIG_FILE{home_dir.join(USER_DATA_PATH).join(path)} else {PathBuf::from(path)}, pretty_config)
         .map_err(|io_error| format!("Failed to write file: {}", io_error))?;
 
     Ok(())

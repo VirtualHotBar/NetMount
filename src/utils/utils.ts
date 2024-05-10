@@ -110,10 +110,10 @@ export async function installWinFsp(): Promise<boolean> {
 }
 
 export async function openUrlInBrowser(url: string) {
-    await shell.open(url) 
+    await shell.open(url)
 }
 
-export function compareVersions(v1:string, v2:string) {
+export function compareVersions(v1: string, v2: string) {
     const splitV1 = v1.split('.').map(Number);
     const splitV2 = v2.split('.').map(Number);
 
@@ -153,4 +153,54 @@ export async function fs_make_dir(path: string) {
     return await invoke('fs_make_dir', {
         path: path
     }) as boolean
+}
+
+export function formatPath(path: string, isWindows: boolean = false) {
+    path = path.replace(/\\/g, '/');
+    path = path.replace(/\/+/g, '/');
+
+    if (isWindows) {
+        if (/^[A-Za-z]/.test(path)) {
+            if (path.substring(1, 2) != ':') {
+                path = path.substring(0, 1).toUpperCase() + ':' + path.substring(1);
+            }
+        } else {
+            path = path.substring(1);
+            formatPath(path, isWindows)
+        }
+    } else {
+        if (path.startsWith('/')) {
+            path = '/' + path;
+        }
+    }
+
+    return path
+}
+
+export async function restartSelf() {
+    await invoke('restart_self')
+}
+
+export async function showPathInExplorer(path: string, isDir?: boolean) {
+
+    path = path.replace(/\//g, '\\');
+
+    console.log(path);
+    
+    if (isDir === undefined) {
+        isDir = path.endsWith('\\');
+    }
+
+    try {
+        if (isDir) {
+            await runCmd('explorer', [path])
+        }else{
+            await runCmd('explorer', ['/select,', path])
+        }
+        
+        return true
+    } catch {
+        return false
+    }
+
 }

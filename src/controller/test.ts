@@ -5,25 +5,30 @@ import { invoke } from '@tauri-apps/api';
 
 import { appWindow } from "@tauri-apps/api/window";
 import { app } from "@tauri-apps/api";
-import { nmConfig, osInfo } from "../services/config";
+import { nmConfig, osInfo, roConfig } from "../services/config";
 import { Aria2 } from "../utils/aria2/aria2";
 import { checkUpdate } from "./update/update";
-import { getWinFspInstallState, installWinFsp } from "../utils/utils";
+import { getWinFspInstallState, installWinFsp, showPathInExplorer } from "../utils/utils";
 import { t } from "i18next";
 import { FilterType, StorageInfoType, StorageParamItemType } from "../type/controller/storage/info";
 import { updateStorageInfoList } from "./storage/allList";
 import { rcloneInfo } from "../services/rclone";
+import { alist_api_get,  } from "../utils/alist/request";
 
 export async function Test() {
     console.log(nmConfig);
     console.log(osInfo);
     console.log(rcloneInfo);
 
-
     console.log(await rclone_api_post('/options/get'));
     console.log(await rclone_api_post('/rc/list'),);
-
+    console.log(await alist_api_get('/api/me'));
+    console.log(roConfig.env.path.homeDir);
     
+
+    //console.log(await getAlistToken());
+
+
     /*     let data = await invoke('read_config_file') as any;
         console.log(data);
         console.log(await invoke('write_config_file', {

@@ -7,6 +7,11 @@ const roConfig = {
         docs: 'https://docs.netmount.cn',
         rclone: 'https://github.com/rclone/rclone',
     },
+    env:{
+        path:{
+            homeDir:'~'
+        }
+    },
     options: {
         task: {
             runMode: {

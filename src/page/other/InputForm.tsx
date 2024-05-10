@@ -6,9 +6,44 @@ import { FilterType, StorageParamItemType } from "../../type/controller/storage/
 import { ParametersType } from "../../type/defaults";
 import { t } from "i18next";
 import { IconQuestionCircle } from "@arco-design/web-react/icon";
+import { getProperties } from "../../utils/utils";
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
+
+function paramsType2FormItems(params: ParametersType, isAdvanced: boolean = false) {
+    const formItems: StorageParamItemType[] = []
+
+    getProperties(params).forEach((item) => {
+        let valueType: 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function' | 'array' = typeof item.value;
+        let formItem: StorageParamItemType = {
+            label: item.key,
+            name: item.key,
+            description: item.key,
+            type: 'boolean',
+            required: false,
+            default: item.value,
+            advanced: isAdvanced,
+            isPassword: false,
+            mark: []
+        }
+        switch (valueType) {
+            case 'boolean':
+                formItem.type = 'boolean'
+                break;
+            case 'number':
+                formItem.type = 'number'
+                break;
+            default:
+                formItem.type = 'string'
+                break;
+        }
+        formItems.push(formItem)
+    })
+
+    return formItems
+}
+
 
 //应用过滤器
 function filter(filters: FilterType[], formValuesResult: ParametersType) {
@@ -131,9 +166,10 @@ function InputFormItemContent_module({ data, formValuesResult /* style */ }: {
 
 }
 
-function InputForm_module({ data, style, showAdvanced, footer, onChange, overwriteValues, setFormHook }: {
+function InputForm_module({ data, style, showAdvanced, footer, onChange, overwriteValues, setFormHook ,header}: {
     data: StorageParamItemType[];
     footer?: JSX.Element;
+    header?: JSX.Element;
     showAdvanced?: boolean;
     style?: CSSProperties;
     onChange?: (data: ParametersType) => void;
@@ -162,10 +198,10 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
     return (
         <Form
             form={form}
-
             onValuesChange={() => {
                 setFormValuesResult(form.getFieldsValue(form.getTouchedFields()));
             }}>
+                {header && header}
             {
                 (() => {
                     const formItems: JSX.Element[] = []
@@ -193,13 +229,9 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
                     return formItems.filter(item => item && item)
                 })()
             }
-            {
-                footer && <FormItem wrapperCol={{ offset: 5 }}>
-                    {footer}
-                </FormItem>
-            }
+            {footer &&  footer }
         </Form>
     )
 }
 
-export { InputForm_module }
+export { InputForm_module, paramsType2FormItems, InputFormItemContent_module }

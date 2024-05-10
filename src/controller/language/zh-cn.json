@@ -277,5 +277,10 @@
     "filelist_load_Fail":"文件列表加载失败，请检查网络或存储配置",
 
     "devtools":"开发者工具",
-    "not_add_storage":"未添加存储"
+    "not_add_storage":"未添加存储",
+    "about_to_restart_self":"即将重启程序",
+    "desktop":"桌面",
+    "custom":"自定义",
+    "recommend":"推荐",
+    "show_path_in_explorer":"在资源管理器中显示"
 }

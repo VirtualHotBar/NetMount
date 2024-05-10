@@ -8,19 +8,10 @@ import { IconQuestionCircle } from '@arco-design/web-react/icon';
 import { formatPathRclone } from '../../controller/storage/storage';
 import { useNavigate } from 'react-router-dom';
 import { saveTask } from '../../controller/task/task';
+import { formatPath } from '../../utils/utils';
 const Row = Grid.Row;
 const Col = Grid.Col;
 
-const formatPath = (path: string) => {
-    path = path.replace(/\\/g, '/');
-    path = path.replace(/\/+/g, '/');
-
-    if (path.substring(0, 1) != '/') {
-        path = '/' + path;
-    }
-
-    return path
-}
 
 // 定义状态和 action 类型
 type TaskInfoState = TaskListItem;

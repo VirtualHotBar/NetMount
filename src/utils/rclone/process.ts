@@ -15,7 +15,6 @@ async function startRclone() {
         rcloneInfo.endpoint.auth.pass = randomString(128)
     }
 
-
     rcloneInfo.endpoint.url = 'http://localhost:' + rcloneInfo.endpoint.localhost.port.toString()
 
     let args: string[] = [
@@ -45,7 +44,7 @@ async function startRclone() {
     rcloneInfo.process.child = await rcloneInfo.process.command.spawn()
 
     while (true) {
-        await setTimeout( () => {}, 1000);
+        await setTimeout(() => { }, 1000);
         if (await rclone_api_noop().catch(() => { })) {
             return;
         }
@@ -60,4 +59,9 @@ async function stopRclone() {
     }
 }
 
-export { startRclone, stopRclone }
+async function restartRclone() {
+    await stopRclone();
+    await startRclone();
+}
+
+export { startRclone, stopRclone,restartRclone }

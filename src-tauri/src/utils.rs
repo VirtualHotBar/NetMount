@@ -114,9 +114,25 @@ pub fn is_winfsp_installed() -> Result<bool, Box<dyn Error>> {
     }
 }
 
-
-pub fn get_home_dir()-> std::path::PathBuf {
-    use directories::{UserDirs};
+pub fn get_home_dir() -> std::path::PathBuf {
+    use directories::UserDirs;
     let user_dirs = UserDirs::new().expect("Failed to get user dirs");
     user_dirs.home_dir().to_path_buf()
+}
+
+pub fn restart_self() {
+    // 重启自身
+    use std::ffi::OsString;
+    use std::process::Command;
+
+    let args: Vec<String> = std::env::args().skip(1).collect();
+
+    let os_args: Vec<OsString> = args.into_iter().map(OsString::from).collect();
+
+    Command::new(std::env::args().next().unwrap())
+        .args(os_args)
+        .spawn()
+        .expect("Failed to restart the process");
+
+    std::process::exit(0);
 }

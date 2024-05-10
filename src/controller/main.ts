@@ -7,7 +7,7 @@ import { reupMount } from "./storage/mount/mount"
 import { reupStorage } from "./storage/storage"
 import { listenWindow, windowsHide } from "./window"
 import { NMConfig } from "../type/config"
-import { randomString } from "../utils/utils"
+import { randomString, restartSelf } from "../utils/utils"
 import { t } from "i18next"
 import { startRclone, stopRclone } from "../utils/rclone/process"
 import { getOsInfo } from "../utils/tauri/osInfo"
@@ -17,11 +17,13 @@ import { setThemeMode } from "./setting/setting"
 import { setLocalized } from "./language/localized"
 import { checkNotice } from "./update/notice"
 import { updateStorageInfoList } from "./storage/allList"
+import { startAlist } from "../utils/alist/process"
+import { homeDir } from "@tauri-apps/api/path"
 
 async function init(setStartStr: Function) {
 
     setStartStr(t('init'))
-
+    roConfig.env.path.homeDir=await homeDir()
     listenWindow()
 
     await getOsInfo()
@@ -33,7 +35,7 @@ async function init(setStartStr: Function) {
     if (nmConfig.settings.startHide) {
         windowsHide()
     }
-    
+
     if (nmConfig.settings.language) {
         await setLocalized(nmConfig.settings.language);
     } else {
@@ -51,6 +53,7 @@ async function init(setStartStr: Function) {
     await checkNotice()
 
     await startRclone()
+    await startAlist()
 
     startUpdateCont()
     await updateStorageInfoList()
@@ -78,15 +81,17 @@ function main() {
 
 }
 
-async function exit() {
-    try{
+async function exit(isRestartSelf: boolean = false) {
+    try {
         await stopRclone()
         await saveNmConfig()
-    }finally{
-        await process.exit();
+    } finally {
+        if (isRestartSelf) {
+            await restartSelf()
+        } else {
+            await process.exit();
+        }
     }
-
-    
 }
 
 export { init, main, exit }

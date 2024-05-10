@@ -58,21 +58,29 @@
             "name": "curl",
             "cmd": "curl",
             "args": true
+          },
+          {
+            "name": "explorer",
+            "cmd": "explorer",
+            "args": true
+          },
+          {
+            "name": "alist",
+            "cmd": "res/bin/alist/alist",
+            "args": true
           }
-          
         ],
         "sidecar": false
       }
     },
     "bundle": {
-      "targets":"all",
+      "targets": "all",
       "active": true,
       "category": "DeveloperTool",
       "copyright": "(C) 2024-Present  VirtualHotBar",
       "shortDescription": "Cloud storage management tools",
       "longDescription": "Unified management and mounting of cloud storage facilities",
-      "deb": {
-      },
+      "deb": {},
       "externalBin": [],
       "icon": [
         "img/icons/icon.png",
@@ -90,27 +98,30 @@
       "resources": [
         "res/bin/**/*"
       ],
-      
       "windows": {
-        
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": "",
         "webviewInstallMode": {
           "type": "embedBootstrapper"
         },
-        "wix":{
+        "wix": {
           "bannerPath": "img/wix/banner.png",
-          "dialogImagePath":"img/wix/dialog.png",
-          "language": ["zh-CN","en-US"],
+          "dialogImagePath": "img/wix/dialog.png",
+          "language": [
+            "zh-CN",
+            "en-US"
+          ],
           "template": "pack/wix.wxs"
         },
-        "nsis":{
-          "sidebarImage":"img/nsis/sidebar.bmp",
+        "nsis": {
+          "sidebarImage": "img/nsis/sidebar.bmp",
           "headerImage": "img/nsis/header.bmp",
-          "languages":["SimpChinese","English"],
+          "languages": [
+            "SimpChinese",
+            "English"
+          ],
           "installerIcon": "img/icons/icon.ico"
-          
         }
       }
     },

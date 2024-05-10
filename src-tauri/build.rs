@@ -7,13 +7,67 @@ const OS_TYPE: &str = env::consts::OS;
 // 获取架构类型
 const ARCH: &str = env::consts::ARCH;
 
+struct ResBinUrls {
+    rclone: &'static str,
+    alist: &'static str,
+}
+
 fn main() {
-    check_rclone();
+    check_res_bin();
     tauri_build::build()
 }
 
-fn check_rclone() {
+fn check_res_bin() {
     let bin_path = "res/bin/";
+
+    let res_bin_urls = match OS_TYPE {
+        "windows" => match ARCH {
+            "x86_64" => ResBinUrls {
+                rclone: "https://downloads.rclone.org/rclone-current-windows-amd64.zip",
+                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-windows-amd64.zip",
+            },
+            "aarch64" => ResBinUrls {
+                rclone: "https://downloads.rclone.org/rclone-current-windows-386.zip",
+                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-windows-arm64.zip",
+            },
+            _ => ResBinUrls {
+                rclone: "",
+                alist: "",
+            },
+        },
+        "linux" => match ARCH {
+            "x86_64" => ResBinUrls {
+                rclone: "https://downloads.rclone.org/rclone-current-linux-amd64.zip",
+                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-linux-amd64.tar.gz",
+            },
+            "aarch64" => ResBinUrls {
+                rclone: "https://downloads.rclone.org/rclone-current-linux-arm64.zip",
+                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-linux-arm64.tar.gz",
+            },
+            _ => ResBinUrls {
+                rclone: "",
+                alist: "",
+            },
+        },
+        "macos" => match ARCH {
+            "x86_64" => ResBinUrls {
+                rclone: "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
+                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-darwin-amd64.tar.gz",
+            },
+            "aarch64" => ResBinUrls {
+                rclone: "https://downloads.rclone.org/rclone-current-osx-arm64.zip",
+                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-darwin-arm64.tar.gz",
+            },
+            _ => ResBinUrls {
+                rclone: "",
+                alist: "",
+            },
+        },
+        _ => ResBinUrls {
+            rclone: "",
+            alist: "",
+        },
+    };
 
     if !Path::new(bin_path).exists() {
         std::fs::create_dir_all(bin_path).expect("Failed to create rclone directory");
@@ -45,37 +99,17 @@ fn check_rclone() {
         "windows" => "rclone.exe",
         _ => "rclone",
     };
-
     let reclone_path = &format!("{}{}", bin_path, rclone_name);
     if !Path::new(reclone_path).exists() {
-        let rclone_url = match OS_TYPE {
-            "windows" => match ARCH {
-                "x86_64" => "https://downloads.rclone.org/rclone-current-windows-amd64.zip",
-                "aarch64" => "https://downloads.rclone.org/rclone-current-windows-386.zip",
-                _ => "",
-            },
-            "linux" => match ARCH {
-                "x86_64" => "https://downloads.rclone.org/rclone-current-linux-amd64.zip",
-                "aarch64" => "https://downloads.rclone.org/rclone-current-linux-arm64.zip",
-                _ => "",
-            },
-            "macos" => match ARCH {
-                "x86_64" => "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
-                "aarch64" => "https://downloads.rclone.org/rclone-current-osx-arm64.zip",
-                _ => "",
-            },
-            _ => "",
-        };
-
-        if rclone_url.is_empty() {
+        if res_bin_urls.rclone.is_empty() {
             panic!("Unsupported OS or architecture: {} {}", OS_TYPE, ARCH);
         }
 
         // 下载 rclone
-        let zip_name: &str = "rclone.zip";
+        let zip_name: &str = &extract_filename_from_url(res_bin_urls.rclone).unwrap();
 
         let _ = download_with_progress(
-            rclone_url,
+            res_bin_urls.rclone,
             temp_dir.join(zip_name).to_str().unwrap(),
             |total_size, downloaded| {
                 println!(
@@ -88,7 +122,7 @@ fn check_rclone() {
         );
 
         // 解压 rclone
-        let _ = unzip_file(
+        let _ = decompress_file(
             temp_dir.join(zip_name).to_str().unwrap(),
             temp_dir.to_str().unwrap(),
         );
@@ -115,17 +149,76 @@ fn check_rclone() {
                 eprintln!("无法获取文件元数据: {}", e);
             }
         }
+        if Path::new(format!("{}{}", bin_path, rclone_name).as_str()).exists() {
+            println!("添加成功 rclone ");
+        } else {
+            println!("添加失败 rclone ");
+            exit(1);
+        }
+    };
+
+    let alist_name = match OS_TYPE {
+        "windows" => "alist.exe",
+        _ => "alist",
+    };
+    let alist_dir = &format!("{}alist/", bin_path);
+    let alist_path = &format!("{}{}", alist_dir, alist_name);
+
+    if !Path::new(alist_path).exists() {
+        if res_bin_urls.alist.is_empty() {
+            panic!("Unsupported OS or architecture: {} {}", OS_TYPE, ARCH);
+        }
+
+        if !Path::new(alist_path).parent().unwrap().exists() {
+            fs::create_dir_all(Path::new(alist_path).parent().unwrap()).unwrap();
+        }
+
+        // 下载 alist
+        let zip_name: &str = &extract_filename_from_url(res_bin_urls.alist).unwrap();
+
+        let _ = download_with_progress(
+            res_bin_urls.alist,
+            temp_dir.join(zip_name).to_str().unwrap(),
+            |total_size, downloaded| {
+                println!(
+                    "下载进度: {}/{}  {}%",
+                    total_size,
+                    downloaded,
+                    (100 * downloaded / total_size)
+                );
+            },
+        );
+
+        // 解压 alist
+        let _ = decompress_file(temp_dir.join(zip_name).to_str().unwrap(), alist_dir);
+
+        let _ = std::fs::remove_file(temp_dir.join(zip_name));
+
+        // 尝试设置权限
+        #[cfg(not(target_os = "windows"))]
+        match fs::metadata(&alist_path) {
+            Ok(metadata) => {
+                let mut permissions = metadata.permissions();
+                // 直接设置权限位
+                permissions.set_mode(0o755); // 设置为所有者可读写执行，同组用户可读执行，其他用户可读执行
+                if let Err(e) = fs::set_permissions(&alist_path, permissions) {
+                    eprintln!("设置文件权限时出错: {}", e);
+                }
+            }
+            Err(e) => {
+                eprintln!("无法获取文件元数据: {}", e);
+            }
+        }
+        if Path::new(alist_path).exists() {
+            println!("添加成功 alist ");
+        } else {
+            println!("添加失败 alist ");
+            exit(1);
+        }
     };
 
     //清理
     let _ = std::fs::remove_dir_all(temp_dir);
-
-    if Path::new(format!("{}{}", bin_path, rclone_name).as_str()).exists() {
-        println!("添加成功 rclone ");
-    } else {
-        println!("添加失败 rclone ");
-        exit(1);
-    }
 }
 
 use std::fs;
@@ -160,6 +253,11 @@ pub async fn download_with_progress<F>(
 where
     F: FnMut(usize, usize),
 {
+let mut url=url.to_owned();
+    if url.to_owned().contains("//github.com"){
+        url=format!("https://mirror.ghproxy.com/{}",url)//github镜像
+    }
+
     let response = Client::new()
         .get(url)
         .send()
@@ -191,9 +289,8 @@ where
     Ok(())
 }
 
-use zip::read::ZipArchive;
-
 fn unzip_file(zip_path: &str, dest_dir: &str) -> Result<(), Box<dyn std::error::Error>> {
+    use zip::read::ZipArchive;
     let file = File::open(zip_path)?;
     let mut archive = ZipArchive::new(file)?;
 
@@ -215,4 +312,72 @@ fn unzip_file(zip_path: &str, dest_dir: &str) -> Result<(), Box<dyn std::error::
     }
 
     Ok(())
+}
+
+fn decompress_file(
+    file_path: &str,
+    destination_dir: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if file_path.ends_with(".zip") {
+        unzip_file(file_path, destination_dir)?;
+        return Ok(());
+    } else
+    /* if(file_path.ends_with(".tar.gz")) */
+    {
+        decompress_tar_gz(file_path, destination_dir)?;
+        return Ok(());
+    }
+}
+
+fn decompress_tar_gz(
+    tar_gz_path: &str,
+    destination_dir: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    use flate2::read::GzDecoder;
+    use tar::{Archive, EntryType};
+    // 打开并解压缩gz文件
+    let file = File::open(tar_gz_path)?;
+    let decoder = GzDecoder::new(file);
+    let mut archive = Archive::new(io::BufReader::new(decoder));
+
+    // 遍历tar档案中的所有条目
+    for entry in archive.entries()? {
+        let mut entry = entry?;
+
+        // 获取条目的路径
+        let entry_path = entry.path().unwrap();
+        let outpath = Path::new(destination_dir).join(entry_path);
+
+        // 创建目录或文件
+        match entry.header().entry_type() {
+            EntryType::Regular => {
+                if let Some(parent) = outpath.parent() {
+                    fs::create_dir_all(parent)?;
+                }
+
+                let mut outfile = File::create(&outpath)?;
+                io::copy(&mut entry, &mut outfile)?;
+            }
+            EntryType::Directory => {
+                fs::create_dir_all(&outpath)?;
+            }
+            _ => {
+                // 忽略其他类型的条目，如符号链接等
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn extract_filename_from_url(url: &str) -> Option<String> {
+    use std::path::PathBuf; // 克隆PathBuf并转换为String
+                            // 转换为PathBuf
+    let path_buf = PathBuf::from(url);
+
+    // 获取文件名并转换为String
+    path_buf
+        .file_name()
+        .and_then(|os_str| os_str.to_str())
+        .map(|s| s.to_owned())
 }

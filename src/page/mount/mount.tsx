@@ -7,8 +7,10 @@ import { hooks } from '../../services/hook'
 import { useNavigate } from 'react-router-dom'
 import { nmConfig, osInfo, roConfig } from '../../services/config'
 import { NoData_module } from '../other/noData'
-import { getWinFspInstallState, installWinFsp, openUrlInBrowser } from '../../utils/utils'
-import { IconQuestionCircle } from '@arco-design/web-react/icon'
+import { getWinFspInstallState, installWinFsp, openUrlInBrowser, showPathInExplorer } from '../../utils/utils'
+import { IconEye, IconQuestionCircle } from '@arco-design/web-react/icon'
+import { exit } from '../../controller/main'
+import { restartRclone } from '../../utils/rclone/process'
 const Row = Grid.Row;
 const Col = Grid.Col;
 
@@ -26,7 +28,7 @@ function Mount_page() {
     },
     {
       title: t('mount_path'),
-      dataIndex: 'mountPath',
+      dataIndex: 'mountPath_',
     },
     {
       title: t('mount_status'),
@@ -55,17 +57,17 @@ function Mount_page() {
   return (
     <div style={{ width: "100%", height: "100%", }}>
 
-        <Row style={{ width: "100%", height: "2rem", }}>
-          <Col flex={'auto'}>
-            <Space>
-              <Button onClick={() => { navigate('./add') }} type='primary'>{t('add')}</Button>
-              <Button onClick={() => { reupMount() }}>{t('refresh')}</Button>
-            </Space>
-          </Col>
-          <Col flex={'4rem'} style={{ textAlign: 'right' }}>
-            <Button title={t('help')} icon={<IconQuestionCircle />} onClick={() => { openUrlInBrowser(roConfig.url.docs + '/docs/storage-mount') }} />
-          </Col>
-        </Row>
+      <Row style={{ width: "100%", height: "2rem", }}>
+        <Col flex={'auto'}>
+          <Space>
+            <Button onClick={() => { navigate('./add') }} type='primary'>{t('add')}</Button>
+            <Button onClick={() => { reupMount() }}>{t('refresh')}</Button>
+          </Space>
+        </Col>
+        <Col flex={'4rem'} style={{ textAlign: 'right' }}>
+          <Button title={t('help')} icon={<IconQuestionCircle />} onClick={() => { openUrlInBrowser(roConfig.url.docs + '/docs/storage-mount') }} />
+        </Col>
+      </Row>
 
       <div style={{ height: "calc(100% - 3rem)" }}>
         <br />
@@ -75,7 +77,12 @@ function Mount_page() {
               <Button type='primary' onClick={async () => {
                 setWinFspInstalling(true)
                 if (await installWinFsp()) {
+                  await restartRclone()
                   Message.success(t('install_success'))
+                  /* Message.info(t('about_to_restart_self'))
+                  setTimeout(() => {
+                    exit(true)
+                  }, 1500) */
                 } else {
                   Message.error(t('install_failed'))
                 }
@@ -91,15 +98,21 @@ function Mount_page() {
             const mounted = isMounted(item.mountPath)
             return {
               ...item,
+              mountPath_: <>{item.mountPath}{rcloneInfo.endpoint.isLocal&&osInfo.osType==='Windows_NT' &&mounted&&
+              <Button title={t('show_path_in_explorer')} onClick={async () => {
+                await showPathInExplorer(item.mountPath,true)
+               }} type='text' icon={<IconEye />}></Button>}</>,
               mounted: mounted ? t('mounted') : t('unmounted'),
               actions: <Space>
                 {
-                  mounted ? <>
+                  mounted ? <>  
                     <Button onClick={() => { unmountStorage(item.mountPath) }} status='danger' >{t('unmount')}</Button>
                   </> :
                     <>
+                    
                       <Button onClick={() => { delMountStorage(item.mountPath) }} status='danger' >{t('delete')}</Button>
-                      <Button onClick={() => { mountStorage(item) }} type='primary' >{t('mount')}</Button></>
+                      <Button onClick={() => { mountStorage(item) }} type='primary' >{t('mount')}</Button>
+                      </>
                 }
               </Space>
             }

@@ -76,8 +76,20 @@ jobs:
           # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.settings.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      - name: install dependencies (windows only)
+        if: matrix.settings.platform == 'windows-latest' 
+        run: |
+        #winget  install 7z -h --accept-package-agreements --accept-source-agreements
+
+            
+      - name: install dependencies (macos only)
+        if: matrix.settings.platform == 'macos-latest'
+        run: |
+        #/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        #brew install p7zip
+
       - name: install dependencies (ubuntu only)
-        if: matrix.settings.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        if: matrix.settings.platform == 'ubuntu-22.04' 
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf

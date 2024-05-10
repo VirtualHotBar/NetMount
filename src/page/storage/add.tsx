@@ -11,7 +11,7 @@ import { roConfig } from "../../services/config";
 import { searchStorageInfo, storageInfoList } from "../../controller/storage/allList";
 import { ParametersType } from "../../type/defaults";
 import { StorageParamsType } from "../../type/controller/storage/info";
-import { InputForm_module } from "../other/InputForm";
+import { InputForm_module, InputFormItemContent_module } from "../other/InputForm";
 const FormItem = Form.Item;
 const Row = Grid.Row;
 const Col = Grid.Col;
@@ -27,7 +27,7 @@ function AddStorage_page() {
     const [showAdvanced, setShowAdvanced] = useState(false)
     const [storageName, setStorageName] = useState('')//存储名称
     const isEditMode = (getURLSearchParam('edit') == 'true')
-    const [formHook, setFormHook] = useState<FormInstance>();//表单结果
+    const [formHook, setFormHook] = useState<FormInstance>();//表单实例
 
     const [storageParams, setStorageParams] = useState<ParametersType>()//编辑模式下，覆盖默认参数
 
@@ -97,7 +97,12 @@ function AddStorage_page() {
             break;
         case 'setParams':
             content = (<div style={{ width: '100%' }}>
-                <InputForm_module data={searchStorageInfo(storageTypeName).defaultParams.parameters} showAdvanced={showAdvanced} overwriteValues={storageParams} setFormHook={(hook) => { setFormHook(hook) }} />
+
+                <InputForm_module header={<FormItem label={'*' + t('storage_name')}>
+                    <Input value={storageName} onChange={(value) => {
+                        setStorageName(value)
+                    }} />
+                </FormItem>} data={searchStorageInfo(storageTypeName).defaultParams.parameters} showAdvanced={showAdvanced} overwriteValues={storageParams} setFormHook={(hook) => { setFormHook(hook) }} />
                 <br />
 
                 <Row style={{ width: '100%' }}>
