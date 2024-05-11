@@ -1,6 +1,6 @@
 import { Button, Grid, Popconfirm, Space } from "@arco-design/web-react"
 import { useTranslation } from 'react-i18next';
-import { delStorage, reupStorage } from "../../controller/storage/storage"
+import { delStorage, filterHideStorage, reupStorage } from "../../controller/storage/storage"
 import { rcloneInfo } from "../../services/rclone"
 import { useEffect, useReducer, useState } from "react";
 import { hooks } from "../../services/hook";
@@ -58,7 +58,7 @@ function Storage_page() {
             <div style={{ height: "calc(100% - 3rem)" }}>
                 <br />
                 <Table style={{ height: "100%" }} noDataElement={<NoData_module />} columns={columns} pagination={false} data={
-                    rcloneInfo.storageList.map((item) => {
+                    filterHideStorage(rcloneInfo.storageList).map(item => {
                         return {
                             ...item,
                             type: searchStorageInfo(item.type).label,
@@ -77,9 +77,9 @@ function Storage_page() {
                                 <Button onClick={() => navigate('/storage/explorer?name=' + item.name)} >{t('explorer')}</Button>
                                 <Button onClick={() => navigate('/mount/add?name=' + item.name)} type='primary'>{t('mount')}</Button>
                             </Space>
-
                         }
-                    })} />
+                    })
+                } />
             </div>
         </div>
     )

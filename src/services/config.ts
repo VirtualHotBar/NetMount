@@ -6,6 +6,7 @@ const roConfig = {
         website: 'https://www.netmount.cn',
         docs: 'https://docs.netmount.cn',
         rclone: 'https://github.com/rclone/rclone',
+        alist:'https://github.com/alist-org/alist'
     },
     env:{
         path:{

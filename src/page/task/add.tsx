@@ -5,7 +5,7 @@ import { nmConfig, roConfig, saveNmConfig } from '../../services/config';
 import { TaskListItem } from '../../type/config';
 import { rcloneInfo } from '../../services/rclone';
 import { IconQuestionCircle } from '@arco-design/web-react/icon';
-import { formatPathRclone } from '../../controller/storage/storage';
+import { filterHideStorage, formatPathRclone } from '../../controller/storage/storage';
 import { useNavigate } from 'react-router-dom';
 import { saveTask } from '../../controller/task/task';
 import { formatPath } from '../../utils/utils';
@@ -56,22 +56,23 @@ const reducer = (state: TaskInfoState, action: Action): TaskInfoState => {
 function AddTask_page() {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const storageList=filterHideStorage(rcloneInfo.storageList)
     const [taskInfo, dispatch] = useReducer(reducer, {
         name: 'task_' + (nmConfig.task ? nmConfig.task.length + 1 : 1),
         taskType: roConfig.options.task.taskType.select[roConfig.options.task.taskType.defIndex],
         source: {
             storageName:
-                rcloneInfo.storageList && rcloneInfo.storageList.length > 0
-                    ? rcloneInfo.storageList[0].name
+                storageList && storageList.length > 0
+                    ? storageList[0].name
                     : '',
             path: '/',
         },
         target: {
             storageName:
-                rcloneInfo.storageList && rcloneInfo.storageList.length > 0
-                    ? (rcloneInfo.storageList.length > 1
-                        ? rcloneInfo.storageList[1].name
-                        : rcloneInfo.storageList[0].name)
+                storageList && storageList.length > 0
+                    ? (storageList.length > 1
+                        ? storageList[1].name
+                        : storageList[0].name)
                     : '',
             path: '/',
         },
@@ -83,7 +84,7 @@ function AddTask_page() {
                 s: 0,
             }
         },
-        runInfo:{
+        runInfo: {
 
         },
         enable: true,
@@ -202,7 +203,7 @@ function AddTask_page() {
                                 placeholder={t('please_select')}
                                 onChange={(value) => dispatch({ type: 'setSourceStorageName', payload: value })}
                             >
-                                {rcloneInfo.storageList.map((item) => (
+                                {storageList.map((item) => (
                                     <Select.Option key={item.name} value={item.name}>
                                         {item.name}
                                     </Select.Option>
@@ -218,7 +219,7 @@ function AddTask_page() {
                         </Col>
                         <Col flex={'2rem'}>
                             <Tooltip content={t('explain_for_task_path_format')}>
-                                <Button icon={<IconQuestionCircle />}/>
+                                <Button icon={<IconQuestionCircle />} />
                             </Tooltip>
                         </Col>
                     </Row>
@@ -233,7 +234,7 @@ function AddTask_page() {
                                     placeholder={t('please_select')}
                                     onChange={(value) => dispatch({ type: 'setTargetStorageName', payload: value })}
                                 >
-                                    {rcloneInfo.storageList.map((item) => (
+                                    {storageList.map((item) => (
                                         <Select.Option key={item.name} value={item.name}>
                                             {item.name}
                                         </Select.Option>
@@ -249,7 +250,7 @@ function AddTask_page() {
                             </Col>
                             <Col flex={'2rem'}>
                                 <Tooltip content={t('explain_for_task_path_format')}>
-                                    <Button icon={<IconQuestionCircle />}/>
+                                    <Button icon={<IconQuestionCircle />} />
                                 </Tooltip>
                             </Col>
                         </Row>
@@ -272,19 +273,19 @@ function AddTask_page() {
                                 title: t('error'),
                                 content: t('the_task_name_is_illegal'),
                             })
-                        } else if(!taskInfo.source.storageName || !taskInfo.source.path|| (taskInfo.taskType!== 'delete' &&(!taskInfo.target.storageName || !taskInfo.target.path))){
+                        } else if (!taskInfo.source.storageName || !taskInfo.source.path || (taskInfo.taskType !== 'delete' && (!taskInfo.target.storageName || !taskInfo.target.path))) {
                             Notification.error({
                                 title: t('error'),
                                 content: t('the_path_is_illegal'),
                             })
-                        }else if(taskInfo.taskType!== 'delete' && taskInfo.source.path===taskInfo.target.path&&taskInfo.source.storageName===taskInfo.target.storageName){
+                        } else if (taskInfo.taskType !== 'delete' && taskInfo.source.path === taskInfo.target.path && taskInfo.source.storageName === taskInfo.target.storageName) {
                             Notification.error({
                                 title: t('error'),
                                 content: t('same_source_and_target'),
                             })
                         } else {
                             if (saveTask(taskInfo)) {
-                                
+
                                 Notification.success({
                                     title: t('success'),
                                     content: t('task_added_successfully'),

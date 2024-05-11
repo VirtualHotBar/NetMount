@@ -282,5 +282,6 @@
     "desktop":"桌面",
     "custom":"自定义",
     "recommend":"推荐",
-    "show_path_in_explorer":"在资源管理器中显示"
+    "show_path_in_explorer":"在资源管理器中显示",
+    "storage_name_cannot_be_empty":"存储名称不能为空"
 }

@@ -2,10 +2,10 @@ import { Child, Command } from "@tauri-apps/api/shell";
 import { RcloneStats } from "./stats";
 
 interface RcloneInfo {
-    process:{
-        command?:Command,
-        child?:Child,
-        log?:string
+    process: {
+        command?: Command,
+        child?: Child,
+        log?: string
     },
     endpoint: {
         url: string,
@@ -40,16 +40,23 @@ interface RcloneVersion {
 }
 
 interface StorageList {
+    framework: 'rclone' | 'alist';//框架
     name: string,
     type: 'webdav' | string,
-    space?:StorageSpace
+    space?: StorageSpace,
+    other?: {
+        alist?: { id?: number ,
+            driverPath?:string//alist存储的挂载路径
+        }
+    },
+    hide?: boolean,//是否隐藏
 }
 
 interface StorageSpace {
     used: number,
     total: number,
     free: number,
-    trashed?:number
+    trashed?: number
 }
 
 interface MountList {
@@ -59,12 +66,12 @@ interface MountList {
 }
 
 interface FileInfo {
-    Path: string;
-    Name: string;
-    Size: number;
-    MimeType: string;
-    ModTime: Date;
-    IsDir: boolean;
+    path: string;
+    name: string;
+    size: number;
+    mimeType?: string;
+    modTime: Date;
+    isDir: boolean;
 }
 
-export { RcloneInfo, FileInfo,StorageSpace }
+export { RcloneInfo, FileInfo, StorageSpace,StorageList }

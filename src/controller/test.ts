@@ -11,9 +11,11 @@ import { checkUpdate } from "./update/update";
 import { getWinFspInstallState, installWinFsp, showPathInExplorer } from "../utils/utils";
 import { t } from "i18next";
 import { FilterType, StorageInfoType, StorageParamItemType } from "../type/controller/storage/info";
-import { updateStorageInfoList } from "./storage/allList";
+import { storageInfoList, updateStorageInfoList } from "./storage/allList";
 import { rcloneInfo } from "../services/rclone";
-import { alist_api_get,  } from "../utils/alist/request";
+import { alist_api_get, } from "../utils/alist/request";
+import { alistInfo } from "../services/alist";
+import { addAlistInRclone } from "../utils/alist/alist";
 
 export async function Test() {
     console.log(nmConfig);
@@ -24,8 +26,10 @@ export async function Test() {
     console.log(await rclone_api_post('/rc/list'),);
     console.log(await alist_api_get('/api/me'));
     console.log(roConfig.env.path.homeDir);
-    
 
+    console.log(storageInfoList);
+    
+    await addAlistInRclone()
     //console.log(await getAlistToken());
 
 

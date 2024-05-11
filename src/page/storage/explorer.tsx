@@ -3,7 +3,7 @@ import { BackTop, Badge, Button, Divider, Dropdown, Grid, Input, Link, List, Men
 import { IconCopy, IconDelete, IconEdit, IconFolderAdd, IconLeft, IconMore, IconPaste, IconRefresh, IconScissor, IconUpCircle, IconUpload } from '@arco-design/web-react/icon';
 import { rcloneInfo } from '../../services/rclone';
 import { useTranslation } from 'react-i18next';
-import { copyDir, copyFile, delDir, delFile, formatPathRclone, getFileList, mkDir, moveDir, moveFile } from '../../controller/storage/storage';
+import { copyDir, copyFile, delDir, delFile, filterHideStorage, formatPathRclone, getFileList, mkDir, moveDir, moveFile, uploadFileRequest } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
 import { formatSize, getURLSearchParam } from '../../utils/utils';
 import { rcloneApiHeaders } from '../../utils/rclone/request';
@@ -143,7 +143,11 @@ function ExplorerItem() {
 
 
         if (!storageName && !getURLSearchParam('name') && rcloneInfo.storageList.length > 0) {
-            setStorageName(rcloneInfo.storageList[0].name)
+            for (const item of rcloneInfo.storageList) {
+                if (item.hide) continue;
+                setStorageName(item.name)
+                break
+            }
         }
     }, []);
 
@@ -184,38 +188,13 @@ function ExplorerItem() {
 
     function UploadFile() {
 
-        const customRequest = (option: RequestOptions) => {
-            const { onProgress, onError, onSuccess, file } = option;
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            const xhr = new XMLHttpRequest();
-
-            xhr.upload.onprogress = ({ lengthComputable, loaded, total }) => {
-                if (lengthComputable) {
-                    console.log(Math.round(loaded / total * 100));
-                    onProgress(Math.round(loaded / total * 100));
-                }
-            };
-
-            xhr.onload = () => {
-                xhr.status === 200 ? onSuccess() : onError(xhr);
-            };
-
-            xhr.onerror = () => onError(xhr);
-
-            xhr.open('POST', `${rcloneInfo.endpoint.url}/operations/uploadfile?fs=${storageName}:&remote=${formatPathRclone(path!, false)}`, true);
-            xhr.setRequestHeader('Authorization', `Bearer ${rcloneApiHeaders.Authorization}`);
-            xhr.send(formData);
-        };
 
         if (storageName && path) {
             modal.info!({
                 title: t('upload_file'),
                 icon: null,
                 content: <>
-                    <Upload drag customRequest={customRequest} ></Upload></>,
+                    <Upload drag customRequest={(option: RequestOptions)=>{uploadFileRequest(option,storageName,path)}} ></Upload></>,
                 onOk: fileInfo,
                 onCancel: fileInfo
             })
@@ -262,13 +241,7 @@ function ExplorerItem() {
                             }
                         }
                         }>
-                            {
-                                rcloneInfo.storageList.map((item) => {
-                                    return (
-                                        <Select.Option key={item.name} value={item.name}>{item.name}({searchStorageInfo(item.type).label})</Select.Option>
-                                    )
-                                })
-                            }
+                            {filterHideStorage(rcloneInfo.storageList).map((item) => <Select.Option key={item.name} value={item.name} >{item.name}({searchStorageInfo(item.type).label})</Select.Option>)}
                         </Select>
                     </Col>
                     <Col style={{ paddingLeft: '0.2rem', paddingRight: '1rem' }} flex='auto'>
@@ -329,22 +302,22 @@ function ExplorerItem() {
                                 data={
                                     fileList.map((item) => {
                                         return {
-                                            ...item, fileName: <Link style={{ width: '100%' }} onClick={() => { item.IsDir && updatePath(item.Path) }}><Typography.Ellipsis showTooltip>{item.Name}</Typography.Ellipsis></Link>,
-                                            fileSize: (item.Size != -1 ? formatSize(item.Size) : t('dir')),
-                                            fileModTime: (new Date(item.ModTime)).toLocaleString(),
+                                            ...item, fileName: <Link style={{ width: '100%' }} onClick={() => { item.isDir && updatePath(item.path) }}><Typography.Ellipsis showTooltip>{item.name}</Typography.Ellipsis></Link>,
+                                            fileSize: (item.size != -1 ? formatSize(item.size) : t('dir')),
+                                            fileModTime: (new Date(item.modTime)).toLocaleString(),
                                             actions: <Space size={'mini'}>
-                                                <Button onClick={() => { addCilp({ isMove: false, storageName: storageName!, path: item.Path, isDir: item.IsDir }) }} type='text' icon={<IconCopy />} title={t('copy')} />
-                                                <Button onClick={() => { addCilp({ isMove: true, storageName: storageName!, path: item.Path, isDir: item.IsDir }) }} type='text' icon={<IconScissor />} title={t('cut')} />
+                                                <Button onClick={() => { addCilp({ isMove: false, storageName: storageName!, path: item.path, isDir: item.isDir }) }} type='text' icon={<IconCopy />} title={t('copy')} />
+                                                <Button onClick={() => { addCilp({ isMove: true, storageName: storageName!, path: item.path, isDir: item.isDir }) }} type='text' icon={<IconScissor />} title={t('cut')} />
                                                 <Dropdown unmountOnExit={false} droplist={
                                                     <Menu>
-                                                        <Menu.Item key='rename' style={{ color: 'var(primary-4)' }} onClick={() => fileRename(item.Path, item.IsDir)}><IconEdit /> {t('rename')}</Menu.Item>
+                                                        <Menu.Item key='rename' style={{ color: 'var(primary-4)' }} onClick={() => fileRename(item.path, item.isDir)}><IconEdit /> {t('rename')}</Menu.Item>
                                                         <Menu.Item key='del' /* style={{ color: 'var(danger-4)' }} */>
                                                             <Popconfirm
                                                                 focusLock
                                                                 title={t('confirm_delete_question')}
                                                                 onOk={() => {
-                                                                    item.IsDir ? delDir(storageName!, item.Path, fileInfo) :
-                                                                        delFile(storageName!, item.Path, fileInfo)
+                                                                    item.isDir ? delDir(storageName!, item.path, fileInfo) :
+                                                                        delFile(storageName!, item.path, fileInfo)
                                                                 }}
                                                             >
                                                                 <IconDelete /> {t('delete')}

@@ -169,7 +169,7 @@ export function formatPath(path: string, isWindows: boolean = false) {
             formatPath(path, isWindows)
         }
     } else {
-        if (path.startsWith('/')) {
+        if (!path.startsWith('/')) {
             path = '/' + path;
         }
     }

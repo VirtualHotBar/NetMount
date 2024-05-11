@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api"
 import runCmd from "../tauri/cmd"
 import { addParams, alistDataDir } from "./process"
 import { alistInfo } from "../../services/alist"
+import { createStorage } from "../../controller/storage/create"
 
 
 
@@ -24,4 +25,14 @@ async function modifyAlistConfig(rewriteData:any=alistInfo.alistConfig){
     await invoke('write_config_file',{configData:newAlistConfig,path:path})
 }
 
-export{ getAlistToken,modifyAlistConfig,setAlistPass}
+async function addAlistInRclone(){
+    await createStorage(alistInfo.markInRclone,'webdav',{
+        'url':alistInfo.endpoint.url+'/dav',
+        'vendor':'other',
+        'user':alistInfo.endpoint.auth.user,
+        'pass':alistInfo.endpoint.auth.password,
+    })
+}
+
+
+export{ getAlistToken,modifyAlistConfig,setAlistPass,addAlistInRclone}

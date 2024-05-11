@@ -4,7 +4,7 @@ import { CSSProperties, useEffect, useState } from "react";
 import { createStorage } from "../../controller/storage/create";
 import { useNavigate, useParams } from "react-router-dom";
 import { getProperties, getURLSearchParam, openUrlInBrowser } from "../../utils/utils";
-import { getStorageParams } from "../../controller/storage/storage";
+import { getStorageParams, searchStorage } from "../../controller/storage/storage";
 import { rcloneInfo } from "../../services/rclone";
 import { IconQuestionCircle } from "@arco-design/web-react/icon";
 import { roConfig } from "../../services/config";
@@ -36,11 +36,12 @@ function AddStorage_page() {
     /*     const setParams = (key: string, value: any) => {
             parameters[key] = value;
         }; */
+    const storageInfo = searchStorageInfo(storageTypeName)
 
     const editMode = async () => {
         const name = getURLSearchParam('name')
-        setStorageTypeName(searchStorageInfo(getURLSearchParam('type')).label)
         setStorageName(name)
+        setStorageTypeName(searchStorageInfo(getURLSearchParam('type')).label)
         setStorageParams(await getStorageParams(name))
 
         setStep('setParams')
@@ -52,6 +53,10 @@ function AddStorage_page() {
         }
     }, [])
 
+    if (storageInfo.framework === 'alist') {
+        formHook?.setFieldValue('mount_path', '/' + storageName)
+    }
+
     let content: JSX.Element
 
     switch (step) {
@@ -62,7 +67,7 @@ function AddStorage_page() {
                         <Select
                             placeholder={t('please_select')}
                             style={{ width: '15rem' }}
-                            value={storageTypeName && searchStorageInfo(storageTypeName).label}
+                            value={storageTypeName && storageInfo.label}
                             onChange={(value) => {
                                 setStorageTypeName(value)
                                 const storageInfo = searchStorageInfo(value)
@@ -80,7 +85,7 @@ function AddStorage_page() {
 
                     {/* 存储介绍 */}
                     {storageTypeName ? <FormItem label={t('storage_introduce')}>
-                        <Typography.Text>{t(searchStorageInfo(storageTypeName).description!)}</Typography.Text>
+                        <Typography.Text>{t(storageInfo.description!)}</Typography.Text>
                     </FormItem> : ''}
 
                     <br />
@@ -98,17 +103,18 @@ function AddStorage_page() {
         case 'setParams':
             content = (<div style={{ width: '100%' }}>
 
-                <InputForm_module header={<FormItem label={'*' + t('storage_name')}>
-                    <Input value={storageName} onChange={(value) => {
-                        setStorageName(value)
-                    }} />
-                </FormItem>} data={searchStorageInfo(storageTypeName).defaultParams.parameters} showAdvanced={showAdvanced} overwriteValues={storageParams} setFormHook={(hook) => { setFormHook(hook) }} />
+                <InputForm_module
+                    header={<FormItem label={'*' + t('storage_name')} hidden={isEditMode}>
+                        <Input value={storageName} onChange={(value) => {
+                            setStorageName(value)
+                        }} />
+                    </FormItem>} data={[...storageInfo.defaultParams.parameters/* ,...storageInfo.defaultParams.exParameters?.alist?.additional||[] */]}
+                    showAdvanced={showAdvanced} overwriteValues={storageParams} setFormHook={(hook) => { setFormHook(hook) }} />
                 <br />
 
                 <Row style={{ width: '100%' }}>
                     <Col flex={'4rem'}>
                         <Button onClick={() => {
-                            const storageInfo = searchStorageInfo(storageTypeName)
                             openUrlInBrowser(roConfig.url.docs + '/docs/storage-mgr/' +
                                 (storageInfo.displayType || storageInfo.type).toLocaleLowerCase().split(' ').join('-')
                             )
@@ -137,17 +143,23 @@ function AddStorage_page() {
 
 
                                 if (!isEditMode) {
-                                    for (const storage of rcloneInfo.storageList) {
-                                        if (storage.name === storageName) {
-                                            Message.error(t('storage_name_already_exists'))
-                                            return
-                                        }
+                                    if (searchStorage(storageName)?.name) {
+                                        Message.error(t('storage_name_already_exists'))
+                                        return
                                     }
                                 }
 
-                                const parameters: ParametersType = formHook.getFieldsValue(formHook.getTouchedFields())
+                                if (!storageName) {
+                                    Message.error(t('storage_name_cannot_be_empty'))
+                                    return
+                                }
 
-                                if (await createStorage(storageName, searchStorageInfo(storageTypeName).type, parameters)) {
+                                const parameters: ParametersType = storageInfo.framework === 'rclone' ? formHook.getFieldsValue(formHook.getTouchedFields()) : formHook.getFieldsValue()
+                                console.log(parameters);
+
+                                //return
+
+                                if (await createStorage(storageName, storageInfo.type, parameters)) {
                                     Notification.success({
                                         title: t('success'),
                                         content: t('Storage_added_successfully'),

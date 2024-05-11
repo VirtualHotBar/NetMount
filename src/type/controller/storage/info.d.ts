@@ -26,6 +26,7 @@ interface StorageParamItemType {
     select?: ParamItemOptionType[],//可选值
     isPassword: boolean,//是否是密码
 
+    hide?: boolean,//是否隐藏,优先于filters
     filters?: FilterType[],
 
     mark?: ('StorageAndPathInputer' | 'PathInputer')[],//参数标记,StorageSelector:存储选择器
@@ -36,14 +37,31 @@ interface StorageParamItemType {
 interface StorageParamsType {
     name: string,//存储名称
     parameters: StorageParamItemType[],//参数列表
+    exParameters?:{//扩展参数
+        /* rclone?:{
+            
+        } */
+        alist?:{
+            supplement?: StorageParamItemType[]
+        }
+    }
 }
 
 interface StorageInfoType {
+    framework: 'rclone'|'alist';//框架
     label: string;//存储名称(显示)
     type: string;//存储类型
     description: string;//存储描述
     defaultParams: StorageParamsType;//默认参数
     displayType?: string;
+    otherConfig?:{
+        rclone?:{
+            
+        }
+        alist?:{
+
+        }
+    }
 }
 
 export { StorageInfoType, StorageParamsType, StorageParamItemType, ParamItemOptionType, FilterType }

@@ -7,25 +7,23 @@ let rcloneApiHeaders = {
 };
 
 async function rclone_api_noop(): Promise<boolean> {
-    try{
-        const data= await rclone_api_post('/rc/noop').finally(()=>{
+    try {
+        const data = await rclone_api_post('/rc/noop').finally(() => {
             return true;
         })
-        
-        if(data){
+
+        if (data) {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
-    catch(e){
+    catch (e) {
         return false;
     }
 }
 
-function rclone_api_post(path: string, data?: object, ignoreError?: boolean) {
-    if (!data) data = {}
-
+function rclone_api_post(path: string, bodyData: object = {}, ignoreError?: boolean) {
     // 以 base64 编码的方式来设置账密字符串
     const base64Credentials = btoa(`${rcloneInfo.endpoint.auth.user}:${rcloneInfo.endpoint.auth.pass}`);
 
@@ -38,7 +36,7 @@ function rclone_api_post(path: string, data?: object, ignoreError?: boolean) {
     return fetch(rcloneInfo.endpoint.url + path, {
         method: 'POST',
         headers: rcloneApiHeaders,
-        body: JSON.stringify(data)
+        body: JSON.stringify(bodyData)
     }).then((response) => {
         if (!response.ok && !ignoreError) {
             printError(response);
@@ -79,4 +77,4 @@ async function printError(error: Response) {
     })
 } */
 
-export { rclone_api_post, rcloneApiHeaders ,rclone_api_noop}
+export { rclone_api_post, rcloneApiHeaders, rclone_api_noop }

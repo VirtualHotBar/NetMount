@@ -6,6 +6,7 @@ import { MountListItem } from "../../../type/config"
 import { ParametersType } from "../../../type/defaults"
 import { rclone_api_post } from "../../../utils/rclone/request"
 import { fs_exist_dir, fs_make_dir } from "../../../utils/utils"
+import { convertStoragePath, formatPathRclone } from "../storage"
 
 
 //列举存储
@@ -38,7 +39,6 @@ function isMounted(mountPath: string): boolean {
 }
 
 async function addMountStorage(storageName: string, mountPath: string, parameters: ParametersType, autoMount?: boolean) {
-
     if (getMountStorage(mountPath)) {
         return false
     }
@@ -90,13 +90,12 @@ async function editMountStorage(mountInfo: MountListItem) {
 }
 
 async function mountStorage(mountInfo: MountListItem) {
-
     if (!rcloneInfo.version.os.toLowerCase().includes('windows') && !await fs_exist_dir(mountInfo.mountPath)) {
         await fs_make_dir(mountInfo.mountPath)
     }
 
     const back = await rclone_api_post('/mount/mount', {
-        fs: mountInfo.storageName + ":",
+        fs:convertStoragePath( mountInfo.storageName ),
         mountPoint: mountInfo.mountPath,
         ...(mountInfo.parameters)
     })

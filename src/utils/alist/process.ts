@@ -4,11 +4,11 @@ import { rcloneInfo } from "../../services/rclone";
 import { formatPath, randomString } from "../utils";
 import { alistInfo } from "../../services/alist";
 import { homeDir } from "@tauri-apps/api/path";
-import { roConfig } from "../../services/config";
+import { osInfo, roConfig } from "../../services/config";
 import { getAlistToken, modifyAlistConfig, setAlistPass } from "./alist";
 
 const alistDataDir = () => {
-    return formatPath(roConfig.env.path.homeDir + '/.netmount/alist/')
+    return formatPath(roConfig.env.path.homeDir + '/.netmount/alist/',osInfo.osType==='Windows_NT')
 }
 
 const addParams = (): string[] => {
@@ -18,9 +18,10 @@ const addParams = (): string[] => {
 }
 
 async function startAlist() {
-    await setAlistPass(alistInfo.auth.password)
+    alistInfo.endpoint.url='http://localhost:'+(alistInfo.alistConfig.scheme?.http_port||5573)
+    await setAlistPass(alistInfo.endpoint.auth.password)
 
-    alistInfo.auth.token = await getAlistToken()
+    alistInfo.endpoint.auth.token = await getAlistToken()
     await modifyAlistConfig()
     let args: string[] = [
         'server',

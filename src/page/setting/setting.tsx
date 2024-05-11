@@ -11,6 +11,7 @@ import { rcloneInfo } from '../../services/rclone';
 import { setLocalized } from '../../controller/language/localized';
 import { openUrlInBrowser, set_devtools_state } from '../../utils/utils';
 import { showLog } from '../other/modal';
+import { alistInfo } from '../../services/alist';
 const CollapseItem = Collapse.Item;
 const FormItem = Form.Item;
 const Row = Grid.Row;
@@ -117,6 +118,10 @@ export default function Setting_page() {
           <Link onClick={() => { shell.open(roConfig.url.rclone) }}>Rclone</Link>(<Link onClick={() => {
             rcloneInfo.process.log && showLog(modal,rcloneInfo.process.log)
           }}>{t('log')}</Link>): {rcloneInfo.version.version}
+          <br />
+          <Link onClick={() => { shell.open(roConfig.url.alist) }}>Alist</Link>(<Link onClick={() => {
+            alistInfo.process.log && showLog(modal,alistInfo.process.log)
+          }}>{t('log')}</Link>): {alistInfo.version.version}
           <br />
         </Card>
         <Card title={t('tools')} style={{}} size='small'>

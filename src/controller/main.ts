@@ -19,6 +19,9 @@ import { checkNotice } from "./update/notice"
 import { updateStorageInfoList } from "./storage/allList"
 import { startAlist } from "../utils/alist/process"
 import { homeDir } from "@tauri-apps/api/path"
+import { alist_api_get } from "../utils/alist/request"
+import { alistInfo } from "../services/alist"
+import { addAlistInRclone } from "../utils/alist/alist"
 
 async function init(setStartStr: Function) {
 
@@ -57,8 +60,10 @@ async function init(setStartStr: Function) {
 
     startUpdateCont()
     await updateStorageInfoList()
+    await reupAlistVersion()
     await reupRcloneVersion()
     await reupStorage()
+    await addAlistInRclone()
     await reupMount()
 
     //自动挂载
@@ -69,12 +74,11 @@ async function init(setStartStr: Function) {
 }
 
 async function reupRcloneVersion() {
-    const ver = await rclone_api_post(
-        '/core/version',
-    )
+    rcloneInfo.version = await rclone_api_post('/core/version',)
+}
 
-    rcloneInfo.version = ver
-    console.log(rcloneInfo.version);
+async function reupAlistVersion() {
+alistInfo.version.version =  (await alist_api_get('/api/admin/setting/get', { key: 'version' })).data.value
 }
 
 function main() {

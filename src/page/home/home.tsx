@@ -11,6 +11,7 @@ import { formatETA, formatSize } from '../../utils/utils';
 import { useTranslation } from 'react-i18next';
 import { nmConfig } from '../../services/config';
 import { IconCloud, IconList, IconSelectAll, IconStorage, IconSwap } from '@arco-design/web-react/icon';
+import { filterHideStorage } from '../../controller/storage/storage';
 const Row = Grid.Row;
 const Col = Grid.Col;
 const { Meta } = Card;
@@ -24,6 +25,7 @@ function Home_page() {
   const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
   const [modal, contextHolder] = Modal.useModal();
   const [notification, noticeContextHolder] = Notification.useNotification();
+  const storageList=filterHideStorage(rcloneInfo.storageList)
 
   useEffect(() => {
     hooks.upStats = forceUpdate;
@@ -79,7 +81,7 @@ function Home_page() {
         </Card> */}
 
         <div style={{ height: '1.5rem' }} />
-        {rcloneInfo.storageList && !(rcloneInfo.storageList.length > 0) &&
+        {storageList && !(storageList.length > 0) &&
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Alert style={{ maxWidth: '20rem', marginBottom: '1.0rem' }} type='info' content={
               <Row >
@@ -96,7 +98,7 @@ function Home_page() {
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Space style={{ height: '100%' }}>
             <Card style={{ width: '10rem', height: '6rem' }} hoverable >
-              <strong ><IconCloud /> {t('storage')}</strong>({rcloneInfo.storageList.length})<br />
+              <strong ><IconCloud /> {t('storage')}</strong>({filterHideStorage(storageList).length})<br />
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
                   <Button type='text' onClick={() => { hooks.navigate('/storage/manage/add') }}> {t('add')} </Button>

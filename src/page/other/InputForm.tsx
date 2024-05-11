@@ -7,6 +7,7 @@ import { ParametersType } from "../../type/defaults";
 import { t } from "i18next";
 import { IconQuestionCircle } from "@arco-design/web-react/icon";
 import { getProperties } from "../../utils/utils";
+import { filterHideStorage } from "../../controller/storage/storage";
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
@@ -92,7 +93,7 @@ function StorageAndPathInputer({ value, onChange }: { value?: string, onChange?(
                         change()
                     }}
                 >
-                    {rcloneInfo.storageList.map((item) => (
+                    {filterHideStorage(rcloneInfo.storageList).map((item) => (
                         <Select.Option key={item.name} value={item.name}>
                             {item.name}
                         </Select.Option>
@@ -219,7 +220,7 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
                                 triggerPropName={dataItem.type === 'boolean' ? 'checked' : 'value'}
                                 initialValue={dataItem.default}
                                 rules={[{ required: dataItem.required }]}
-                                hidden={filterState !== undefined ? (!filterState) : (dataItem.advanced && !showAdvanced)}
+                                hidden={dataItem.hide!==undefined ? dataItem.hide : (filterState !== undefined ? (!filterState) : (dataItem.advanced && !showAdvanced))}
                                 style={{ ...style }}>
                                 {InputFormItemContent_module({ data: dataItem, formValuesResult: formValuesResult })}
                             </FormItem>

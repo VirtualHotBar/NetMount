@@ -10,6 +10,7 @@ import { addMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage
 import { osInfo } from '../../services/config';
 import { homeDir } from '@tauri-apps/api/path';
 import { InputForm_module, paramsType2FormItems } from '../other/InputForm';
+import { filterHideStorage } from '../../controller/storage/storage';
 
 const FormItem = Form.Item;
 
@@ -27,6 +28,7 @@ export default function AddMount_page() {
     const [vfsOptFormHook, setVfsOptFormHook] = useState<FormInstance>();//表单实例
     const [mountOptFormHook, setMountOptFormHook] = useState<FormInstance>();//表单实例
     const RadioGroup = Radio.Group;
+    const storageList=filterHideStorage(rcloneInfo.storageList)
 
     const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows');
 
@@ -55,7 +57,7 @@ export default function AddMount_page() {
     useEffect(() => {
         checkWinFspState()
 
-        if (rcloneInfo.storageList.length === 0) {
+        if (storageList.length === 0) {
             navigate('/mount')
             Notification.warning({
                 id: 'no_storage',
@@ -66,7 +68,7 @@ export default function AddMount_page() {
         } else if (getURLSearchParam('name')) {
             setStorageName(getURLSearchParam('name'))
         } else if (!storageName) {
-            setStorageName(rcloneInfo.storageList[0].name)
+            setStorageName(storageList[0].name)
         }
     }, [])
 
@@ -99,7 +101,7 @@ export default function AddMount_page() {
                         setStorageName(value)
                     }>
                         {
-                            rcloneInfo.storageList.map((item) => {
+                            storageList.map((item) => {
                                 return (
                                     <Select.Option key={item.name} value={item.name}>{item.name}({item.type})</Select.Option>
                                 )
