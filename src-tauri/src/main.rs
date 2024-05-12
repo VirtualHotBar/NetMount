@@ -89,8 +89,8 @@ fn main() {
         }
     }
 
-    run_command("ls").expect("运行ls命令失败");
-    run_command("dir").expect("运行ls命令失败");
+    //run_command("ls").expect("运行ls命令失败");
+    //run_command("dir").expect("运行ls命令失败");
 
     // 根据不同的操作系统配置Tauri Builder
     let builder = tauri::Builder::default()
