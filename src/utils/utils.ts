@@ -114,6 +114,8 @@ export async function openUrlInBrowser(url: string) {
 }
 
 export function compareVersions(v1: string, v2: string) {
+    v1=v1.replace(/[^0-9.]/g, '');
+    v2=v2.replace(/[^0-9.]/g, '');
     const splitV1 = v1.split('.').map(Number);
     const splitV2 = v2.split('.').map(Number);
 
@@ -125,7 +127,7 @@ export function compareVersions(v1: string, v2: string) {
     while (splitV2.length < maxParts) {
         splitV2.push(0);
     }
-
+    
     for (let i = 0; i < maxParts; i++) {
         if (splitV1[i] > splitV2[i]) {
             return 1;

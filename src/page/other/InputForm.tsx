@@ -7,7 +7,8 @@ import { ParametersType } from "../../type/defaults";
 import { t } from "i18next";
 import { IconQuestionCircle } from "@arco-design/web-react/icon";
 import { getProperties } from "../../utils/utils";
-import { filterHideStorage } from "../../controller/storage/storage";
+import { convertStoragePath, filterHideStorage, formatPathRclone, searchStorage } from "../../controller/storage/storage";
+import { alistInfo } from "../../services/alist";
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
@@ -63,33 +64,42 @@ function filter(filters: FilterType[], formValuesResult: ParametersType) {
 
 function StorageAndPathInputer({ value, onChange }: { value?: string, onChange?(value: string): void }) {
     if (value == undefined) value = '';
-    const separatorIndex = value.indexOf(':')
-
-    const formatPath = (path: string) => {
-        path = path.replace(/\\/g, '/');
-        path = path.replace(/\/+/g, '/');
-
-        if (path.substring(0, 1) != '/') {
-            path = '/' + path;
+    if (value.includes(alistInfo.markInRclone)) {
+        let tempPath = formatPathRclone(value.substring(value.indexOf(':') + 1));
+        if (tempPath.includes('/')) {
+            value = tempPath.replace('/', ':')
+        } else {
+            value = tempPath+':';
         }
-
-        return path
     }
 
-    let storage = value.substring(0, separatorIndex)
-    let path = formatPath(value.substring(separatorIndex + 1))
+    const separatorIndex = value.indexOf(':')
+    let storageName = value.substring(0, separatorIndex)
+    let path = formatPathRclone(value.substring(separatorIndex + 1))
+
+    /*const formatPath = (path: string) => {
+            path = path.replace(/\\/g, '/');
+            path = path.replace(/\/+/g, '/');
+    
+            if (path.substring(0, 1) != '/') {
+                path = '/' + path;
+            }
+    
+            return path
+        } */
+
 
     const change = () => {
-        storage && onChange && onChange(storage + ':' + path);
+        storageName && onChange && onChange(convertStoragePath(storageName, path)!);
     }
     return <>
         <Row>
             <Col flex={'7rem'}>
                 <Select
-                    value={storage}
+                    value={storageName}
                     placeholder={t('please_select')}
                     onChange={(value) => {
-                        storage = value;
+                        storageName = value;
                         change()
                     }}
                 >
@@ -102,12 +112,12 @@ function StorageAndPathInputer({ value, onChange }: { value?: string, onChange?(
             </Col>
             <Col flex={'auto'}>
                 <Input
-                    value={path}
+                    value={'/' + path}
                     onChange={(value) => {
-                        path = formatPath(value);
+                        path = formatPathRclone(value);
                         change()
                     }}
-                    disabled={!storage}
+                    disabled={!storageName}
                 />
             </Col>
             <Col flex={'2rem'}>
@@ -167,7 +177,7 @@ function InputFormItemContent_module({ data, formValuesResult /* style */ }: {
 
 }
 
-function InputForm_module({ data, style, showAdvanced, footer, onChange, overwriteValues, setFormHook ,header}: {
+function InputForm_module({ data, style, showAdvanced, footer, onChange, overwriteValues, setFormHook, header }: {
     data: StorageParamItemType[];
     footer?: JSX.Element;
     header?: JSX.Element;
@@ -202,7 +212,7 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
             onValuesChange={() => {
                 setFormValuesResult(form.getFieldsValue(form.getTouchedFields()));
             }}>
-                {header && header}
+            {header && header}
             {
                 (() => {
                     const formItems: JSX.Element[] = []
@@ -220,7 +230,7 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
                                 triggerPropName={dataItem.type === 'boolean' ? 'checked' : 'value'}
                                 initialValue={dataItem.default}
                                 rules={[{ required: dataItem.required }]}
-                                hidden={dataItem.hide!==undefined ? dataItem.hide : (filterState !== undefined ? (!filterState) : (dataItem.advanced && !showAdvanced))}
+                                hidden={dataItem.hide !== undefined ? dataItem.hide : (filterState !== undefined ? (!filterState) : (dataItem.advanced && !showAdvanced))}
                                 style={{ ...style }}>
                                 {InputFormItemContent_module({ data: dataItem, formValuesResult: formValuesResult })}
                             </FormItem>
@@ -230,7 +240,7 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
                     return formItems.filter(item => item && item)
                 })()
             }
-            {footer &&  footer }
+            {footer && footer}
         </Form>
     )
 }

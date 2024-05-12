@@ -11,8 +11,11 @@ async function updateStorageInfoList() {
         ...(await updateAlistStorageInfoList()),
         ...(await updateRcloneStorageInfoList()),)
 
+    //移除不需要的存储
+    const unneededStorages:string[]=['Virtual','Crypt','Alias']
+    storageInfoList=storageInfoList.filter(item => !unneededStorages.includes(item.type));
 
-
+    //给存储排序
     const keyWordList: { text: string, weight: number }[] = [
         { "text": "115", "weight": 4 },
         { "text": "139", "weight": 4.5 },
@@ -43,25 +46,25 @@ async function updateStorageInfoList() {
     ]
 
 
-storageInfoList = storageInfoList.sort((a, b) => {
-    let labelA = a.type.toLocaleLowerCase();
-    let labelB = b.type.toLocaleLowerCase();
-    let aWeight = 0;
-    let bWeight = 0;
-    for (const keyWord of keyWordList) {
-        if (labelA.includes(keyWord.text)) {
-            aWeight += keyWord.weight;
-            // 确保关键词只影响一次权重
-            labelA = labelA.replace(keyWord.text.toLocaleLowerCase(), '');
+    storageInfoList = storageInfoList.sort((a, b) => {
+        let labelA = a.type.toLocaleLowerCase();
+        let labelB = b.type.toLocaleLowerCase();
+        let aWeight = 0;
+        let bWeight = 0;
+        for (const keyWord of keyWordList) {
+            if (labelA.includes(keyWord.text)) {
+                aWeight += keyWord.weight;
+                // 确保关键词只影响一次权重
+                labelA = labelA.replace(keyWord.text.toLocaleLowerCase(), '');
+            }
+            if (labelB.includes(keyWord.text)) {
+                bWeight += keyWord.weight;
+                // 确保关键词只影响一次权重
+                labelB = labelB.replace(keyWord.text.toLocaleLowerCase(), '');
+            }
         }
-        if (labelB.includes(keyWord.text)) {
-            bWeight += keyWord.weight;
-            // 确保关键词只影响一次权重
-            labelB = labelB.replace(keyWord.text.toLocaleLowerCase(), '');
-        }
-    }
-    return bWeight - aWeight;
-});
+        return bWeight - aWeight;
+    });
 
 }
 

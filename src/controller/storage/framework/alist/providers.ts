@@ -82,7 +82,7 @@ async function updateAlistStorageInfoList() {
             }
         })
 
-        console.log(provider.config);
+        //console.log(provider.config);
     }
 
     return alistStorageInfoList

@@ -221,6 +221,11 @@ function ExplorerItem() {
         })
     }
 
+    const openFile=( path:string )=>{
+        console.log(path); 
+        Message.info({ content:t('mount_the_storage_to_download_files'),id:'openfile' })
+    }
+
     return (
         <div style={{ height: '100%', width: '100%' }}>
             <div style={{ width: "100%", height: "2rem", }}>
@@ -302,7 +307,7 @@ function ExplorerItem() {
                                 data={
                                     fileList.map((item) => {
                                         return {
-                                            ...item, fileName: <Link style={{ width: '100%' }} onClick={() => { item.isDir && updatePath(item.path) }}><Typography.Ellipsis showTooltip>{item.name}</Typography.Ellipsis></Link>,
+                                            ...item, fileName: <Link style={{ width: '100%' }} onClick={() => { item.isDir ?updatePath(item.path): openFile(item.path) }}><Typography.Ellipsis showTooltip>{item.name}</Typography.Ellipsis></Link>,
                                             fileSize: (item.size != -1 ? formatSize(item.size) : t('dir')),
                                             fileModTime: (new Date(item.modTime)).toLocaleString(),
                                             actions: <Space size={'mini'}>
