@@ -1,4 +1,4 @@
-import { Button, Grid, Popconfirm, Space } from "@arco-design/web-react"
+import { Button, Grid, Popconfirm, Space, Tag, Tooltip } from "@arco-design/web-react"
 import { useTranslation } from 'react-i18next';
 import { delStorage, filterHideStorage, reupStorage } from "../../controller/storage/storage"
 import { rcloneInfo } from "../../services/rclone"
@@ -59,9 +59,11 @@ function Storage_page() {
                 <br />
                 <Table style={{ height: "100%" }} noDataElement={<NoData_module />} columns={columns} pagination={false} data={
                     filterHideStorage(rcloneInfo.storageList).map(item => {
+                        const isNotWork = item.framework === 'alist' && item.other?.alist?.status !== 'work';
                         return {
                             ...item,
-                            type: searchStorageInfo(item.type).label,
+                            name:<>{item.name}{(isNotWork)?<Tooltip content={item.other?.alist?.status} color="#FF6060" style={{marginRight:'10rem'}}> <Tag color="RED">{t('not_work')}</Tag></Tooltip>:''}</>,
+                            type: t(searchStorageInfo(item.type).label),
                             actions: <Space>
                                 <Popconfirm
                                     focusLock

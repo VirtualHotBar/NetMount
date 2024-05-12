@@ -1,7 +1,7 @@
 {
   "name": "netmount-gui",
   "private": true,
-  "version": "0.1.4",
+  "version": "1.0.0beta",
   "type": "module",
   "scripts": {
     "dev": "vite",

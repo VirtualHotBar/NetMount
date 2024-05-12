@@ -9,12 +9,12 @@ async function updateAlistStorageInfoList() {
 
     for (const key in alistProviders) {
         const provider = alistProviders[key]
-        const getStorageParams = (options: any[],prefix:string = '') => {
+        const getStorageParams = (options: any[], prefix: string = '') => {
             let storageParams: StorageParamItemType[] = []
             for (const option of options) {
                 let storageParam: StorageParamItemType = {
                     label: option.name,
-                    name: prefix+option.name,
+                    name: prefix + option.name,
                     description: option.help,
                     type: 'string',
                     required: option.required,
@@ -56,10 +56,10 @@ async function updateAlistStorageInfoList() {
                 }
 
                 //为隐藏无用参数
-                if([ 'mount_path', 'order','webdav_policy','web_proxy','remark','order_by','order_direction','enable_sign','cache_expiration','down_proxy_url','extract_folder'].includes(option.name)){
-                    storageParam.hide=true
+                if (['mount_path', 'order', 'webdav_policy', 'web_proxy', 'remark', 'order_by', 'order_direction', 'enable_sign', 'cache_expiration', 'down_proxy_url', 'extract_folder'].includes(option.name)) {
+                    storageParam.hide = true
                 }
-                
+
 
                 storageParams.push(storageParam)
             }
@@ -67,13 +67,13 @@ async function updateAlistStorageInfoList() {
         }
 
         alistStorageInfoList.push({
-            label: provider.config.name,
+            label: 'storage.'+provider.config.name,
             type: key,
-            description: key.toLocaleLowerCase().replace(' ', '') + '_description',
+            description: 'description.'+key.toLocaleLowerCase(),
             framework: 'alist',
             defaultParams: {
                 name: provider.config.name + '_new',
-                parameters: getStorageParams(provider.common).concat(getStorageParams(provider.additional,'addition.')),
+                parameters: getStorageParams(provider.common).concat(getStorageParams(provider.additional, 'addition.')),
                 exParameters: {
                     alist: {
                         supplement: [],

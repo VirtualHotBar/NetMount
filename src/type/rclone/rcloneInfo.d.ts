@@ -45,8 +45,10 @@ interface StorageList {
     type: 'webdav' | string,
     space?: StorageSpace,
     other?: {
-        alist?: { id?: number ,
+        alist?: { 
+            id?: number ,
             driverPath?:string//alist存储的挂载路径
+            status?:'work'|string
         }
     },
     hide?: boolean,//是否隐藏

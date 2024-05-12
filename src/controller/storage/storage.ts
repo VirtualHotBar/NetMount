@@ -8,6 +8,8 @@ import { alist_api_get, alist_api_post } from "../../utils/alist/request"
 import { formatPath } from "../../utils/utils"
 import { alistInfo } from "../../services/alist"
 import { RequestOptions } from "@arco-design/web-react/es/Upload"
+import { delMountStorage, getMountStorage, isMounted, unmountStorage } from "./mount/mount"
+import { nmConfig } from "../../services/config"
 
 //列举存储信息
 async function reupStorage() {
@@ -36,7 +38,8 @@ async function reupStorage() {
             other: {
                 alist: {
                     id: storage.id,
-                    driverPath: storage.mount_path
+                    driverPath: storage.mount_path,
+                    status:storage.status
                 }
             }
         })
@@ -45,7 +48,7 @@ async function reupStorage() {
 }
 
 function filterHideStorage(storageList: StorageList[]) {//过滤隐藏的存储
-    let data: any[] = []
+    let data: StorageList[] = []
     for (let item of storageList) {
         if (!item.hide)
             data.push(item)
@@ -71,23 +74,31 @@ async function getStorageSpace(name: string): Promise<StorageSpace> {
 async function delStorage(name: string) {
     const storage = searchStorage(name)
 
+    //删除挂载
+    for (const mount of nmConfig.mount.lists) {
+        if (mount.storageName === storage?.name ) {
+            await delMountStorage(mount.mountPath)
+        }
+    }
+
     switch (storage?.framework) {
         case 'rclone':
             await rclone_api_post(
                 '/config/delete', {
                 name: storage.name
             })
-            reupStorage()
             break;
         case 'alist':
-            await alist_api_post('/api/admin/storage/delete', { id: storage.other?.alist?.id })
+            await alist_api_post('/api/admin/storage/delete',undefined, { id: storage.other?.alist?.id })
             break;
     }
+    reupStorage()
 }
 
 //获取存储
 async function getStorageParams(name: string): Promise<ParametersType> {
     const storage = searchStorage(name)
+
     switch (storage?.framework) {
         case 'rclone':
             return await rclone_api_post(

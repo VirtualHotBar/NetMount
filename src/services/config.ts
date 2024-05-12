@@ -4,13 +4,14 @@ import { NMConfig, OSInfo } from "../type/config"
 const roConfig = {
     url: {
         website: 'https://www.netmount.cn',
-        docs: 'https://docs.netmount.cn',
+        docs: 'https://api.hotpe.top/API/NetMount/GoLink?id=docs&path=',
         rclone: 'https://github.com/rclone/rclone',
-        alist:'https://github.com/alist-org/alist'
+        alist: 'https://github.com/alist-org/alist',
+        to: (id: string, path: string='') => { return 'https://api.hotpe.top/API/NetMount/GoLink?id=' + id + '&path=' + path }
     },
-    env:{
-        path:{
-            homeDir:'~'
+    env: {
+        path: {
+            homeDir: '~'
         }
     },
     options: {

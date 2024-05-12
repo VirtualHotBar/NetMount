@@ -241,7 +241,7 @@ function ExplorerItem() {
                             }
                         }
                         }>
-                            {filterHideStorage(rcloneInfo.storageList).map((item) => <Select.Option key={item.name} value={item.name} >{item.name}({searchStorageInfo(item.type).label})</Select.Option>)}
+                            {filterHideStorage(rcloneInfo.storageList).map((item) => <Select.Option key={item.name} value={item.name} >{item.name}{/* ({searchStorageInfo(item.type).label}) */}</Select.Option>)}
                         </Select>
                     </Col>
                     <Col style={{ paddingLeft: '0.2rem', paddingRight: '1rem' }} flex='auto'>

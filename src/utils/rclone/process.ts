@@ -29,13 +29,11 @@ async function startRclone() {
         args.push('--rc-no-auth')
     }
 
-    console.log(args);
     rcloneInfo.process.command = new Command('rclone', args)
 
     rcloneInfo.process.log = ''
     const addLog = (data: string) => {
         rcloneInfo.process.log += data;
-        console.log(data);
     }
 
     rcloneInfo.process.command.stdout.on('data', (data) => addLog(data))

@@ -1,4 +1,4 @@
-import { Button, Checkbox, Form, FormInstance, Grid, Input, InputNumber, InputTag, Link, Message, Notification, Select, Space, Switch, Typography } from "@arco-design/web-react";
+import { Button, Card, Checkbox, Form, FormInstance, Grid, Input, InputNumber, InputTag, Link, Message, Notification, Radio, Select, Space, Switch, Typography } from "@arco-design/web-react";
 import { useTranslation } from "react-i18next";
 import { CSSProperties, useEffect, useState } from "react";
 import { createStorage } from "../../controller/storage/create";
@@ -10,13 +10,26 @@ import { IconQuestionCircle } from "@arco-design/web-react/icon";
 import { roConfig } from "../../services/config";
 import { searchStorageInfo, storageInfoList } from "../../controller/storage/allList";
 import { ParametersType } from "../../type/defaults";
-import { StorageParamsType } from "../../type/controller/storage/info";
+import { StorageInfoType, StorageParamsType } from "../../type/controller/storage/info";
 import { InputForm_module, InputFormItemContent_module } from "../other/InputForm";
 const FormItem = Form.Item;
-const Row = Grid.Row;
-const Col = Grid.Col;
+const { GridItem, Col, Row } = Grid;
+const RadioGroup = Radio.Group;
+const InputSearch = Input.Search;
 
+const filterDuplicates = (storageInfo: StorageInfoType[], t: (key: string) => string): StorageInfoType[] => {
+    let newStorageList: StorageInfoType[] = [];
+    let labels: string[] = [];
+    for (let i = 0; i < storageInfo.length; i++) {
+        let label = t(storageInfo[i].label);
+        if (!labels.includes(label)) {
 
+            labels.push(label);
+            newStorageList.push(storageInfo[i]);
+        }
+    }
+    return newStorageList
+}
 
 function AddStorage_page() {
     const { t } = useTranslation()
@@ -28,6 +41,8 @@ function AddStorage_page() {
     const [storageName, setStorageName] = useState('')//存储名称
     const isEditMode = (getURLSearchParam('edit') == 'true')
     const [formHook, setFormHook] = useState<FormInstance>();//表单实例
+    const [searchStr, setSearchStr] = useState('')//搜索存储
+
 
     const [storageParams, setStorageParams] = useState<ParametersType>()//编辑模式下，覆盖默认参数
 
@@ -37,21 +52,24 @@ function AddStorage_page() {
             parameters[key] = value;
         }; */
     const storageInfo = searchStorageInfo(storageTypeName)
+    console.log(storageInfo);
 
     const editMode = async () => {
         const name = getURLSearchParam('name')
-        setStorageName(name)
         setStorageTypeName(searchStorageInfo(getURLSearchParam('type')).label)
         setStorageParams(await getStorageParams(name))
-
+        setStorageName(name)
         setStep('setParams')
     }
 
     useEffect(() => {
-        if (isEditMode) {
-            editMode()
-        }
+        if (isEditMode) editMode();
     }, [])
+
+    useEffect(() => {
+        const storageInfo = searchStorageInfo(storageTypeName)
+        setStorageName(storageInfo.defaultParams.name)
+    }, [storageTypeName])
 
     if (storageInfo.framework === 'alist') {
         formHook?.setFieldValue('mount_path', '/' + storageName)
@@ -62,9 +80,54 @@ function AddStorage_page() {
     switch (step) {
         case 'selectType':
             content = (<div style={{ width: '100%' }}>
+
                 <Form autoComplete='off'>
-                    <FormItem label={t('storage_type')}>
-                        <Select
+                    <FormItem style={{ width: '100%', }} label={t('storage_type')} >
+                        <InputSearch value={searchStr} onChange={(value) => setSearchStr(value)} allowClear placeholder={t('enter_keyword_to_search')} style={{}} />
+
+                        <Card style={{ height: '15rem', overflow: 'auto', /* marginTop: '1rem' */ }} hoverable>
+                            <RadioGroup
+                                value={storageTypeName}
+                                onChange={(value) => setStorageTypeName(value)}>
+                                {(showAdvanced ? storageInfoList : filterDuplicates(storageInfoList, t)).map((storageItem, index) => {
+                                    //搜索
+                                    if (searchStr && !(storageItem.label + storageItem.type + t(storageItem.label)).toLocaleLowerCase().includes(searchStr.toLocaleLowerCase())) return;
+
+                                    return (
+                                        <Radio
+                                            value={storageItem.type}
+                                            key={index}
+                                            style={{ margin: 0 }}>
+                                            {({ checked }) => {
+                                                return (
+                                                    <div
+                                                        style={{
+                                                            minWidth: '7rem',
+                                                            marginBlock: '0.2rem',
+                                                            padding: '4px',
+                                                            border: '1px solid var(--color-border-2)',
+                                                            borderRadius: '4px',
+                                                            boxSizing: 'border-box',
+                                                            ...(checked ? { backgroundColor: 'var(--color-primary-light-1)' } : {})
+                                                        }}>
+                                                        <div style={{ display: 'flex', color: 'var(--color-text-1)' }}>
+                                                            {/* <img style={{ width: '1.2rem', height: '1.2rem' }} src={storageItem.framework === 'rclone' ?'/public/img/framework/rclone.png' : '/public/img/framework/alist.svg'} /> */}
+                                                            {t(storageItem.label)}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }}
+                                        </Radio>
+                                    )
+                                })}
+
+                            </RadioGroup>
+                        </Card>
+                        {!showAdvanced &&
+                        <div style={{width:'100%',textAlign:'right'}}><Button onClick={() => setShowAdvanced(true)} type='text'>{t('show_all')} </Button></div>
+                            }
+
+                        {/*<Select
                             placeholder={t('please_select')}
                             style={{ width: '15rem' }}
                             value={storageTypeName && storageInfo.label}
@@ -79,13 +142,13 @@ function AddStorage_page() {
                                     {t(storageItem.label)}
                                 </Select.Option>
                             ))}
-                        </Select>
+                        </Select> */}
                     </FormItem>
 
 
                     {/* 存储介绍 */}
                     {storageTypeName ? <FormItem label={t('storage_introduce')}>
-                        <Typography.Text>{t(storageInfo.description!)}</Typography.Text>
+                        <Typography.Text>{t(storageInfo.description)}</Typography.Text>
                     </FormItem> : ''}
 
                     <br />
@@ -94,11 +157,11 @@ function AddStorage_page() {
                     <div style={{ width: '100%', textAlign: 'right' }}>
                         <Space>
                             <Button onClick={() => { navigate('/storage/manage') }} >{t('step_back')}</Button>
-                            <Button onClick={() => { setStep('setParams') }} disabled={!storageTypeName} type='primary'>{t('step_next')}</Button>
+                            <Button onClick={() => { setStep('setParams'); setShowAdvanced(false) }} disabled={!storageTypeName} type='primary'>{t('step_next')}</Button>
                         </Space>
                     </div>
                 </Form>
-            </div>)
+            </div >)
             break;
         case 'setParams':
             content = (<div style={{ width: '100%' }}>
@@ -115,11 +178,11 @@ function AddStorage_page() {
                 <Row style={{ width: '100%' }}>
                     <Col flex={'4rem'}>
                         <Button onClick={() => {
-                            openUrlInBrowser(roConfig.url.docs + '/docs/storage-mgr/' +
-                                (storageInfo.displayType || storageInfo.type).toLocaleLowerCase().split(' ').join('-')
+                            openUrlInBrowser(
+                                roConfig.url.to('docs-storage', '/' + (storageInfo.displayType || storageInfo.type).toLocaleLowerCase().split(' ').join('-') + '&framework=' + storageInfo.framework)
                             )
                         }}
-                            type='text' icon={<IconQuestionCircle />}>{t('help_for_this_storage')}({storageTypeName}) </Button>
+                            type='text' icon={<IconQuestionCircle />}>{t('help_for_this_storage')}({t(storageInfo.label)}) </Button>
                     </Col>
                     <Col flex={'auto'} style={{ textAlign: 'right' }}>
                         <Space>
@@ -171,12 +234,12 @@ function AddStorage_page() {
                                         content: t('Storage_added_failed'),
                                     })
                                 }
-
                             }
                             } type='primary'>{t('save')}</Button>
                         </Space>
                     </Col>
                 </Row>
+                <br /><br />
             </div>)
     }
 

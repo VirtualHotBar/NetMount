@@ -21,12 +21,11 @@ async function reupMount(noRefreshUI?: boolean) {
     mountPoints.forEach((tiem: any) => {
         const name = tiem.Fs
         rcloneInfo.mountList.push({
-            storageName: name.substring(0, name.length - 1),
+            storageName:name, //name.substring(0, name.length - 1)
             mountPath: tiem.MountPoint,
             mountedTime: new Date(tiem.MountedOn),
         })
     });
-
     !noRefreshUI && hooks.upMount()
 }
 

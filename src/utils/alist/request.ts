@@ -3,7 +3,7 @@ import runCmd from "../tauri/cmd";
 import { addParams } from "./process";
 
 
-async function alist_api_get(path: string, queryData?: object,bodyData?: object) {
+async function alist_api_get(path: string, queryData?: object, bodyData?: object) {
 
     // 将queryData对象转换为URLSearchParams对象以便于构建查询字符串
     const searchParams = new URLSearchParams();
@@ -29,8 +29,17 @@ async function alist_api_get(path: string, queryData?: object,bodyData?: object)
 }
 
 
-function alist_api_post(path: string, bodyData?: object) {
-    return fetch(alistInfo.endpoint.url+path, {
+function alist_api_post(path: string, bodyData?: object, queryData?: object,) {
+    // 将queryData对象转换为URLSearchParams对象以便于构建查询字符串
+    const searchParams = new URLSearchParams();
+    if (queryData) {
+        Object.entries(queryData).forEach(([key, value]) => {
+            searchParams.append(key, String(value));
+        });
+    }
+    const fullPath = `${alistInfo.endpoint.url}${path}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+
+    return fetch(fullPath, {
         method: 'POST',
         redirect: 'follow',
         headers: {
@@ -43,4 +52,4 @@ function alist_api_post(path: string, bodyData?: object) {
     });
 }
 
-export {  alist_api_get ,alist_api_post}
+export { alist_api_get, alist_api_post }

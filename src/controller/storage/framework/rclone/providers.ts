@@ -122,9 +122,9 @@ async function updateRcloneStorageInfoList() {
 
 
         rcloneStorageInfoList.push({
-            label: provider.Name,
+            label: 'storage.'+ provider.Prefix,//provider.Name
             type: provider.Prefix,
-            description: provider.Description,
+            description: 'description.'+provider.Prefix,//provider.Description
             framework:'rclone',
             defaultParams: {
                 name: provider.Name + '_new',

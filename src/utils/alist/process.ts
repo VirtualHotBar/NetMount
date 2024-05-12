@@ -30,7 +30,7 @@ async function startAlist() {
 
     alistInfo.process.command = new Command('alist', args)
 
-    rcloneInfo.process.log = ''
+    alistInfo.process.log = ''
     const addLog = (data: string) => {
         alistInfo.process.log += data;
         console.log(data);
@@ -39,7 +39,7 @@ async function startAlist() {
     alistInfo.process.command.stdout.on('data', (data) => addLog(data))
     alistInfo.process.command.stderr.on('data', (data) => addLog(data))
 
-    rcloneInfo.process.child = await alistInfo.process.command.spawn()
+    alistInfo.process.child = await alistInfo.process.command.spawn()
 }
 
 async function stopAlist() {
