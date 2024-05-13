@@ -6,6 +6,7 @@ import { alistInfo } from "../../services/alist";
 import { homeDir } from "@tauri-apps/api/path";
 import { osInfo, roConfig } from "../../services/config";
 import { getAlistToken, modifyAlistConfig, setAlistPass } from "./alist";
+import { alist_api_ping } from "./request";
 
 const alistDataDir = () => {
     return formatPath(roConfig.env.path.homeDir + '/.netmount/alist/',osInfo.osType==='Windows_NT')
@@ -16,6 +17,8 @@ const addParams = (): string[] => {
     params.push('--data', alistDataDir())
     return params
 }
+
+
 
 async function startAlist() {
     alistInfo.endpoint.url='http://localhost:'+(alistInfo.alistConfig.scheme?.http_port||5573)
@@ -40,10 +43,22 @@ async function startAlist() {
     alistInfo.process.command.stderr.on('data', (data) => addLog(data))
 
     alistInfo.process.child = await alistInfo.process.command.spawn()
+
+    while (true) {
+        await setTimeout(() => { }, 1500);
+        if (await alist_api_ping()&&alistInfo.process.log.includes('start HTTP server')) {
+            break;
+        }
+    }
 }
 
 async function stopAlist() {
     alistInfo.process.child && await alistInfo.process.child.kill()
 }
 
-export { addParams, startAlist, stopAlist, alistDataDir }
+ async function restartAlist() {
+    await stopAlist()
+    await startAlist()
+}
+
+export { addParams, startAlist, stopAlist, alistDataDir ,restartAlist}

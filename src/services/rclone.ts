@@ -15,7 +15,7 @@ let rcloneInfo: RcloneInfo = {
             pass: '',
         },
         localhost: {
-            port: 5572,
+            port: 6434,//随机
         }
     },
     storageList: [],

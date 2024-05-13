@@ -2,8 +2,14 @@ import { invoke } from "@tauri-apps/api";
 import { Command } from "@tauri-apps/api/shell";
 import { rcloneInfo } from "../../services/rclone";
 import { rclone_api_noop, rclone_api_post } from "./request";
-import { randomString } from "../utils";
+import { formatPath, randomString } from "../utils";
+import { alistInfo } from "../../services/alist";
+import { delStorage } from "../../controller/storage/storage";
+import { osInfo, roConfig } from "../../services/config";
 
+const rcloneDataDir = () => {
+    return formatPath(roConfig.env.path.homeDir + '/.netmount/',osInfo.osType==='Windows_NT')
+}
 
 async function startRclone() {
     if (rcloneInfo.process.child) {
@@ -22,7 +28,8 @@ async function startRclone() {
         `--rc-addr=:${rcloneInfo.endpoint.localhost.port.toString()}`,
         `--rc-user=${rcloneInfo.endpoint.auth.user}`,
         `--rc-pass=${rcloneInfo.endpoint.auth.pass}`,
-        '--rc-allow-origin=*',
+        '--rc-allow-origin='+window.location.origin||'*',
+        '--config='+rcloneDataDir()+'/rclone.conf',
     ];
 
     if (rcloneInfo.endpoint.auth.user === '') {
@@ -51,6 +58,7 @@ async function startRclone() {
 }
 
 async function stopRclone() {
+    await delStorage(alistInfo.markInRclone)
     await rclone_api_post('/core/quit')
     if (rcloneInfo.process.child) {
         await rcloneInfo.process.child.kill()

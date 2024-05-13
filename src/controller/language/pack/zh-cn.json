@@ -29,6 +29,7 @@
     "storage_name_illegal": "存储名称不合法",
     "Storage_added_successfully": "存储添加成功",
     "Storage_added_failed": "存储添加失败",
+    "start_framework": "启动框架",
     "edit": "编辑",
     "please_select_storage": "请选择存储",
     "actions": "操作",

@@ -2,6 +2,12 @@ import { alistInfo } from "../../services/alist";
 import runCmd from "../tauri/cmd";
 import { addParams } from "./process";
 
+async function alist_api_ping(){
+    console.log (await fetch(alistInfo.endpoint.url+'/ping',{method: 'GET'} ).then((res) => { return res.ok;}))
+   
+    return await fetch(alistInfo.endpoint.url+'/ping',{method: 'GET'} ).then((res) => { return res.ok;})
+ }
+
 
 async function alist_api_get(path: string, queryData?: object, bodyData?: object) {
 
@@ -52,4 +58,4 @@ function alist_api_post(path: string, bodyData?: object, queryData?: object,) {
     });
 }
 
-export { alist_api_get, alist_api_post }
+export { alist_api_get, alist_api_post ,alist_api_ping}

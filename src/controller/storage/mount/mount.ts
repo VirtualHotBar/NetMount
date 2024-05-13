@@ -94,7 +94,7 @@ async function mountStorage(mountInfo: MountListItem) {
     }
 
     const back = await rclone_api_post('/mount/mount', {
-        fs:convertStoragePath( mountInfo.storageName ),
+        fs:convertStoragePath( mountInfo.storageName )|| mountInfo.storageName,
         mountPoint: mountInfo.mountPath,
         ...(mountInfo.parameters)
     })

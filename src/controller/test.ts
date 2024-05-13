@@ -16,6 +16,8 @@ import { rcloneInfo } from "../services/rclone";
 import { alist_api_get, } from "../utils/alist/request";
 import { alistInfo } from "../services/alist";
 import { addAlistInRclone } from "../utils/alist/alist";
+import { restartRclone } from "../utils/rclone/process";
+import { restartAlist } from "../utils/alist/process";
 
 export async function Test() {
     console.log(nmConfig);
@@ -30,6 +32,9 @@ export async function Test() {
     console.log(storageInfoList);
     
     await addAlistInRclone()
+
+    await restartAlist()
+    await restartRclone()
     //console.log(await getAlistToken());
 
 

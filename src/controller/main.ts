@@ -17,16 +17,17 @@ import { setThemeMode } from "./setting/setting"
 import { setLocalized } from "./language/localized"
 import { checkNotice } from "./update/notice"
 import { updateStorageInfoList } from "./storage/allList"
-import { startAlist } from "../utils/alist/process"
+import { startAlist, stopAlist } from "../utils/alist/process"
 import { homeDir } from "@tauri-apps/api/path"
 import { alist_api_get } from "../utils/alist/request"
 import { alistInfo } from "../services/alist"
 import { addAlistInRclone } from "../utils/alist/alist"
+import { Test } from "./test"
 
 async function init(setStartStr: Function) {
 
     setStartStr(t('init'))
-    roConfig.env.path.homeDir=await homeDir()
+    roConfig.env.path.homeDir = await homeDir()
     listenWindow()
 
     await getOsInfo()
@@ -51,26 +52,30 @@ async function init(setStartStr: Function) {
 
     setThemeMode(nmConfig.settings.themeMode)
 
-    setStartStr(t('get_notice'))
-
-    await checkNotice()
+    setStartStr(t('start_framework'))
 
     await startRclone()
     await startAlist()
 
+    setStartStr(t('get_notice'))
+    await checkNotice()
+
     startUpdateCont()
-    await updateStorageInfoList()
+    
     await reupAlistVersion()
     await reupRcloneVersion()
+    await updateStorageInfoList()
     await reupStorage()
     await addAlistInRclone()
+    //await reupStorage()//addAlistInRclone中结尾有reupStorage所以注释
     await reupMount()
 
     //自动挂载
     await autoMount()
 
+    //await Test()
     //开始任务队列
-    await startTaskScheduler()
+    await startTaskScheduler()    
 }
 
 async function reupRcloneVersion() {
@@ -78,7 +83,13 @@ async function reupRcloneVersion() {
 }
 
 async function reupAlistVersion() {
-alistInfo.version.version =  (await alist_api_get('/api/admin/setting/get', { key: 'version' })).data.value
+    let version = await alist_api_get('/api/admin/setting/get', { key: 'version' })
+    if (version.code !== 200) {
+        await reupAlistVersion()
+        return
+    }
+    alistInfo.version.version = version.data.value || ''
+
 }
 
 function main() {
@@ -88,6 +99,7 @@ function main() {
 async function exit(isRestartSelf: boolean = false) {
     try {
         await stopRclone()
+        await stopAlist()
         await saveNmConfig()
     } finally {
         if (isRestartSelf) {

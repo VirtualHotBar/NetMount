@@ -20,6 +20,7 @@ mod utils;
 use crate::autostart::is_autostart;
 use crate::autostart::set_autostart;
 use crate::utils::download_with_progress;
+use crate::utils::ensure_single_instance;
 #[cfg(target_os = "windows")]
 use crate::utils::find_first_available_drive_letter;
 use crate::utils::get_home_dir;
@@ -32,18 +33,16 @@ use crate::utils::set_window_shadow;
 //use crate::localized::get_localized_text;
 use crate::localized::set_localized;
 
-const USER_DATA_PATH: &str = ".netmount";
+ const USER_DATA_PATH: &str = ".netmount";
 const CONFIG_FILE: &str = "config.json";
-
-use std::sync::Mutex;
 
 fn main() {
     // 确保应用程序只有一个实例运行
-    ensure_single_instance();
+    ensure_single_instance(USER_DATA_PATH);
 
     let home_dir = get_home_dir();
 
-    if home_dir.join(USER_DATA_PATH).exists(){
+    if home_dir.join(USER_DATA_PATH).exists() {
         fs::create_dir_all(home_dir.join(USER_DATA_PATH)).unwrap()
     }
 
@@ -54,8 +53,6 @@ fn main() {
         .expect("无法获取父目录")
         .to_path_buf();
     println!("exe_dir: {}", exe_dir.display());
-
-
 
     let binding = env::current_exe().expect("Failed to get the current executable path");
     let exe_flie_name = Path::new(&binding)
@@ -120,38 +117,10 @@ fn main() {
     builder
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    let _=&run_command;
 }
 
-use once_cell::sync::Lazy;
-use std::collections::HashSet;
-use sysinfo::{Pid, System};
-
-fn ensure_single_instance() {
-    let current_pid = sysinfo::get_current_pid().expect("Failed to get current PID");
-    let current_proc_name = std::env::args().next().unwrap_or_default();
-    let mut system = System::new_all();
-    system.refresh_all();
-
-    static EXISTING_PIDS: Lazy<Mutex<HashSet<Pid>>> = Lazy::new(|| Mutex::new(HashSet::new()));
-
-    {
-        let mut existing_pids = EXISTING_PIDS.lock().expect("Failed to lock PID set");
-
-        for (pid, proc_) in system.processes() {
-            if proc_.name() == current_proc_name && *pid != current_pid {
-                existing_pids.insert(*pid);
-            }
-        }
-
-        if !existing_pids.is_empty() {
-            eprintln!(
-                "An instance of this application is already running (PIDs: {:?}), exiting now.",
-                *existing_pids
-            );
-            std::process::exit(1);
-        }
-    }
-}
 
 #[tauri::command]
 fn set_devtools_state(app: tauri::AppHandle, state: bool) {
@@ -172,10 +141,8 @@ fn fs_exist_dir(path: &str) -> bool {
     // 替换路径中的波浪线 (~) 为用home目录
     let mut resolved_path = PathBuf::new();
     if path.starts_with("~") {
-
-            resolved_path.push(home_dir);
-            resolved_path.push(&path[1..]); // 跳过波浪线
-
+        resolved_path.push(home_dir);
+        resolved_path.push(&path[1..]); // 跳过波浪线
     } else {
         resolved_path.push(path);
     }
@@ -188,10 +155,8 @@ fn fs_make_dir(path: &str) -> bool {
     // 替换路径中的波浪线 (~) 为用home目录
     let mut resolved_path = PathBuf::new();
     if path.starts_with("~") {
-
-            resolved_path.push(home_dir);
-            resolved_path.push(&path[1..]); // 跳过波浪线
-
+        resolved_path.push(home_dir);
+        resolved_path.push(&path[1..]); // 跳过波浪线
     } else {
         resolved_path.push(path);
     }
@@ -227,7 +192,7 @@ fn is_directory(path: &str) -> bool {
 }
 
 #[tauri::command]
-fn restart_self(){
+fn restart_self() {
     utils::restart_self()
 }
 
@@ -307,10 +272,14 @@ fn exit_app(app_handle: tauri::AppHandle) {
 }
 
 #[tauri::command]
-fn read_config_file(path:Option<&str>) -> Result<Value, String> {
+fn read_config_file(path: Option<&str>) -> Result<Value, String> {
     let path = path.unwrap_or(CONFIG_FILE);
     let home_dir = get_home_dir();
-    let content_result = fs::read_to_string(if path == CONFIG_FILE{home_dir.join(USER_DATA_PATH).join(path)} else {PathBuf::from(path)});
+    let content_result = fs::read_to_string(if path == CONFIG_FILE {
+        home_dir.join(USER_DATA_PATH).join(path)
+    } else {
+        PathBuf::from(path)
+    });
     match content_result {
         Ok(content) => match serde_json::from_str(&content) {
             Ok(config) => Ok(config),
@@ -321,14 +290,21 @@ fn read_config_file(path:Option<&str>) -> Result<Value, String> {
 }
 
 #[tauri::command]
-async fn write_config_file(config_data: Value,path:Option<&str>) -> Result<(), String> {
+async fn write_config_file(config_data: Value, path: Option<&str>) -> Result<(), String> {
     let path = path.unwrap_or(CONFIG_FILE);
     let home_dir = get_home_dir();
     let pretty_config = to_string_pretty(&config_data)
         .map_err(|json_error| format!("Failed to serialize JSON: {}", json_error))?;
 
-    fs::write(if path == CONFIG_FILE{home_dir.join(USER_DATA_PATH).join(path)} else {PathBuf::from(path)}, pretty_config)
-        .map_err(|io_error| format!("Failed to write file: {}", io_error))?;
+    fs::write(
+        if path == CONFIG_FILE {
+            home_dir.join(USER_DATA_PATH).join(path)
+        } else {
+            PathBuf::from(path)
+        },
+        pretty_config,
+    )
+    .map_err(|io_error| format!("Failed to write file: {}", io_error))?;
 
     Ok(())
 }

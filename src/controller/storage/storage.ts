@@ -13,13 +13,14 @@ import { nmConfig } from "../../services/config"
 
 //列举存储信息
 async function reupStorage() {
+    const storageListTemp:StorageList[]=[]
     //rclone
     const dump = await rclone_api_post(
         '/config/dump',
     )
-    rcloneInfo.storageList = []
+    
     for (const storageName in dump) {
-        rcloneInfo.storageList.push({
+        storageListTemp.push({
             framework: 'rclone',
             name: storageName,
             type: dump[storageName].type,
@@ -31,7 +32,7 @@ async function reupStorage() {
     //alist
     const list = (await alist_api_get('/api/admin/storage/list')).data.content as any[]
     for (const storage of list) {
-        rcloneInfo.storageList.push({
+        storageListTemp.push({
             framework: 'alist',
             name: storage.mount_path.substring(1),
             type: storage.driver,
@@ -44,6 +45,9 @@ async function reupStorage() {
             }
         })
     }
+    
+    rcloneInfo.storageList = storageListTemp
+
     hooks.upStorage()
 }
 

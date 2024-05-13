@@ -58,7 +58,7 @@ function Storage_page() {
             <div style={{ height: "calc(100% - 3rem)" }}>
                 <br />
                 <Table style={{ height: "100%" }} noDataElement={<NoData_module />} columns={columns} pagination={false} data={
-                    filterHideStorage(rcloneInfo.storageList).map(item => {
+                     filterHideStorage (rcloneInfo.storageList).map(item => {
                         const isNotWork = item.framework === 'alist' && item.other?.alist?.status !== 'work';
                         return {
                             ...item,

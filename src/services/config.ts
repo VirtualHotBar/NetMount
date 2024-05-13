@@ -7,7 +7,9 @@ const roConfig = {
         docs: 'https://api.hotpe.top/API/NetMount/GoLink?id=docs&path=',
         rclone: 'https://github.com/rclone/rclone',
         alist: 'https://github.com/alist-org/alist',
-        to: (id: string, path: string='') => { return 'https://api.hotpe.top/API/NetMount/GoLink?id=' + id + '&path=' + path }
+        to: (id: string, path: string='') => { return 'https://api.hotpe.top/API/NetMount/GoLink?id=' + id + '&path=' + path },
+        vhbBlog:'https://blog.hotpe.top'
+
     },
     env: {
         path: {

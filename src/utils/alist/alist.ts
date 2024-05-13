@@ -3,6 +3,7 @@ import runCmd from "../tauri/cmd"
 import { addParams, alistDataDir } from "./process"
 import { alistInfo } from "../../services/alist"
 import { createStorage } from "../../controller/storage/create"
+import { delStorage } from "../../controller/storage/storage"
 
 
 
@@ -15,7 +16,6 @@ async function getAlistToken() {
 async function setAlistPass(pass:string){
     const resultStr = await runCmd('alist', ['admin', 'set',  pass,...addParams()])
     console.log(resultStr);
-    
 }
 
 async function modifyAlistConfig(rewriteData:any=alistInfo.alistConfig){
@@ -26,6 +26,7 @@ async function modifyAlistConfig(rewriteData:any=alistInfo.alistConfig){
 }
 
 async function addAlistInRclone(){
+    await delStorage(alistInfo.markInRclone)
     await createStorage(alistInfo.markInRclone,'webdav',{
         'url':alistInfo.endpoint.url+'/dav',
         'vendor':'other',

@@ -10,14 +10,14 @@ let alistInfo: AlistInfo = {
         isLocal: true,
         auth: {
             user: 'admin',
-            password: process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),
+            password: randomString(16) ,//process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),!!!!!密码长度为32时rclone会报错
             token: ''
         }
     },
     alistConfig: {// 修改默认alist的配置
         force: true,
         scheme: {
-            http_port: 5573//rcloneInfo.endpoint.localhost.port+1
+            http_port: 9751//随机
         }
     },
     version: {

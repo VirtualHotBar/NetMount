@@ -136,3 +136,101 @@ pub fn restart_self() {
 
     std::process::exit(0);
 }
+
+pub fn ensure_single_instance(user_data_path: &str) {
+    fn message_dialog() {
+        use rfd::MessageDialog;
+
+        MessageDialog::new()
+            .set_title("Warning")
+            .set_description("Process already exists!")
+            .show();
+    }
+
+    let home_dir = get_home_dir();
+
+    let _ = &home_dir.join(user_data_path);
+
+    /* //文件锁
+    use fslock::LockFile;
+    let pid_path = home_dir.join(user_data_path).join("NetMount.lock");
+    // 打开pid文件，没有则自动创建
+    let mut pid_lock = LockFile::open(&pid_path.clone().into_os_string()).unwrap();
+    // 非阻塞的锁文件
+    if !pid_lock.try_lock_with_pid().unwrap() {
+        message_dialog();
+        panic!("An instance of this application is already running, exiting now.");
+        // 如果文件已经被锁，则退出进程
+    } */
+
+    // 进程名
+    use std::sync::Mutex;
+
+    use once_cell::sync::Lazy;
+    use std::collections::HashSet;
+    use sysinfo::{Pid, System};
+    let current_pid = sysinfo::get_current_pid().expect("Failed to get current PID");
+    let current_proc_name = std::env::args().next().unwrap_or_default();
+    let mut system = System::new_all();
+    system.refresh_all();
+
+    static EXISTING_PIDS: Lazy<Mutex<HashSet<Pid>>> = Lazy::new(|| Mutex::new(HashSet::new()));
+
+    {
+        let mut existing_pids = EXISTING_PIDS.lock().expect("Failed to lock PID set");
+
+        for (pid, proc_) in system.processes() {
+            if proc_.name() == current_proc_name && *pid != current_pid {
+                existing_pids.insert(*pid);
+            }
+        }
+
+        if !existing_pids.is_empty() {
+            message_dialog();
+            panic!(
+                "An instance of this application is already running (PIDs: {:?}), exiting now.",
+                *existing_pids
+            );
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        extern crate winapi;
+        extern crate widestring;
+        use widestring::U16CString;
+        //use winapi::shared::ntdef::NULL;
+        use winapi::shared::winerror::ERROR_ALREADY_EXISTS;
+        use winapi::um::errhandlingapi::GetLastError;
+        use winapi::um::synchapi::CreateMutexW;
+        // 定义互斥体名称
+        let mutex_name = U16CString::from_str("NetMount").expect("Failed to create U16CString");
+
+        // 创建互斥体
+        unsafe {
+            let handle = CreateMutexW(
+                std::ptr::null_mut(),
+                winapi::shared::minwindef::FALSE,
+                mutex_name.as_ptr(),
+            );
+
+            // 检查互斥体是否已经创建
+            if !handle.is_null() && GetLastError() == ERROR_ALREADY_EXISTS {
+                // 有效句柄，但是互斥体已存在
+                message_dialog();
+                panic!("Another instance of the application is already running.");
+            } else if !handle.is_null() {
+                // 互斥体创建成功，且无先前存在的实例
+                println!("Application instance is running.");
+
+                // 在这里执行应用程序逻辑
+                // ...
+
+                // 在程序结束前，应该关闭互斥体句柄（此行代码并未在示例中展示）
+            } else {
+                // 创建互斥体失败，可能要进行错误处理
+                //panic!("Failed to create mutex.");
+            }
+        }
+    }
+}
