@@ -62,8 +62,8 @@ async function init(setStartStr: Function) {
 
     startUpdateCont()
     
-    await reupAlistVersion()
     await reupRcloneVersion()
+    await reupAlistVersion()
     await updateStorageInfoList()
     await reupStorage()
     await addAlistInRclone()

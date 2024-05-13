@@ -31,10 +31,10 @@ export async function Test() {
 
     console.log(storageInfoList);
     
-    await addAlistInRclone()
+    //await addAlistInRclone()
 
-    await restartAlist()
-    await restartRclone()
+    //await restartAlist()
+    //await restartRclone()
     //console.log(await getAlistToken());
 
 

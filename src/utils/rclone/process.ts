@@ -40,6 +40,7 @@ async function startRclone() {
 
     rcloneInfo.process.log = ''
     const addLog = (data: string) => {
+        console.log(data);
         rcloneInfo.process.log += data;
     }
 
@@ -50,8 +51,8 @@ async function startRclone() {
 
     while (true) {
         await setTimeout(() => { }, 1000);
-        if (await rclone_api_noop().catch(() => { })) {
-            return;
+        if (await rclone_api_noop()&&rcloneInfo.process.log.includes('Serving remote control on')) {
+            break;
         }
     }
 
