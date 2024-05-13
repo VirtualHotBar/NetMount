@@ -3,9 +3,12 @@ import runCmd from "../tauri/cmd";
 import { addParams } from "./process";
 
 async function alist_api_ping(){
-    console.log (await fetch(alistInfo.endpoint.url+'/ping',{method: 'GET'} ).then((res) => { return res.ok;}))
-   
-    return await fetch(alistInfo.endpoint.url+'/ping',{method: 'GET'} ).then((res) => { return res.ok;})
+    try {
+        return await fetch(alistInfo.endpoint.url+'/ping',{method: 'GET'} ).then((res) =>  res.ok)
+    }catch (e) {
+        console.log(e)
+        return false
+    }
  }
 
 

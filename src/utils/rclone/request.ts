@@ -7,7 +7,12 @@ let rcloneApiHeaders = {
 };
 
 async function rclone_api_noop(): Promise<boolean> {
-    return fetch(rcloneInfo.endpoint.url + '/rc/noop', { method: 'POST' }).then(data => data.ok);
+    try {
+        return await fetch(rcloneInfo.endpoint.url + '/rc/noop', { method: 'POST' }).then(data => data.ok)
+    } catch (e) {
+        console.log(e)
+        return false;
+    }
 }
 
 function rclone_api_post(path: string, bodyData: object = {}, ignoreError?: boolean) {

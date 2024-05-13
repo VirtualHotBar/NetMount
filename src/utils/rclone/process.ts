@@ -51,7 +51,7 @@ async function startRclone() {
 
     while (true) {
         await setTimeout(() => { }, 1000);
-        if (await rclone_api_noop()&&rcloneInfo.process.log.includes('Serving remote control on')) {
+        if (await rclone_api_noop()/* &&rcloneInfo.process.log.includes('Serving remote control on') */) {
             break;
         }
     }

@@ -69,7 +69,7 @@ async function init(setStartStr: Function) {
     await addAlistInRclone()
     //await reupStorage()//addAlistInRclone中结尾有reupStorage所以注释
     await reupMount()
-
+    
     //自动挂载
     await autoMount()
 
