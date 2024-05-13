@@ -22,31 +22,23 @@ fn check_res_bin() {
 
     let res_bin_urls = match OS_TYPE {
         "windows" => match ARCH {
-            "x86_64" => ResBinUrls {
-                rclone: "https://downloads.rclone.org/rclone-current-windows-amd64.zip",
-                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-windows-amd64.zip",
-            },
             "aarch64" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-windows-386.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-windows-arm64.zip",
             },
             _ => ResBinUrls {
-                rclone: "",
-                alist: "",
+                rclone: "https://downloads.rclone.org/rclone-current-windows-amd64.zip",
+                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-windows-amd64.zip",
             },
         },
         "linux" => match ARCH {
-            "x86_64" => ResBinUrls {
-                rclone: "https://downloads.rclone.org/rclone-current-linux-amd64.zip",
-                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-linux-amd64.tar.gz",
-            },
             "aarch64" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-linux-arm64.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-linux-arm64.tar.gz",
             },
             _ => ResBinUrls {
-                rclone: "",
-                alist: "",
+                rclone: "https://downloads.rclone.org/rclone-current-linux-amd64.zip",
+                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-linux-amd64.tar.gz",
             },
         },
         "macos" => match ARCH {
@@ -54,13 +46,9 @@ fn check_res_bin() {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-darwin-amd64.tar.gz",
             },
-            "aarch64" => ResBinUrls {
+            _ => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-arm64.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-darwin-arm64.tar.gz",
-            },
-            _ => ResBinUrls {
-                rclone: "",
-                alist: "",
             },
         },
         _ => ResBinUrls {
