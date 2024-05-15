@@ -8,8 +8,8 @@ const roConfig = {
         docs: 'https://api.hotpe.top/API/NetMount/GoLink?id=docs&path=',
         rclone: 'https://github.com/rclone/rclone',
         alist: 'https://github.com/alist-org/alist',
-        to: (id: string, path: string='') => { return 'https://api.hotpe.top/API/NetMount/GoLink?id=' + id + '&path=' + path },
-        vhbBlog:'https://blog.hotpe.top'
+        to: (id: string, path: string = '') => { return 'https://api.hotpe.top/API/NetMount/GoLink?id=' + id + '&path=' + path },
+        vhbBlog: 'https://blog.hotpe.top'
 
     },
     env: {
@@ -66,14 +66,14 @@ let nmConfig: NMConfig = {
         themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex],
         startHide: false,
     },
-    framework:{
-        rclone:{
-            user:  process.env.NODE_ENV != 'development'?randomString(32):'',
-            password:  process.env.NODE_ENV != 'development'?randomString(128):'',
+    framework: {
+        rclone: {
+            user: process.env.NODE_ENV != 'development' ? randomString(32) : '',
+            password: process.env.NODE_ENV != 'development' ? randomString(128) : '',
         },
-        alist:{
+        alist: {
             user: 'admin',
-            password: randomString(16) ,//process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),!!!!!密码长度为32时rclone会报错
+            password: randomString(16),//process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),!!!!!密码长度为32时rclone会报错
         }
     }
 }
@@ -84,7 +84,7 @@ const setNmConfig = (config: NMConfig) => {
 
 const readNmConfig = async () => {
     await invoke('read_config_file').then(configData => {
-        setNmConfig(configData as NMConfig)
+        setNmConfig({ ...nmConfig, ...(configData as NMConfig) })
     }).catch(err => {
         console.log(err);
     })
