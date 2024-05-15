@@ -9,8 +9,8 @@ let alistInfo: AlistInfo = {
         url: '',
         isLocal: true,
         auth: {
-            user: 'admin',
-            password: randomString(16) ,//process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),!!!!!密码长度为32时rclone会报错
+            //user: 'admin',
+            //password: randomString(16) ,//process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),!!!!!密码长度为32时rclone会报错
             token: ''
         }
     },

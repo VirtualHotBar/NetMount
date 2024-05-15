@@ -11,8 +11,8 @@ interface RcloneInfo {
         url: string,
         isLocal: boolean,// 是否为本地地址
         auth: {
-            user: string,
-            pass: string,
+            //user: string,
+            //pass: string,
         },
         localhost: {
             port: number,

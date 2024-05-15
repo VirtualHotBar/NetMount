@@ -27,7 +27,7 @@ function Transmit_page() {
   }, [])
 
   return (
-    <div style={{margin:'0'}}>
+    <div style={{ margin: '0' }}>
       <Card style={{}}
         title={t('overview')}
         bordered={false}
@@ -37,7 +37,7 @@ function Transmit_page() {
           {rcloneInfo.stats.bytes > 0 && <Progress percent={~~(rcloneInfo.stats.bytes / rcloneInfo.stats.totalBytes * 100)} />}
           <Descriptions colon=' :' data={[
             {
-              label:t('speed'),
+              label: t('speed'),
               value: `${formatSize(rcloneInfo.stats.realSpeed!)}/s`
             },
 
@@ -48,7 +48,7 @@ function Transmit_page() {
 
             ...(rcloneInfo.stats.transferTime > 0 ? [
               {
-                label:t('used_time'),
+                label: t('used_time'),
                 value: formatETA(rcloneInfo.stats.transferTime)
               }
             ] : []),
@@ -77,7 +77,7 @@ function Transmit_page() {
         bordered={false}
       >
 
-        <List noDataElement={ <NoData_module />}>
+        <List noDataElement={<NoData_module />}>
           {
             transmitList.map((item, index) => {
               return <List.Item key={index}>
@@ -102,7 +102,7 @@ function Transmit_page() {
                         },
                         {
                           label: t('source'),
-                          value: item.srcFs.replace(alistInfo.markInRclone+':','')
+                          value: (item.srcFs || '').replace(alistInfo.markInRclone + ':', '')
                         },
                         {
                           label: t('speed_avg'),
@@ -117,7 +117,7 @@ function Transmit_page() {
                         ...(item.dstFs ? [
                           {
                             label: t('target'),
-                            value: item.dstFs.replace(alistInfo.markInRclone+':','')
+                            value: (item.dstFs || '').replace(alistInfo.markInRclone + ':', '')
                           }
                         ] : []),
                       ]} />

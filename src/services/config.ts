@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api"
 import { NMConfig, OSInfo } from "../type/config"
+import { randomString } from "../utils/utils"
 
 const roConfig = {
     url: {
@@ -65,6 +66,16 @@ let nmConfig: NMConfig = {
         themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex],
         startHide: false,
     },
+    framework:{
+        rclone:{
+            user:  process.env.NODE_ENV != 'development'?randomString(32):'',
+            password:  process.env.NODE_ENV != 'development'?randomString(128):'',
+        },
+        alist:{
+            user: 'admin',
+            password: randomString(16) ,//process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),!!!!!密码长度为32时rclone会报错
+        }
+    }
 }
 
 const setNmConfig = (config: NMConfig) => {

@@ -12,10 +12,20 @@ interface NMConfig {
     },
     settings: {
         themeMode: 'dark' | 'light' | 'auto' | string,
-        startHide:boolean,
-        language?:string
+        startHide: boolean,
+        language?: string
     },
-    notice?:Notice
+    notice?: Notice,
+    framework: {
+        rclone: {
+            user: string,
+            password: string,
+        },
+        alist: {
+            user: string,
+            password: string,
+        }
+    }
 }
 
 
@@ -28,7 +38,7 @@ interface MountListItem {
 
 interface TaskListItem {
     name: string,
-    taskType: 'copy' | 'move' | 'delete' | 'sync' |'bisync'| string,
+    taskType: 'copy' | 'move' | 'delete' | 'sync' | 'bisync' | string,
     source: {
         storageName: string,
         path: string,
@@ -41,7 +51,7 @@ interface TaskListItem {
     enable: boolean
     run: {
         runId?: number,//任务id,setTimeout或setInterval的返回值
-        mode: 'time' | 'interval' | 'start' |'disposable'| string,//start：软件启动时执行，time:定时执行，interval:间隔执行 , disposable:一次性执行(执行后删除任务)
+        mode: 'time' | 'interval' | 'start' | 'disposable' | string,//start：软件启动时执行，time:定时执行，interval:间隔执行 , disposable:一次性执行(执行后删除任务)
         time: {
             intervalDays: number,//间隔天数
             h: number,//小时
@@ -51,7 +61,7 @@ interface TaskListItem {
         interval?: number,//周期执行，单位ms
     },
     runInfo: {
-        error?:boolean
+        error?: boolean
         msg?: string,
     }
 }

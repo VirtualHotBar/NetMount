@@ -1,8 +1,9 @@
 import { Message } from "@arco-design/web-react";
 import { rcloneInfo } from "../../services/rclone";
+import { nmConfig } from "../../services/config";
 
 let rcloneApiHeaders = {
-    Authorization: `Basic ${btoa(`${rcloneInfo.endpoint.auth.user}:${rcloneInfo.endpoint.auth.pass}`)}`,
+    Authorization: `Basic ${btoa(`${nmConfig.framework.rclone.user}:${nmConfig.framework.rclone.password}`)}`,
     'Content-Type': 'application/json'
 };
 
@@ -17,7 +18,7 @@ async function rclone_api_noop(): Promise<boolean> {
 
 function rclone_api_post(path: string, bodyData: object = {}, ignoreError?: boolean) {
     // 以 base64 编码的方式来设置账密字符串
-    const base64Credentials = btoa(`${rcloneInfo.endpoint.auth.user}:${rcloneInfo.endpoint.auth.pass}`);
+    const base64Credentials = btoa(`${nmConfig.framework.rclone.user}:${nmConfig.framework.rclone.password}`);
 
     // 定义请求头部，包括授权头部
     rcloneApiHeaders = {

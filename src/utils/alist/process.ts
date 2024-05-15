@@ -4,7 +4,7 @@ import { rcloneInfo } from "../../services/rclone";
 import { formatPath, randomString } from "../utils";
 import { alistInfo } from "../../services/alist";
 import { homeDir } from "@tauri-apps/api/path";
-import { osInfo, roConfig } from "../../services/config";
+import { nmConfig, osInfo, roConfig } from "../../services/config";
 import { getAlistToken, modifyAlistConfig, setAlistPass } from "./alist";
 import { alist_api_ping } from "./request";
 
@@ -22,7 +22,7 @@ const addParams = (): string[] => {
 
 async function startAlist() {
     alistInfo.endpoint.url='http://localhost:'+(alistInfo.alistConfig.scheme?.http_port||5573)
-    await setAlistPass(alistInfo.endpoint.auth.password)
+    await setAlistPass(nmConfig.framework.alist.password)
 
     alistInfo.endpoint.auth.token = await getAlistToken()
     await modifyAlistConfig()

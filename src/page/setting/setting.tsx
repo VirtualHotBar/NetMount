@@ -103,7 +103,7 @@ export default function Setting_page() {
               {/* {t('technology_stack')}:Tauri,TypeScript,Vite,React,Arco Design,Rust
               <br /> */}
               Copyright © 2024-Present 
-              <Link onClick={() => { openUrlInBrowser(roConfig.url.docs ) }}>VirtualHotBar </Link>
+              <Link onClick={() => { openUrlInBrowser(roConfig.url.vhbBlog ) }}>VirtualHotBar </Link>
             </Col>
             <Col flex={'10rem'} style={{ textAlign: 'right' }}>
               <Link onClick={() => { openUrlInBrowser(roConfig.url.website) }}> NetMount </Link>

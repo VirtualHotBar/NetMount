@@ -4,6 +4,7 @@ import { addParams, alistDataDir } from "./process"
 import { alistInfo } from "../../services/alist"
 import { createStorage } from "../../controller/storage/create"
 import { delStorage } from "../../controller/storage/storage"
+import { nmConfig } from "../../services/config"
 
 
 
@@ -30,8 +31,8 @@ async function addAlistInRclone(){
     await createStorage(alistInfo.markInRclone,'webdav',{
         'url':alistInfo.endpoint.url+'/dav',
         'vendor':'other',
-        'user':alistInfo.endpoint.auth.user,
-        'pass':alistInfo.endpoint.auth.password,
+        'user':nmConfig.framework.alist.user,
+        'pass':nmConfig.framework.alist.password,
     })
 }
 
