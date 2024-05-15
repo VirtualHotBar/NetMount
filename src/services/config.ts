@@ -68,8 +68,8 @@ let nmConfig: NMConfig = {
     },
     framework: {
         rclone: {
-            user: process.env.NODE_ENV != 'development' ? randomString(32) : '',
-            password: process.env.NODE_ENV != 'development' ? randomString(128) : '',
+            user: randomString(32),
+            password: randomString(128),
         },
         alist: {
             user: 'admin',

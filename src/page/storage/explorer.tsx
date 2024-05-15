@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { copyDir, copyFile, delDir, delFile, filterHideStorage, formatPathRclone, getFileList, mkDir, moveDir, moveFile, uploadFileRequest } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
 import { formatSize, getURLSearchParam } from '../../utils/utils';
-import { rcloneApiHeaders } from '../../utils/rclone/request';
 import { RequestOptions } from '@arco-design/web-react/es/Upload';
 import { NoData_module } from '../other/noData';
 import { clipListItem } from '../../type/page/storage/explorer';

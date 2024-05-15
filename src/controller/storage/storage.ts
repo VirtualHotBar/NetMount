@@ -3,7 +3,7 @@ import { hooks } from "../../services/hook"
 import { rcloneInfo } from "../../services/rclone"
 import { FileInfo, StorageList, StorageSpace } from "../../type/rclone/rcloneInfo"
 import { ParametersType } from "../../type/defaults"
-import { rclone_api_post, rcloneApiHeaders } from "../../utils/rclone/request"
+import { getRcloneApiHeaders, rclone_api_post } from "../../utils/rclone/request"
 import { alist_api_get, alist_api_post } from "../../utils/alist/request"
 import { formatPath } from "../../utils/utils"
 import { alistInfo } from "../../services/alist"
@@ -311,7 +311,7 @@ const uploadFileRequest = (option: RequestOptions, storageName: string, path: st
     xhr.onerror = () => onError(xhr);
 
     xhr.open('POST', `${rcloneInfo.endpoint.url}/operations/uploadfile?fs=${convertStoragePath(storageName,undefined,undefined,undefined,true)}&remote=${convertStoragePath(storageName,path,true,true,undefined)}`, true);
-    xhr.setRequestHeader('Authorization', `Bearer ${rcloneApiHeaders.Authorization}`);
+    xhr.setRequestHeader('Authorization', `Bearer ${getRcloneApiHeaders().Authorization}`);
     xhr.send(formData);
 };
 

@@ -7,7 +7,7 @@ import { reupMount } from "./storage/mount/mount"
 import { reupStorage } from "./storage/storage"
 import { listenWindow, windowsHide } from "./window"
 import { NMConfig } from "../type/config"
-import { randomString, restartSelf } from "../utils/utils"
+import { randomString, restartSelf, sleep } from "../utils/utils"
 import { t } from "i18next"
 import { startRclone, stopRclone } from "../utils/rclone/process"
 import { getOsInfo } from "../utils/tauri/osInfo"
@@ -85,6 +85,7 @@ async function reupRcloneVersion() {
 async function reupAlistVersion() {
     let version = await alist_api_get('/api/admin/setting/get', { key: 'version' })
     if (version.code !== 200) {
+        await sleep(500)
         await reupAlistVersion()
         return
     }
@@ -98,6 +99,7 @@ function main() {
 
 async function exit(isRestartSelf: boolean = false) {
     try {
+        await saveNmConfig()
         await stopRclone()
         await stopAlist()
         await saveNmConfig()

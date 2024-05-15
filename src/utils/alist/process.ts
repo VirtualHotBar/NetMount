@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api";
 import { Command } from "@tauri-apps/api/shell";
 import { rcloneInfo } from "../../services/rclone";
-import { formatPath, randomString } from "../utils";
+import { formatPath, randomString, sleep } from "../utils";
 import { alistInfo } from "../../services/alist";
 import { homeDir } from "@tauri-apps/api/path";
 import { nmConfig, osInfo, roConfig } from "../../services/config";
@@ -45,7 +45,7 @@ async function startAlist() {
     alistInfo.process.child = await alistInfo.process.command.spawn()
 
     while (true) {
-        await setTimeout(() => { }, 1500);
+        await sleep(500)
         if (await alist_api_ping()&&alistInfo.process.log.includes('start HTTP server')) {
             break;
         }
