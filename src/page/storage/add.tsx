@@ -7,7 +7,7 @@ import { getProperties, getURLSearchParam, openUrlInBrowser } from "../../utils/
 import { getStorageParams, searchStorage } from "../../controller/storage/storage";
 import { rcloneInfo } from "../../services/rclone";
 import { IconQuestionCircle } from "@arco-design/web-react/icon";
-import { roConfig } from "../../services/config";
+import { nmConfig, roConfig } from "../../services/config";
 import { searchStorageInfo, storageInfoList } from "../../controller/storage/allList";
 import { ParametersType } from "../../type/defaults";
 import { StorageInfoType, StorageParamsType } from "../../type/controller/storage/info";
@@ -124,8 +124,8 @@ function AddStorage_page() {
                             </RadioGroup>
                         </Card>
                         {!showAdvanced &&
-                        <div style={{width:'100%',textAlign:'right'}}><Button onClick={() => setShowAdvanced(true)} type='text'>{t('show_all')} </Button></div>
-                            }
+                            <div style={{ width: '100%', textAlign: 'right' }}><Button onClick={() => setShowAdvanced(true)} type='text'>{t('show_all')} </Button></div>
+                        }
 
                         {/*<Select
                             placeholder={t('please_select')}
@@ -179,7 +179,7 @@ function AddStorage_page() {
                     <Col flex={'4rem'}>
                         <Button onClick={() => {
                             openUrlInBrowser(
-                                roConfig.url.to('docs-storage', '/' + (storageInfo.displayType || storageInfo.type).toLocaleLowerCase().split(' ').join('-') + '&framework=' + storageInfo.framework)
+                                roConfig.url.to('docs-storage', '/' + (storageInfo.displayType || storageInfo.type).toLocaleLowerCase().split(' ').join('-') + '&framework=' + storageInfo.framework + '&lang=' + nmConfig.settings.language)
                             )
                         }}
                             type='text' icon={<IconQuestionCircle />}>{t('help_for_this_storage')}({t(storageInfo.label)}) </Button>
