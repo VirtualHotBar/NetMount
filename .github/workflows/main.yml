@@ -28,7 +28,7 @@ jobs:
       - name: get version
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          sed -i "s/^version = \".*\"/version = \"$PACKAGE_VERSION\"/" src-tauri/Cargo.toml
+          #sed -i "s/^version = \".*\"/version = \"$PACKAGE_VERSION\"/" src-tauri/Cargo.toml
           echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
 
           
