@@ -81,11 +81,11 @@ function Transmit_page() {
           {
             transmitList.map((item, index) => {
               return <List.Item key={index}>
-                <Row >
-                  <Col flex={'3.5rem'}>
+                <div style={{ width: '100%' ,display: 'flex' }}>
+                  <div style={{width:'5rem'}}>
                     <Progress type={'circle'} percent={item.percentage} style={{ marginTop: '0.5rem' }} size='small' />
-                  </Col>
-                  <Col flex={'auto'}>
+                  </div>
+                  <div style={{width:'calc(100% - 5rem)',overflow:'auto'}}>
                     <Typography.Ellipsis >{item.name}</Typography.Ellipsis>
                     <Descriptions
                       size='small'
@@ -121,8 +121,8 @@ function Transmit_page() {
                           }
                         ] : []),
                       ]} />
-                  </Col>
-                </Row>
+                  </div>
+                </div>
               </List.Item>
             })
           }

@@ -13,12 +13,12 @@ import { nmConfig } from "../../services/config"
 
 //列举存储信息
 async function reupStorage() {
-    const storageListTemp:StorageList[]=[]
+    const storageListTemp: StorageList[] = []
     //rclone
     const dump = await rclone_api_post(
         '/config/dump',
     )
-    
+
     for (const storageName in dump) {
         storageListTemp.push({
             framework: 'rclone',
@@ -40,12 +40,12 @@ async function reupStorage() {
                 alist: {
                     id: storage.id,
                     driverPath: storage.mount_path,
-                    status:storage.status
+                    status: storage.status
                 }
             }
         })
     }
-    
+
     rcloneInfo.storageList = storageListTemp
 
     hooks.upStorage()
@@ -80,7 +80,7 @@ async function delStorage(name: string) {
 
     //删除挂载
     for (const mount of nmConfig.mount.lists) {
-        if (mount.storageName === storage?.name ) {
+        if (mount.storageName === storage?.name) {
             await delMountStorage(mount.mountPath)
         }
     }
@@ -93,7 +93,7 @@ async function delStorage(name: string) {
             })
             break;
         case 'alist':
-            await alist_api_post('/api/admin/storage/delete',undefined, { id: storage.other?.alist?.id })
+            await alist_api_post('/api/admin/storage/delete', undefined, { id: storage.other?.alist?.id })
             break;
     }
     reupStorage()
@@ -310,8 +310,8 @@ const uploadFileRequest = (option: RequestOptions, storageName: string, path: st
 
     xhr.onerror = () => onError(xhr);
 
-    xhr.open('POST', `${rcloneInfo.endpoint.url}/operations/uploadfile?fs=${convertStoragePath(storageName,undefined,undefined,undefined,true)}&remote=${convertStoragePath(storageName,path,true,true,undefined)}`, true);
-    xhr.setRequestHeader('Authorization', `Bearer ${getRcloneApiHeaders().Authorization}`);
+    xhr.open('POST', `${rcloneInfo.endpoint.url}/operations/uploadfile?fs=${convertStoragePath(storageName, undefined, undefined, undefined, true)}&remote=${convertStoragePath(storageName, path, true, true, undefined)}`, true);
+    xhr.setRequestHeader('Authorization', getRcloneApiHeaders().Authorization);
     xhr.send(formData);
 };
 

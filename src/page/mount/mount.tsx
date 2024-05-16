@@ -25,19 +25,28 @@ function Mount_page() {
     {
       title: t('storage_name'),
       dataIndex: 'storageName',
+      width:'11rem',
+      ellipsis: true,
+      render: (text) => {
+        return <Typography.Ellipsis>{text}</Typography.Ellipsis>
+      },
     },
     {
       title: t('mount_path'),
       dataIndex: 'mountPath_',
+      ellipsis: true,
+
     },
     {
       title: t('mount_status'),
       dataIndex: 'mounted',
+      width:'5.5rem',
     },
     {
       title: t('actions'),
       dataIndex: 'actions',
-      align: 'right'
+      align: 'right',
+      width:'11rem'
     }
   ]
 
@@ -98,10 +107,10 @@ function Mount_page() {
             const mounted = isMounted(item.mountPath)
             return {
               ...item,
-              mountPath_: <>{item.mountPath}{rcloneInfo.endpoint.isLocal&&osInfo.osType==='Windows_NT' &&mounted&&
+              mountPath_: <div style={{ display: 'flex', width:'100%',alignItems:'center' }}><Typography.Ellipsis className='singe-line' showTooltip>{item.mountPath}</Typography.Ellipsis>{rcloneInfo.endpoint.isLocal&&osInfo.osType==='Windows_NT' &&mounted&&
               <Button title={t('show_path_in_explorer')} onClick={async () => {
                 await showPathInExplorer(item.mountPath,true)
-               }} type='text' icon={<IconEye />}></Button>}</>,
+               }} type='text' icon={<IconEye />}></Button>}</div>,
               mounted: mounted ? t('mounted') : t('unmounted'),
               actions: <Space>
                 {

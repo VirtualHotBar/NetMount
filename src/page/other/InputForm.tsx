@@ -224,7 +224,7 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
                         formItems.push(
                             <FormItem
                                 requiredSymbol={false}
-                                label={<div className="singe-line">{dataItem.required && '*'}{t(dataItem.label)}</div>}
+                                label={<div className="singe-line" title={t(dataItem.label)}>{dataItem.required && '*'}{t(dataItem.label)}</div>}
                                 title={dataItem.description}
                                 field={dataItem.name}
                                 triggerPropName={dataItem.type === 'boolean' ? 'checked' : 'value'}

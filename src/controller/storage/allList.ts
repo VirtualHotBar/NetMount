@@ -12,7 +12,7 @@ async function updateStorageInfoList() {
         ...(await updateRcloneStorageInfoList()),)
 
     //移除不需要的存储
-    const unneededStorages:string[]=['Virtual','Crypt','Alias']
+    const unneededStorages:string[]=['Virtual','Crypt','Alias','SMB','FTP','WebDAV']
     storageInfoList=storageInfoList.filter(item => !unneededStorages.includes(item.type));
 
     //给存储排序
@@ -22,7 +22,7 @@ async function updateStorageInfoList() {
         { "text": "189", "weight": 4.5 },
         { "text": "alist", "weight": 3.5 },
         { "text": "aliyundrive", "weight": 5 },
-        { "text": "baidunetdisk", "weight": 6 },
+        { "text": "baidunetdisk", "weight": 5 },
         { "text": "baiduphoto", "weight": 1 },
         { "text": "cloudreve", "weight": 3 },
         { "text": "feijipan", "weight": 2.5 },
