@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom';
 import { ParametersType } from '../../type/defaults';
 import { formatPath, getProperties, getURLSearchParam, getWinFspInstallState, showPathInExplorer } from '../../utils/utils';
-import { defaultMountConfig, defaultVfsConfig } from '../../controller/storage/mount/parameters/defaults';
+import { defaultMountConfig, defaultVfsConfig, vfsCacheModeParam } from '../../controller/storage/mount/parameters/defaults';
 import { rcloneInfo } from '../../services/rclone';
 import { addMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage } from '../../controller/storage/mount/mount';
 import { osInfo } from '../../services/config';
@@ -152,7 +152,7 @@ export default function AddMount_page() {
                 {
                     <div style={{ display: showAllOptions ? 'block' : 'none' }}>
                         <InputForm_module data={paramsType2FormItems(defaultMountConfig)} onChange={(data) => { parameters.mountOpt = data }} overwriteValues={defaultMountConfig} setFormHook={(form) => { setMountOptFormHook(form) }} />
-                        <InputForm_module data={paramsType2FormItems(defaultVfsConfig)} onChange={(data) => { parameters.vfsOpt = data }} overwriteValues={defaultVfsConfig} setFormHook={(form) => { setVfsOptFormHook(form) }} />
+                        <InputForm_module data={[vfsCacheModeParam,...paramsType2FormItems(defaultVfsConfig,undefined,['CacheMode'])]} onChange={(data) => { parameters.vfsOpt = data }} overwriteValues={defaultVfsConfig} setFormHook={(form) => { setVfsOptFormHook(form) }} />
                     </div>
                 }
 

@@ -5,12 +5,11 @@
 //https://github.com/rclone/rclone-webui-react/blob/master/src/utils/MountOptions.js
 //http://localhost:5572/options/get
 //https://rclone.org/commands/rclone_mount/#options-opt
-import { ParametersType, ParamsSelectType } from "../../../defaults";
 
 interface VfsOptions {
     CacheMaxAge: number;
     CacheMaxSize: number;
-    CacheMode: ParamsSelectType;
+    CacheMode: string;
     CachePollInterval: number;
     CaseInsensitive: boolean;
     ChunkSize: number;

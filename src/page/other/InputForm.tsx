@@ -13,10 +13,12 @@ const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
 
-function paramsType2FormItems(params: ParametersType, isAdvanced: boolean = false) {
+function paramsType2FormItems(params: ParametersType, isAdvanced: boolean = false,filter:string[]=[]) {//丢弃key匹配filter的项
     const formItems: StorageParamItemType[] = []
 
     getProperties(params).forEach((item) => {
+        if (filter.includes(item.key)) return;
+        
         let valueType: 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function' | 'array' = typeof item.value;
         let formItem: StorageParamItemType = {
             label: item.key,
@@ -27,7 +29,7 @@ function paramsType2FormItems(params: ParametersType, isAdvanced: boolean = fals
             default: item.value,
             advanced: isAdvanced,
             isPassword: false,
-            mark: []
+            //mark: []
         }
         switch (valueType) {
             case 'boolean':
@@ -36,6 +38,22 @@ function paramsType2FormItems(params: ParametersType, isAdvanced: boolean = fals
             case 'number':
                 formItem.type = 'number'
                 break;
+         case 'object':
+                if (item.value.select) {//选择器
+                    formItem.type = 'string'
+                    formItem.default = item.value.default
+                    formItem.select = item.value.select.map((item: string) => {
+                        return {
+                            label: item,
+                            value: item,
+                            help: item
+                        }
+                    })
+
+                } else {
+                    formItem.type = 'string'
+                }
+                break; 
             default:
                 formItem.type = 'string'
                 break;
@@ -69,7 +87,7 @@ function StorageAndPathInputer({ value, onChange }: { value?: string, onChange?(
         if (tempPath.includes('/')) {
             value = tempPath.replace('/', ':')
         } else {
-            value = tempPath+':';
+            value = tempPath + ':';
         }
     }
 
@@ -159,7 +177,7 @@ function InputFormItemContent_module({ data, formValuesResult /* style */ }: {
                 for (const item of data.select) {
                     //过滤
                     const filterState = (formValuesResult && item.filters) ? filter(item.filters, formValuesResult) : true;
-
+                   
                     if (filterState) selectContent.push(<Select.Option value={item.value} key={item.value}>{t(item.label)}</Select.Option>)
                 }
 
@@ -169,7 +187,6 @@ function InputFormItemContent_module({ data, formValuesResult /* style */ }: {
             } else {
                 content = <Input placeholder={t('please_input')} />
             }
-
             break;
     }
 
@@ -187,7 +204,7 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
     overwriteValues?: ParametersType;
     setFormHook?: (form: FormInstance) => void;
 }) {
-    //console.log(data);
+    console.log(data);
 
     const { t } = useTranslation()
     const [form] = Form.useForm();
