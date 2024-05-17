@@ -4,7 +4,7 @@ import { Button, Grid, Link, Modal, Space, Table, TableColumnProps, Typography }
 import { useTranslation } from 'react-i18next'
 import { nmConfig, roConfig } from '../../services/config'
 import { useNavigate } from 'react-router-dom'
-import { delTask } from '../../controller/task/task'
+import { delTask, taskScheduler } from '../../controller/task/task'
 import { NoData_module } from '../other/noData'
 import { IconQuestionCircle } from '@arco-design/web-react/icon'
 import { openUrlInBrowser } from '../../utils/utils'
@@ -24,16 +24,16 @@ function Task_page() {
     {
       title: t('task_name'),
       dataIndex: 'name',
-      width:'20%'
+      width: '20%'
     },
     {
       title: t('state'),
       dataIndex: 'state',
-      width:'5rem'
+      width: '5rem'
     }, {
       title: t('cycle'),
       dataIndex: 'cycle',
-      width:'5rem'
+      width: '5rem'
     }
     , {
       title: t('run_info'),
@@ -43,7 +43,7 @@ function Task_page() {
       title: t('actions'),
       dataIndex: 'actions',
       align: 'right',
-      width:'6rem'
+      width: '6rem'
     }
   ];
   console.log(nmConfig.task);
@@ -72,9 +72,15 @@ function Task_page() {
               onClick={() => { showLog(modal, taskItem.runInfo?.msg || t('none')) }}>
               <Typography.Ellipsis>{(taskItem.runInfo?.msg || t('none')).split('\n').pop()}</Typography.Ellipsis>
             </Link>,
-            actions: <>
+            actions: <Space>
               <Button onClick={() => { delTask(taskItem.name); forceUpdate() }}>{t('delete')}</Button>
-            </>
+              <Button onClick={() => {
+                taskScheduler.executeTask(taskItem)
+                setTimeout(() => {
+                  forceUpdate()
+                }, 200)
+              }}>{t('execute')}</Button>
+            </Space>
           }
         })} />
       </div>

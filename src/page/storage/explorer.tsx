@@ -5,7 +5,7 @@ import { rcloneInfo } from '../../services/rclone';
 import { useTranslation } from 'react-i18next';
 import { copyDir, copyFile, delDir, delFile, filterHideStorage, formatPathRclone, getFileList, mkDir, moveDir, moveFile, uploadFileRequest } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
-import { formatSize, getURLSearchParam } from '../../utils/utils';
+import { formatSize, getURLSearchParam, sleep } from '../../utils/utils';
 import { RequestOptions } from '@arco-design/web-react/es/Upload';
 import { NoData_module } from '../other/noData';
 import { clipListItem } from '../../type/page/storage/explorer';
@@ -73,7 +73,7 @@ function ExplorerItem() {
 
     const [fileList, setFileInfo] = useState<Array<FileInfo>>()
 
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState<boolean>()
 
     const [clipList, setClipList] = useState<Array<clipListItem>>([])
 
@@ -110,9 +110,12 @@ function ExplorerItem() {
     //刷新文件列表
     async function fileInfo() {
         setLoading(true)
-        const l = await getFileList(storageName!, path!)
-        setLoading(false)
-        setFileInfo(l)
+        try {
+            const l = await getFileList(storageName!, path!)
+            setFileInfo(l)
+        } finally {
+            setLoading(false)
+        }
     }
 
     // 创建一个自定义函数用于更新路径，确保路径始终符合规范
@@ -193,7 +196,7 @@ function ExplorerItem() {
                 title: t('upload_file'),
                 icon: null,
                 content: <>
-                    <Upload drag customRequest={(option: RequestOptions)=>{uploadFileRequest(option,storageName,path)}} ></Upload></>,
+                    <Upload drag customRequest={(option: RequestOptions) => { uploadFileRequest(option, storageName, path) }} ></Upload></>,
                 onOk: fileInfo,
                 onCancel: fileInfo
             })
@@ -220,9 +223,9 @@ function ExplorerItem() {
         })
     }
 
-    const openFile=( path:string )=>{
-        console.log(path); 
-        Message.info({ content:t('mount_the_storage_to_download_files'),id:'openfile' })
+    const openFile = (path: string) => {
+        console.log(path);
+        Message.info({ content: t('mount_the_storage_to_download_files'), id: 'openfile' })
     }
 
     return (
@@ -306,7 +309,7 @@ function ExplorerItem() {
                                 data={
                                     fileList.map((item) => {
                                         return {
-                                            ...item, fileName: <Link style={{ width: '100%' }} onClick={() => { item.isDir ?updatePath(item.path): openFile(item.path) }}><Typography.Ellipsis showTooltip>{item.name}</Typography.Ellipsis></Link>,
+                                            ...item, fileName: <Link style={{ width: '100%' }} onClick={() => { item.isDir ? updatePath(item.path) : openFile(item.path) }}><Typography.Ellipsis showTooltip>{item.name}</Typography.Ellipsis></Link>,
                                             fileSize: (item.size != -1 ? formatSize(item.size) : t('dir')),
                                             fileModTime: (new Date(item.modTime)).toLocaleString(),
                                             actions: <Space size={'mini'}>
@@ -332,10 +335,14 @@ function ExplorerItem() {
                                             </Space>
                                         }
                                     })} />
-                            : <div style={{ textAlign: 'center', marginTop: '10rem', width: '100%' }}><p>{t('filelist_load_Fail')}</p></div>
+                            : <div style={{ textAlign: 'center', marginTop: '10rem', width: '100%' }}>
+                                <p>{loading ? <Spin tip={t('filelist_loading')} /> : t('filelist_load_fail')}</p>
+                            </div>
                     }
                     </> :
-                    !storageName && <Typography.Paragraph style={tipsStyle}>{t('please_select_storage')}</Typography.Paragraph>
+                    !storageName && <Typography.Paragraph style={tipsStyle}>
+                        {t('please_select_storage')}
+                    </Typography.Paragraph>
                 }
             </div>
         </div>

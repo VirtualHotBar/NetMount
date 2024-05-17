@@ -12,6 +12,7 @@ import { homeDir } from '@tauri-apps/api/path';
 import { InputForm_module, paramsType2FormItems } from '../other/InputForm';
 import { filterHideStorage } from '../../controller/storage/storage';
 import { MountOptions, VfsOptions } from '../../type/rclone/storage/mount/parameters';
+import { searchStorageInfo } from '../../controller/storage/allList';
 
 const FormItem = Form.Item;
 
@@ -134,7 +135,7 @@ export default function AddMount_page() {
                         {
                             storageList.map((item) => {
                                 return (
-                                    <Select.Option key={item.name} value={item.name}>{item.name}({item.type})</Select.Option>
+                                    <Select.Option key={item.name} value={item.name}>{item.name}({t(searchStorageInfo(item.type).label)})</Select.Option>
                                 )
                             })
                         }

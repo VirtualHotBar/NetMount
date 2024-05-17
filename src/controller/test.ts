@@ -1,6 +1,6 @@
 import { rclone_api_post } from "../utils/rclone/request";
 import { createStorage } from "./storage/create";
-import { getFileList, reupStorage } from "./storage/storage";
+import { convertStoragePath, getFileList, reupStorage } from "./storage/storage";
 import { invoke } from '@tauri-apps/api';
 
 import { appWindow } from "@tauri-apps/api/window";
@@ -26,10 +26,16 @@ export async function Test() {
 
     console.log(await rclone_api_post('/options/get'));
     console.log(await rclone_api_post('/rc/list'),);
-    console.log(await alist_api_get('/api/me'));
-    console.log(roConfig.env.path.homeDir);
 
-    console.log(storageInfoList);
+    /* console.log(await rclone_api_post('/operations/publiclink',{
+        fs: convertStoragePath('S3_new',undefined,undefined,undefined,true),
+        remote :convertStoragePath('S3_new','Package/HotPE-V2.7.240201.7z',undefined,true,false),
+    })); */
+    
+    //console.log(await alist_api_get('/api/me'));
+    //console.log(roConfig.env.path.homeDir);
+
+    //console.log(storageInfoList);
     
     //await addAlistInRclone()
 
