@@ -38,6 +38,7 @@ export default function AddMount_page() {
 
     const isMountPathCustom = mountPath !== '*' && !mountPath.startsWith('~/Desktop/');
     const mountPathuIsDriveLetter = isWindows && (mountPath === '*' || mountPath.endsWith(':') || mountPath.endsWith(':/'));
+    console.log(mountPath);
 
 
     const checkWinFspState = async () => {
@@ -67,9 +68,9 @@ export default function AddMount_page() {
 
     useEffect(() => {
         setMountPath(mountPath.replace(/\\/g, '/').replace(/\/+/g, '/'))
-       /*  if (mountPathuIsDriveLetter) {
-            mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
-        } */
+        /*  if (mountPathuIsDriveLetter) {
+             mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
+         } */
     }, [mountPath])
 
     useEffect(() => {
@@ -95,21 +96,24 @@ export default function AddMount_page() {
     }, [])
 
     useEffect(() => {
-        //默认挂载路径
-        if (isWindows) {
-            //setMountPath('*')
-            setMountPath('~/Desktop/' + storageName)
+        if (!isEditMode) {
+            //默认挂载路径
+            if (isWindows) {
+                //setMountPath('*')
+                setMountPath('~/Desktop/' + storageName)
 
 
-        } else {
-            if (storageName) {
-                if (rcloneInfo.version.os.toLowerCase().includes('darwin')) {
-                    setMountPath('~/Desktop/' + storageName)
-                } else {
-                    setMountPath('/mnt/' + storageName)
+            } else {
+                if (storageName) {
+                    if (rcloneInfo.version.os.toLowerCase().includes('darwin')) {
+                        setMountPath('~/Desktop/' + storageName)
+                    } else {
+                        setMountPath('/mnt/' + storageName)
+                    }
                 }
             }
         }
+
     }, [storageName])
 
     useEffect(() => {
