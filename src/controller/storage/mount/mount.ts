@@ -7,6 +7,7 @@ import { ParametersType } from "../../../type/defaults"
 import { rclone_api_post } from "../../../utils/rclone/request"
 import { fs_exist_dir, fs_make_dir } from "../../../utils/utils"
 import { convertStoragePath, formatPathRclone } from "../storage"
+import { MountOptions, VfsOptions } from "../../../type/rclone/storage/mount/parameters"
 
 
 //列举存储
@@ -17,11 +18,11 @@ async function reupMount(noRefreshUI?: boolean) {
     )).mountPoints || []
 
     rcloneInfo.mountList = [];
-    
+
     mountPoints.forEach((tiem: any) => {
         const name = tiem.Fs
         rcloneInfo.mountList.push({
-            storageName:name, //name.substring(0, name.length - 1)
+            storageName: name, //name.substring(0, name.length - 1)
             mountPath: tiem.MountPoint,
             mountedTime: new Date(tiem.MountedOn),
         })
@@ -37,7 +38,7 @@ function isMounted(mountPath: string): boolean {
     return rcloneInfo.mountList.findIndex((item) => item.mountPath === mountPath) !== -1
 }
 
-async function addMountStorage(storageName: string, mountPath: string, parameters: ParametersType, autoMount?: boolean) {
+async function addMountStorage(storageName: string, mountPath: string, parameters:  { vfsOpt: VfsOptions, mountOpt: MountOptions }, autoMount?: boolean) {
     if (getMountStorage(mountPath)) {
         return false
     }
@@ -71,7 +72,7 @@ async function delMountStorage(mountPath: string) {
 
 async function editMountStorage(mountInfo: MountListItem) {
 
-    await reupMount()
+    //await reupMount()
     //觉得这里是不必要的，就注释了
     /*rcloneInfo.mountList.forEach((item) => {
             if (item.mountPath === mountInfo.mountPath) {
@@ -79,11 +80,14 @@ async function editMountStorage(mountInfo: MountListItem) {
             }
         }) */
 
-    const index = nmConfig.mount.lists.findIndex((item) => item.mountPath === mountInfo.mountPath)
 
-    if (index !== -1) {
-        nmConfig.mount.lists[index] = mountInfo
+    for (let i = 0; i < nmConfig.mount.lists.length; i++) {
+        if (nmConfig.mount.lists[i].mountPath === mountInfo.mountPath) {
+            nmConfig.mount.lists[i] = mountInfo
+            break
+        }
     }
+
 
     await saveNmConfig()
 }
@@ -94,7 +98,7 @@ async function mountStorage(mountInfo: MountListItem) {
     }
 
     const back = await rclone_api_post('/mount/mount', {
-        fs:convertStoragePath( mountInfo.storageName )|| mountInfo.storageName,
+        fs: convertStoragePath(mountInfo.storageName) || mountInfo.storageName,
         mountPoint: mountInfo.mountPath,
         ...(mountInfo.parameters)
     })

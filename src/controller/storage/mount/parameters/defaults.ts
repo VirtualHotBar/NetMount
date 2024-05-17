@@ -6,7 +6,7 @@ const vfsCacheModeParam: StorageParamItemType = {
     name: 'CacheMode',
     description: 'CacheMode',
     type: 'string',
-    default: 'full',
+    default: 'minimal',
     required: false,
     advanced: false,
     isPassword: false,

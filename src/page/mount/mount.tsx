@@ -23,19 +23,19 @@ function Mount_page() {
 
   const columns: TableColumnProps[] = [
     {
-      title: t('storage_name'),
-      dataIndex: 'storageName',
-      width:'11rem',
-      ellipsis: true,
-      render: (text) => {
-        return <Typography.Ellipsis>{text}</Typography.Ellipsis>
-      },
-    },
-    {
       title: t('mount_path'),
       dataIndex: 'mountPath_',
       ellipsis: true,
 
+    },
+    {
+      title: t('storage_name'),
+      dataIndex: 'storageName',
+      width:'10rem',
+      ellipsis: true,
+      render: (text) => {
+        return <Typography.Ellipsis>{text}</Typography.Ellipsis>
+      },
     },
     {
       title: t('mount_status'),
@@ -46,7 +46,7 @@ function Mount_page() {
       title: t('actions'),
       dataIndex: 'actions',
       align: 'right',
-      width:'11rem'
+      width:'14.3rem'
     }
   ]
 
@@ -107,7 +107,7 @@ function Mount_page() {
             const mounted = isMounted(item.mountPath)
             return {
               ...item,
-              mountPath_: <div style={{ display: 'flex', width:'100%',alignItems:'center' }}><Typography.Ellipsis className='singe-line' showTooltip>{item.mountPath}</Typography.Ellipsis>{rcloneInfo.endpoint.isLocal&&osInfo.osType==='Windows_NT' &&mounted&&
+              mountPath_: <div style={{ display: 'flex', alignItems:'center' }}><Typography.Ellipsis className='singe-line' showTooltip>{item.mountPath}</Typography.Ellipsis>{rcloneInfo.endpoint.isLocal&&osInfo.osType==='Windows_NT' &&mounted&&
               <Button title={t('show_path_in_explorer')} onClick={async () => {
                 await showPathInExplorer(item.mountPath,true)
                }} type='text' icon={<IconEye />}></Button>}</div>,
@@ -118,8 +118,8 @@ function Mount_page() {
                     <Button onClick={() => { unmountStorage(item.mountPath) }} status='danger' >{t('unmount')}</Button>
                   </> :
                     <>
-                    
                       <Button onClick={() => { delMountStorage(item.mountPath) }} status='danger' >{t('delete')}</Button>
+                      <Button onClick={() => {  navigate('./add?edit=true&mountPath='+item.mountPath) }} >{t('edit')}</Button>
                       <Button onClick={() => { mountStorage(item) }} type='primary' >{t('mount')}</Button>
                       </>
                 }

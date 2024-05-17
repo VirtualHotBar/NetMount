@@ -32,7 +32,7 @@ interface NMConfig {
 interface MountListItem {
     storageName: string,
     mountPath: string,
-    parameters: ParametersType,//挂载配置
+    parameters:  { vfsOpt: VfsOptions, mountOpt: MountOptions },//挂载配置
     autoMount: boolean,//软件启动自动挂载
 }
 

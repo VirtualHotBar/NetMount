@@ -6,15 +6,17 @@ import { ParametersType } from '../../type/defaults';
 import { formatPath, getProperties, getURLSearchParam, getWinFspInstallState, showPathInExplorer } from '../../utils/utils';
 import { defaultMountConfig, defaultVfsConfig, vfsCacheModeParam } from '../../controller/storage/mount/parameters/defaults';
 import { rcloneInfo } from '../../services/rclone';
-import { addMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage } from '../../controller/storage/mount/mount';
+import { addMountStorage, editMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage } from '../../controller/storage/mount/mount';
 import { osInfo } from '../../services/config';
 import { homeDir } from '@tauri-apps/api/path';
 import { InputForm_module, paramsType2FormItems } from '../other/InputForm';
 import { filterHideStorage } from '../../controller/storage/storage';
+import { MountOptions, VfsOptions } from '../../type/rclone/storage/mount/parameters';
 
 const FormItem = Form.Item;
 
 const CollapseItem = Collapse.Item;
+
 
 export default function AddMount_page() {
     const { t } = useTranslation()
@@ -25,15 +27,17 @@ export default function AddMount_page() {
     const [autoMount, setAutoMount] = useState(true)
     //const [autoMountPath, setAutoMountPath] = useState(true)//自动分配盘符
     //const [notification, contextHolder] = Notification.useNotification();
+    const [parameters, setParameters] = useState<{ vfsOpt: VfsOptions, mountOpt: MountOptions }>({ mountOpt: defaultMountConfig, vfsOpt: defaultVfsConfig })
     const [vfsOptFormHook, setVfsOptFormHook] = useState<FormInstance>();//表单实例
     const [mountOptFormHook, setMountOptFormHook] = useState<FormInstance>();//表单实例
-    const RadioGroup = Radio.Group;
-    const storageList=filterHideStorage(rcloneInfo.storageList)
 
+    const RadioGroup = Radio.Group;
+    const storageList = filterHideStorage(rcloneInfo.storageList)
+    const isEditMode = (getURLSearchParam('edit') === 'true')
     const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows');
 
-    let parameters: ParametersType = { mountOpt: {}, vfsOpt: {} }
-
+    const isMountPathCustom = mountPath !== '*' && !mountPath.startsWith('~/Desktop/');
+    const mountPathuIsDriveLetter = isWindows && (mountPath === '*' || mountPath.endsWith(':') || mountPath.endsWith(':/'));
 
 
     const checkWinFspState = async () => {
@@ -50,8 +54,22 @@ export default function AddMount_page() {
         }
     }
 
+    const editMode = () => {
+        let mountPathTemp = getURLSearchParam('mountPath')
+        const mount = getMountStorage(mountPathTemp)
+        if (mount) {
+            setStorageName(mount.storageName)
+            setMountPath(mount.mountPath)
+            setAutoMount(mount.autoMount)
+            setParameters(mount.parameters as { vfsOpt: VfsOptions, mountOpt: MountOptions })
+        }
+    }
+
     useEffect(() => {
         setMountPath(mountPath.replace(/\\/g, '/').replace(/\/+/g, '/'))
+       /*  if (mountPathuIsDriveLetter) {
+            mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
+        } */
     }, [mountPath])
 
     useEffect(() => {
@@ -70,6 +88,10 @@ export default function AddMount_page() {
         } else if (!storageName) {
             setStorageName(storageList[0].name)
         }
+
+        if (isEditMode) {
+            editMode()
+        }
     }, [])
 
     useEffect(() => {
@@ -77,6 +99,8 @@ export default function AddMount_page() {
         if (isWindows) {
             //setMountPath('*')
             setMountPath('~/Desktop/' + storageName)
+
+
         } else {
             if (storageName) {
                 if (rcloneInfo.version.os.toLowerCase().includes('darwin')) {
@@ -88,7 +112,10 @@ export default function AddMount_page() {
         }
     }, [storageName])
 
-    const isMountPathCustom = mountPath !== '*' && !mountPath.startsWith('~/Desktop/');
+    useEffect(() => {
+        vfsOptFormHook && vfsOptFormHook.setFieldsValue(parameters.vfsOpt);
+        mountOptFormHook && mountOptFormHook.setFieldsValue(parameters.mountOpt)
+    }, [vfsOptFormHook, mountOptFormHook])
 
 
     return (
@@ -110,8 +137,7 @@ export default function AddMount_page() {
                     </Select>
                 </FormItem>
 
-                <FormItem label={t('mount_path')}>
-
+                <FormItem label={t('mount_path')} hidden={isEditMode}>
                     {isMountPathCustom && (
                         <>
                             <Input
@@ -136,34 +162,50 @@ export default function AddMount_page() {
 
                 </FormItem>
 
+                <FormItem label={t('VolumeName') + '(' + t('optional') + ')'} hidden={!mountPathuIsDriveLetter}>
+                    <Input /* bordered={false} */ value={parameters.mountOpt.VolumeName} placeholder={t('please_input')} onChange={(value) =>
+                        setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, VolumeName: value } })
+                    } />
+                </FormItem>
+
                 {!showAllOptions &&
                     <FormItem label={t('mount_options')}>
                         <Space>
-                        <Checkbox defaultChecked={defaultVfsConfig.ReadOnly} onChange={(checked) => {
-                            vfsOptFormHook?.setFieldValue('ReadOnly', checked)
-                        }} >{t('read_only')}</Checkbox>
-                        {(mountPath === '*' || mountPath.endsWith(':') || mountPath.endsWith(':/')) && isWindows && <Checkbox defaultChecked={!defaultMountConfig.NetworkMode} onChange={(checked) => {
-                            mountOptFormHook?.setFieldValue('NetworkMode', !checked)
-                        }} >{t('simulate_hard_drive')}</Checkbox>}
+                            <Checkbox checked={parameters.vfsOpt.ReadOnly} onChange={(checked) => {
+                                vfsOptFormHook?.setFieldValue('ReadOnly', checked)
+                            }} >{t('read_only')}</Checkbox>
+                            {mountPathuIsDriveLetter && <Checkbox checked={!parameters.mountOpt.NetworkMode} onChange={(checked) => {
+                                mountOptFormHook?.setFieldValue('NetworkMode', !checked)
+                            }} >{t('simulate_hard_drive')}</Checkbox>}
                         </Space>
                     </FormItem>
                 }
 
                 {
                     <div style={{ display: showAllOptions ? 'block' : 'none' }}>
-                        <InputForm_module data={paramsType2FormItems(defaultMountConfig)} onChange={(data) => { parameters.mountOpt = data }} overwriteValues={defaultMountConfig} setFormHook={(form) => { setMountOptFormHook(form) }} />
-                        <InputForm_module data={[vfsCacheModeParam,...paramsType2FormItems(defaultVfsConfig,undefined,['CacheMode'])]} onChange={(data) => { parameters.vfsOpt = data }} overwriteValues={defaultVfsConfig} setFormHook={(form) => { setVfsOptFormHook(form) }} />
+                        <InputForm_module data={paramsType2FormItems(defaultMountConfig)} onChange={(data) => {
+                            setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, ...data } })
+                        }} overwriteValues={parameters.mountOpt} setFormHook={(form) => {
+                            //form.setFieldsValue(parameters.mountOpt)
+                            setMountOptFormHook(form)
+                        }} />
+                        <InputForm_module data={[vfsCacheModeParam, ...paramsType2FormItems(defaultVfsConfig, undefined, ['CacheMode'])]} onChange={(data) => {
+                            setParameters({ ...parameters, vfsOpt: { ...parameters.vfsOpt, ...data } })
+                        }} overwriteValues={{ ...parameters.vfsOpt, CacheMode: 'full' }} setFormHook={(form) => {
+                            //form.setFieldsValue(parameters.vfsOpt);
+                            setVfsOptFormHook(form)
+                        }} />
                     </div>
                 }
 
                 {/* 按钮 */}
                 <div style={{ width: '100%', textAlign: 'right' }}>
                     <Space>
-                        <Checkbox defaultChecked={autoMount} onChange={(checked) => { setAutoMount(checked) }} >{t('auto_mount')}</Checkbox>
+                        <Checkbox checked={autoMount} onChange={(checked) => { setAutoMount(checked) }} >{t('auto_mount')}</Checkbox>
                         {!showAllOptions && <Button onClick={() => { setShowAllOptions(!showAllOptions) }} type='text'>{t('show_all_options')}</Button>}
                         <Button onClick={() => { navigate('/mount') }} >{t('step_back')}</Button>
                         <Button disabled={!storageName || !mountPath} onClick={async () => {
-                            if (getMountStorage(mountPath)) {
+                            if (!isEditMode && getMountStorage(mountPath)) {
                                 Notification.error({
                                     title: t('error'),
                                     content: t('mount_path_already_exists'),
@@ -183,21 +225,32 @@ export default function AddMount_page() {
                             }
 
                             mountPathTemp = formatPath(mountPathTemp, isWindows)
+                            if (isEditMode) {
+                                console.log(parameters);
 
-                            await addMountStorage(storageName!, mountPathTemp, parameters, autoMount)
+                                await editMountStorage({ storageName: storageName!, mountPath: mountPathTemp, parameters: parameters, autoMount: autoMount })
+                            } else {
+                                await addMountStorage(storageName!, mountPathTemp, parameters, autoMount)
+                            }
 
-                            if (await mountStorage(getMountStorage(mountPathTemp)!)) {
+                            if (isEditMode) {
+                                Notification.success({
+                                    title: t('success'),
+                                    content: t('save_successfully'),
+                                })
+                            } else if (await mountStorage(getMountStorage(mountPathTemp)!)) {
                                 Notification.success({
                                     title: t('success'),
                                     content: t('mount_storage_successfully'),
                                 })
-                                navigate('/mount')
-                                if(isWindows&&rcloneInfo.endpoint.isLocal){
-                                    showPathInExplorer(mountPathTemp,true)
+                                if (isWindows && rcloneInfo.endpoint.isLocal) {
+                                    showPathInExplorer(mountPathTemp, true)
                                 }
                             }
-
-                        }} type='primary'>{t('mount')}</Button>
+                            navigate('/mount')
+                        }} type='primary'>
+                            {isEditMode ? t('save') : t('mount')}
+                        </Button>
                     </Space>
                 </div>
             </Form>

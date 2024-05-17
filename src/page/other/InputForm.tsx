@@ -204,8 +204,6 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
     overwriteValues?: ParametersType;
     setFormHook?: (form: FormInstance) => void;
 }) {
-    console.log(data);
-
     const { t } = useTranslation()
     const [form] = Form.useForm();
 
@@ -218,7 +216,6 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
     }, [])
 
     useEffect(() => {
-        console.log(formValuesResult);
         onChange && onChange(formValuesResult)
     }, [formValuesResult])
 
