@@ -5,7 +5,7 @@ use std::{env, path::Path};
 // 获取操作系统类型
 const OS_TYPE: &str = env::consts::OS;
 // 获取架构类型
-const ARCH: &str = env::consts::ARCH;
+//const ARCH: &str = env::consts::ARCH;
 
 struct ResBinUrls {
     rclone: &'static str,
@@ -18,10 +18,12 @@ fn main() {
 }
 
 fn check_res_bin() {
+    let binding = get_arch();
+    let arch = binding.as_str();
     let bin_path = "res/bin/";
 
     let res_bin_urls = match OS_TYPE {
-        "windows" => match ARCH {
+        "windows" => match arch {
             "aarch64" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-windows-386.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-windows-arm64.zip",
@@ -31,7 +33,7 @@ fn check_res_bin() {
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-windows-amd64.zip",
             },
         },
-        "linux" => match ARCH {
+        "linux" => match arch {
             "aarch64" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-linux-arm64.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-linux-arm64.tar.gz",
@@ -41,7 +43,8 @@ fn check_res_bin() {
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-linux-amd64.tar.gz",
             },
         },
-        "macos" => match ARCH {
+        "macos" => match arch {
+            
             "x86_64" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-darwin-amd64.tar.gz",
@@ -90,7 +93,7 @@ fn check_res_bin() {
     let reclone_path = &format!("{}{}", bin_path, rclone_name);
     if !Path::new(reclone_path).exists() {
         if res_bin_urls.rclone.is_empty() {
-            panic!("Unsupported OS or architecture: {} {}", OS_TYPE, ARCH);
+            panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
         }
 
         // 下载 rclone
@@ -154,7 +157,7 @@ fn check_res_bin() {
 
     if !Path::new(alist_path).exists() {
         if res_bin_urls.alist.is_empty() {
-            panic!("Unsupported OS or architecture: {} {}", OS_TYPE, ARCH);
+            panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
         }
 
         if !Path::new(alist_path).parent().unwrap().exists() {
@@ -208,6 +211,23 @@ fn check_res_bin() {
     //清理
     let _ = std::fs::remove_dir_all(temp_dir);
 }
+
+fn get_arch()->String{
+    #[cfg(not(target_os = "windows"))]
+    {
+    use std::process::Command;
+
+    let output = Command::new("uname")
+    .arg("-m")
+    .output()
+    .expect("failed to execute process");
+    
+    return String::from_utf8_lossy(&output.stdout).into_owned();
+    }
+    return  env::consts::ARCH.to_owned();
+}
+
+
 
 use std::fs;
 

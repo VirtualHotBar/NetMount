@@ -27,7 +27,7 @@ async function modifyAlistConfig(rewriteData:any=alistInfo.alistConfig){
 }
 
 async function addAlistInRclone(){
-    await delStorage(alistInfo.markInRclone)
+    //await delStorage(alistInfo.markInRclone)
     await createStorage(alistInfo.markInRclone,'webdav',{
         'url':alistInfo.endpoint.url+'/dav',
         'vendor':'other',
