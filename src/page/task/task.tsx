@@ -24,7 +24,8 @@ function Task_page() {
     {
       title: t('task_name'),
       dataIndex: 'name',
-      width: '20%'
+      width: '20%',
+      ellipsis: true,
     },
     {
       title: t('state'),
@@ -38,12 +39,13 @@ function Task_page() {
     , {
       title: t('run_info'),
       dataIndex: 'runInfo',
+      ellipsis: true,
     },
     {
       title: t('actions'),
       dataIndex: 'actions',
       align: 'right',
-      width: '6rem'
+      width: '14rem'
     }
   ];
   console.log(nmConfig.task);
@@ -68,18 +70,45 @@ function Task_page() {
             ...taskItem,
             state: taskItem.enable ? t('enabled') : t('disabled'),
             cycle: t('task_run_mode_' + taskItem.run.mode),
-            runInfo: <Link style={{ width: '100%', height: '100%', display: 'block' }}
+            runInfo: <Link style={{ width: '100%' }}
               onClick={() => { showLog(modal, taskItem.runInfo?.msg || t('none')) }}>
-              <Typography.Ellipsis>{(taskItem.runInfo?.msg || t('none')).split('\n').pop()}</Typography.Ellipsis>
+              <Typography.Ellipsis>  {(taskItem.runInfo?.msg || t('none')).split('\n').pop()}</Typography.Ellipsis>
+
             </Link>,
             actions: <Space>
-              <Button onClick={() => { delTask(taskItem.name); forceUpdate() }}>{t('delete')}</Button>
-              <Button onClick={() => {
-                taskScheduler.executeTask(taskItem)
-                setTimeout(() => {
-                  forceUpdate()
-                }, 200)
-              }}>{t('execute')}</Button>
+
+              {
+                taskItem.enable ? <>
+                  <Button onClick={() => {
+                    taskScheduler.cancelTask(taskItem.name)
+                    taskItem.enable = false
+                    setTimeout(() => {
+                      forceUpdate()
+                    }, 200)
+                  }} status='danger'>{t('disable')}</Button>
+
+                  <Button onClick={() => {
+                    taskScheduler.executeTask(taskItem)
+                    setTimeout(() => {
+                      forceUpdate()
+                    }, 200)
+                  }}>{t('trigger')}</Button>
+                </>
+                  :
+                  <>
+                    <Button onClick={() => { delTask(taskItem.name); forceUpdate() }} status='danger'>{t('delete')}</Button>
+                    <Button onClick={() => { navigate('./add/?edit=true&taskName=' + taskItem.name) }}>{t('edit')}</Button>
+                    <Button onClick={() => {
+                      taskItem.enable = true;
+                      taskScheduler.addTask(taskItem);
+                      setTimeout(() => {
+                        forceUpdate()
+                      }, 200)
+                    }} type='primary'>{t('enable')}</Button>
+                  </>
+              }
+
+
             </Space>
           }
         })} />

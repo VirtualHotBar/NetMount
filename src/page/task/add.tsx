@@ -8,7 +8,7 @@ import { IconQuestionCircle } from '@arco-design/web-react/icon';
 import { filterHideStorage, formatPathRclone } from '../../controller/storage/storage';
 import { useNavigate } from 'react-router-dom';
 import { saveTask } from '../../controller/task/task';
-import { formatPath } from '../../utils/utils';
+import { formatPath, getURLSearchParam } from '../../utils/utils';
 const Row = Grid.Row;
 const Col = Grid.Col;
 
@@ -25,7 +25,8 @@ type Action =
     | { type: 'setTargetStorageName'; payload: string }
     | { type: 'setTargetPath'; payload: string }
     | { type: 'setIntervalDays'; payload: number }
-    | { type: 'setRunTime'; payload: { h: number, m: number, s: number } };
+    | { type: 'setRunTime'; payload: { h: number, m: number, s: number } }
+    | { type: 'setWhole'; payload: TaskListItem };
 
 // 定义 reducer 函数
 const reducer = (state: TaskInfoState, action: Action): TaskInfoState => {
@@ -48,6 +49,8 @@ const reducer = (state: TaskInfoState, action: Action): TaskInfoState => {
             return { ...state, run: { ...state.run, time: { ...state.run.time, intervalDays: action.payload } } };
         case 'setRunTime':
             return { ...state, run: { ...state.run, time: { ...state.run.time, ...action.payload } } };
+        case 'setWhole':
+            return action.payload;
         default:
             throw new Error('Invalid action');
     }
@@ -56,7 +59,7 @@ const reducer = (state: TaskInfoState, action: Action): TaskInfoState => {
 function AddTask_page() {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const storageList=filterHideStorage(rcloneInfo.storageList)
+    const storageList = filterHideStorage(rcloneInfo.storageList)
     const [taskInfo, dispatch] = useReducer(reducer, {
         name: 'task_' + (nmConfig.task ? nmConfig.task.length + 1 : 1),
         taskType: roConfig.options.task.taskType.select[roConfig.options.task.taskType.defIndex],
@@ -95,6 +98,19 @@ function AddTask_page() {
         multiplicand: 1
     })
 
+    const isEditMode = (getURLSearchParam('edit') === 'true')
+
+    const editMode = () => {
+        const name = getURLSearchParam('taskName')
+        dispatch({type:'setWhole',payload: nmConfig.task.find(item => item.name === name)!})
+    }
+
+    useEffect(() => {
+        if (isEditMode) {
+            editMode()
+        }
+    }, [])
+
     useEffect(() => {
         if (taskInfo.run.mode === 'time') {
             setTimeMultiplier({ ...roConfig.options.task.dateMultiplier.select[roConfig.options.task.dateMultiplier.defIndex], multiplicand: 1 })
@@ -106,9 +122,9 @@ function AddTask_page() {
 
     return (
         <div style={{ width: '100%', height: '100%' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{t('add_task')}</h2>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{!isEditMode?t('add_task'):t('edit_task')}</h2>
             <Form style={{ paddingRight: '10%' }}>
-                <Form.Item label={t('task_name')}>
+                <Form.Item label={t('task_name')} hidden={isEditMode}>
                     <Input
                         value={taskInfo.name}
                         onChange={(value) => dispatch({ type: 'setName', payload: value })}
@@ -268,7 +284,7 @@ function AddTask_page() {
                         } else if (taskInfo.run.mode === 'interval') {
                             taskInfo.run.interval = timeMultiplier.multiplicand * timeMultiplier.value;
                         }
-                        if (nmConfig.task && nmConfig.task.forEach(item => item.name == taskInfo.name)! || !taskInfo.name) {
+                        if (!isEditMode && nmConfig.task && (nmConfig.task.findIndex(item => item.name === taskInfo.name) !== -1) || !taskInfo.name) {
                             Notification.error({
                                 title: t('error'),
                                 content: t('the_task_name_is_illegal'),
@@ -293,7 +309,7 @@ function AddTask_page() {
                                 navigate('/task/')
                             }
                         }
-                    }}>{t('add')}</Button>
+                    }}>{!isEditMode ? t('add'): t('save')}</Button>
                 </Space>
             </div>
         </div>

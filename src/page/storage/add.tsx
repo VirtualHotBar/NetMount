@@ -245,7 +245,7 @@ function AddStorage_page() {
 
     return (
         <div className=" w-full h-full">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{t('add_storage')}</h2>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{!isEditMode ? t('add_storage') : t('edit_storage')}</h2>
             {content}
         </div>)
 }
