@@ -10,6 +10,7 @@ import esES from '@arco-design/web-react/es/locale/es-ES';
 import deDE from '@arco-design/web-react/es/locale/de-DE';
 import itIT from '@arco-design/web-react/es/locale/it-IT';
 import viVN from '@arco-design/web-react/es/locale/vi-VN';
+import zhTW from '@arco-design/web-react/es/locale/zh-TW'; // 引入台灣繁體中文語言包
 import { Locale } from '@arco-design/web-react/es/locale/interface';
 
 function getLocale(locale:string):Locale {
@@ -20,7 +21,7 @@ function getLocale(locale:string):Locale {
       return enUS;
     case 'ja-jp':
       return jaJP;
-     case 'ko-kr':
+    case 'ko-kr':
       return koKR as unknown as Locale;
     case 'id-id':
       return idID as unknown as Locale;
@@ -37,9 +38,12 @@ function getLocale(locale:string):Locale {
     case 'it-it':
       return itIT as unknown as Locale;
     case 'vi-vn':
-      return viVN as unknown as Locale; 
-     default:
+      return viVN as unknown as Locale;
+    case 'zh-tw':
+      return zhTW; // 新增台灣繁體中文選項
+    default:
       return zhCN; 
   }
 }
-export{getLocale}
+
+export { getLocale };
