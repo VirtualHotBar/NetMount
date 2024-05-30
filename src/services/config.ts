@@ -44,10 +44,10 @@ const roConfig = {
                 defIndex: 0,
                 select: [
                     { name: '简体中文', value: 'cn', langCode: 'zh-cn' },
+                    { name: '繁體中文', value: 'ct', langCode: 'zh-tw' },
                     { name: 'English', value: 'en', langCode: 'en-us' },
-                    /*                     { name: '繁體中文(臺灣)', value: 'cht', langCode: 'zh-tw' },
-                                        { name: '繁體中文(香港)', value: 'cht', langCode: 'zh-hk' },
-                                        { name: 'Русский язык', value: 'ru', langCode: 'ru-RU' }, */
+                    /*{ name: '繁體中文(香港)', value: 'cht', langCode: 'zh-hk' },
+                    { name: 'Русский язык', value: 'ru', langCode: 'ru-RU' }, */
                 ]
             }
         }

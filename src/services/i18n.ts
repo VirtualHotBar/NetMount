@@ -5,12 +5,16 @@ import { initReactI18next } from 'react-i18next';
 // 引入语言文件
 import cn from '../controller/language/pack/zh-cn.json';
 import en from '../controller/language/pack/en.json';
+import ct from '../controller/language/pack/zh-hant.json';
 
 
 // 初始化资源文件，即各种语言的json文件
 const resources = {
   cn: {
     translation: cn
+  },
+  ct: {
+    translation: ct
   },
   en: {
     translation: en
