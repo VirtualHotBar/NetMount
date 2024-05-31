@@ -546,5 +546,13 @@
     "description.115 share": "115分享功能允许用户将115网盘中的文件与他人共享，便于文件的传递和协作。",
     "description.123pan": "123网盘是一个提供个人或团队使用的云存储服务，支持文件的存储、备份和共享。",
     "description.123panlink": "123网盘直链服务允许用户获取文件的直接下载链接，便于快速访问和传输文件。",
-    "description.123panshare": "123网盘分享功能使用户能够将存储在123网盘上的文件与他人共享，便于协作和分发。"
+    "description.123panshare": "123网盘分享功能使用户能够将存储在123网盘上的文件与他人共享，便于协作和分发。",
+    "storage.NeteaseMusic": "网易云音乐",
+    "storage.Lark": "Lark Drive",
+    "storage.ThunderX": "迅雷X",
+    "storage.ThunderXExpert":"迅雷X专家版",
+    "description.lark": "Lark Drive允许您随时随地在任何设备上保存和管理云存储中的所有内容。",
+    "description.neteasemusic":"网易云音乐是一款专注于发现与分享的音乐产品。",
+    "description.thunderx": "迅雷X",
+    "description.thunderxexpert": "迅雷X专家版"
 }

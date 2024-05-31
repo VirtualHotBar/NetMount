@@ -477,5 +477,13 @@
     "description.alist_v3": "AList V3 is an updated version of AList, offering more stable performance and additional features.",
     "description.baidunetdisk": "Baidu Cloud Disk is a cloud storage service provided by Baidu, supporting large-capacity file storage and rapid sharing.",
     "description.baiduphoto": "Yi Ke Album is a photo stoshare, which is convenient for collaboration and distribution.",
-    "description.123panshare": "123 Pan Share functionality enables users to share files stored on 123 Pan, facilitating collaboration and distribution."
+    "description.123panshare": "123 Pan Share functionality enables users to share files stored on 123 Pan, facilitating collaboration and distribution.",
+    "storage.NeteaseMusic": "NetEase Cloud Music",
+    "storage.Lark": "Lark Drive",
+    "storage.ThunderX": "Thunder X",
+    "storage.ThunderXExpert": "Thunder X Expert Edition",
+    "description.lark": "Lark Drive lets you save and manage all your content in cloud storage anytime, anywhere, on any device.",
+    "description.neteasemusic": "NetEase Cloud Music is a music product focused on discovering and sharing.",
+    "description.thunderx": "Thunder X",
+    "description.thunderxexpert": "Thunder X Expert Edition"
 }

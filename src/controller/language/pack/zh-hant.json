@@ -546,5 +546,14 @@
     "description.115 share": "115分享功能允許用戶將115網盤中的檔與他人共用，便於檔的傳遞和協作。",
     "description.123pan": "123網盤是一個提供個人或團隊使用的雲存儲服務，支援檔的存儲、備份和共用。",
     "description.123panlink": "123網盤直鏈服務允許使用者獲取檔的直接下載連結，便於快速訪問和傳輸檔。",
-    "description.123panshare": "123網盤分享功能使使用者能夠將存儲在123網盤上的檔與他人共用，便於協作和分發。"
+    "description.123panshare": "123網盤分享功能使使用者能夠將存儲在123網盤上的檔與他人共用，便於協作和分發。",
+    "storage.NeteaseMusic": "網易雲音樂",
+    "storage.Lark": "Lark Drive",
+    "storage.ThunderX": "迅雷X",
+    "storage.ThunderXExpert": "迅雷X專家版",
+    "description.lark": "Lark Drive讓您隨時隨地在任何裝置上保存和管理雲端儲存的所有內容。",
+    "description.neteasemusic": "網易雲音樂是一款專注於發現與分享的音樂產品。",
+    "description.thunderx": "迅雷X",
+    "description.thunderxexpert": "迅雷X專家版"
+
 }
