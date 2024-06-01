@@ -99,7 +99,7 @@ function Mount_page() {
                     simple: true,
                     maskClosable: false,
                     escToExit: false,
-                    content: t('restart_to_take_effect'),
+                    content: t('restartself_to_take_effect'),
                     onOk: () => {
                       exit(true);
                     },
