@@ -18,7 +18,7 @@ async function reupStats() {
 
     rcloneInfo.stats = {
         ...stats,
-        realSpeed: realSpeed/* ||stats.speed */
+        realSpeed: realSpeed||0/* stats.speed */
     }
 
     //历史状态
