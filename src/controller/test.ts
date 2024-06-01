@@ -28,7 +28,7 @@ export async function Test() {
     console.log(await rclone_api_post('/options/get'));
     console.log(await rclone_api_post('/rc/list'),);
 
-    console.log(await getAvailablePorts() );
+    console.log((await getAvailablePorts(2))[1]);
     
     //exit(true)
 

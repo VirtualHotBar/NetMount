@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { rcloneInfo, rcloneStatsHistory } from '../../services/rclone'
 import { hooks } from '../../services/hook'
 import { RcloneTransferItem } from '../../type/rclone/stats'
-import { Card, Descriptions, List, Progress, Space, Statistic, Grid, Typography } from '@arco-design/web-react'
+import { Card, Descriptions, List, Progress, Space, Statistic, Grid, Typography, Alert } from '@arco-design/web-react'
 import { formatETA, formatSize } from '../../utils/utils'
 import { Area } from '@ant-design/charts'
 import { NoData_module } from '../other/noData'
@@ -32,7 +32,17 @@ function Transmit_page() {
         title={t('overview')}
         bordered={false}
       >
+
         <Space direction='vertical' style={{ width: '100%' }}>
+          {
+            transmitList.length > 0 && rcloneInfo.stats.realSpeed === 0 &&
+            <Alert
+              style={{ margin: '0.1rem' }}
+              type='info'
+              content={t('unable_to_obtain_transmission_speed')}
+            />
+          }
+
 
           {rcloneInfo.stats.bytes > 0 && <Progress percent={~~(rcloneInfo.stats.bytes / rcloneInfo.stats.totalBytes * 100)} />}
           <Descriptions colon=' :' data={[
@@ -81,11 +91,11 @@ function Transmit_page() {
           {
             transmitList.map((item, index) => {
               return <List.Item key={index}>
-                <div style={{ width: '100%' ,display: 'flex' }}>
-                  <div style={{width:'5rem'}}>
+                <div style={{ width: '100%', display: 'flex' }}>
+                  <div style={{ width: '5rem' }}>
                     <Progress type={'circle'} percent={item.percentage} style={{ marginTop: '0.5rem' }} size='small' />
                   </div>
-                  <div style={{width:'calc(100% - 5rem)',overflow:'auto'}}>
+                  <div style={{ width: 'calc(100% - 5rem)', overflow: 'auto' }}>
                     <Typography.Ellipsis >{item.name}</Typography.Ellipsis>
                     <Descriptions
                       size='small'

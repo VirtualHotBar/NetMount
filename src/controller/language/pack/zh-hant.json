@@ -556,5 +556,6 @@
     "description.thunderx": "迅雷X",
     "description.thunderxexpert": "迅雷X專家版",
 
-    "restartself_to_take_effect": "更改設定需要重新啟動程式才能生效。"
+    "restartself_to_take_effect": "更改設定需要重新啟動程式才能生效。",
+    "unable_to_obtain_transmission_speed":"當前可能無法獲取具體傳送速率，但傳輸仍在進行。"
 }

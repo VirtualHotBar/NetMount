@@ -556,5 +556,6 @@
     "description.thunderx": "迅雷X",
     "description.thunderxexpert": "迅雷X专家版",
 
-    "restartself_to_take_effect": "重启软件以使更改生效"
+    "restartself_to_take_effect": "重启软件以使更改生效",
+    "unable_to_obtain_transmission_speed":"当前可能无法获取具体传输速度，但传输仍在进行。"
 }
