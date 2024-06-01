@@ -485,5 +485,7 @@
     "description.lark": "Lark Drive lets you save and manage all your content in cloud storage anytime, anywhere, on any device.",
     "description.neteasemusic": "NetEase Cloud Music is a music product focused on discovering and sharing.",
     "description.thunderx": "Thunder X",
-    "description.thunderxexpert": "Thunder X Expert Edition"
+    "description.thunderxexpert": "Thunder X Expert Edition",
+
+    "restart_to_take_effect": "Restart to take effect"
 }

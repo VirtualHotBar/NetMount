@@ -18,6 +18,7 @@ import { alistInfo } from "../services/alist";
 import { addAlistInRclone } from "../utils/alist/alist";
 import { restartRclone } from "../utils/rclone/process";
 import { restartAlist } from "../utils/alist/process";
+import { exit } from "./main";
 
 export async function Test() {
     console.log(nmConfig);
@@ -26,6 +27,8 @@ export async function Test() {
 
     console.log(await rclone_api_post('/options/get'));
     console.log(await rclone_api_post('/rc/list'),);
+
+    exit(true)
 
     /* console.log(await rclone_api_post('/operations/publiclink',{
         fs: convertStoragePath('S3_new',undefined,undefined,undefined,true),

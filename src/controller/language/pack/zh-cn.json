@@ -554,5 +554,7 @@
     "description.lark": "Lark Drive允许您随时随地在任何设备上保存和管理云存储中的所有内容。",
     "description.neteasemusic":"网易云音乐是一款专注于发现与分享的音乐产品。",
     "description.thunderx": "迅雷X",
-    "description.thunderxexpert": "迅雷X专家版"
+    "description.thunderxexpert": "迅雷X专家版",
+
+    "restart_to_take_effect": "重启以使更改生效"
 }

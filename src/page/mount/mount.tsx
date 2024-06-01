@@ -1,4 +1,4 @@
-import { Alert, Button, Grid, Message, Space, Table, TableColumnProps, Typography } from '@arco-design/web-react'
+import { Alert, Button, Grid, Message, Modal, Space, Table, TableColumnProps, Typography } from '@arco-design/web-react'
 import React, { useEffect, useReducer, useState } from 'react'
 import { rcloneInfo } from '../../services/rclone'
 import { delMountStorage, isMounted, mountStorage, reupMount, unmountStorage } from '../../controller/storage/mount/mount'
@@ -13,6 +13,13 @@ import { exit } from '../../controller/main'
 import { restartRclone } from '../../utils/rclone/process'
 const Row = Grid.Row;
 const Col = Grid.Col;
+
+
+
+
+
+
+
 
 function Mount_page() {
   const { t } = useTranslation()
@@ -86,8 +93,18 @@ function Mount_page() {
               <Button type='primary' onClick={async () => {
                 setWinFspInstalling(true)
                 if (await installWinFsp()) {
-                  await restartRclone()
-                  Message.success(t('install_success'))
+                  //await restartRclone()
+                  Modal.success({
+                    title: t('install_success'),
+                    simple: true,
+                    maskClosable: false,
+                    escToExit: false,
+                    content: t('restart_to_take_effect'),
+                    onOk: () => {
+                      exit(true);
+                    },
+                  });
+
                   /* Message.info(t('about_to_restart_self'))
                   setTimeout(() => {
                     exit(true)
