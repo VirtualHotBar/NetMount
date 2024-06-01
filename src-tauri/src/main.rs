@@ -33,7 +33,7 @@ use crate::utils::set_window_shadow;
 //use crate::localized::get_localized_text;
 use crate::localized::set_localized;
 
- const USER_DATA_PATH: &str = ".netmount";
+const USER_DATA_PATH: &str = ".netmount";
 const CONFIG_FILE: &str = "config.json";
 
 fn main() {
@@ -105,7 +105,8 @@ fn main() {
             set_devtools_state,
             fs_exist_dir,
             fs_make_dir,
-            restart_self
+            restart_self,
+            get_available_ports
         ])
         .setup(|_app| {
             #[cfg(target_os = "windows")]
@@ -118,9 +119,8 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 
-    let _=&run_command;
+    let _ = &run_command;
 }
-
 
 #[tauri::command]
 fn set_devtools_state(app: tauri::AppHandle, state: bool) {
@@ -189,6 +189,11 @@ fn is_directory(path: &str) -> bool {
         Ok(metadata) => metadata.is_dir(),
         Err(_) => false,
     }
+}
+
+#[tauri::command]
+fn get_available_ports(count: usize) -> Vec<u16> {
+    return utils::get_available_ports(count);
 }
 
 #[tauri::command]

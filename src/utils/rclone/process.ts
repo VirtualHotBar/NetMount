@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api";
 import { Command } from "@tauri-apps/api/shell";
 import { rcloneInfo } from "../../services/rclone";
 import { rclone_api_noop, rclone_api_post } from "./request";
-import { formatPath, randomString, sleep } from "../utils";
+import { formatPath, getAvailablePorts, randomString, sleep } from "../utils";
 import { alistInfo } from "../../services/alist";
 import { delStorage } from "../../controller/storage/storage";
 import { nmConfig, osInfo, roConfig } from "../../services/config";
@@ -21,6 +21,9 @@ async function startRclone() {
             rcloneInfo.endpoint.auth.pass = randomString(128)
         } */
 
+    //自动分配端口
+    rcloneInfo.endpoint.localhost.port = (await getAvailablePorts(2))[1]
+
     rcloneInfo.endpoint.url = 'http://localhost:' + rcloneInfo.endpoint.localhost.port.toString()
 
     let args: string[] = [
@@ -31,7 +34,7 @@ async function startRclone() {
         `--rc-user=${nmConfig.framework.rclone.user}`,
         `--rc-pass=${nmConfig.framework.rclone.password}`,
         '--rc-allow-origin=' + window.location.origin || '*',
-        '--config=' +formatPath( rcloneDataDir() + '/rclone.conf', osInfo.osType === 'Windows_NT'),
+        '--config=' + formatPath(rcloneDataDir() + '/rclone.conf', osInfo.osType === 'Windows_NT'),
     ];
 
     if (nmConfig.framework.rclone.user === '') {

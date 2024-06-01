@@ -38,7 +38,7 @@ function Mount_page() {
     {
       title: t('storage_name'),
       dataIndex: 'storageName',
-      width:'10rem',
+      width: '10rem',
       ellipsis: true,
       render: (text) => {
         return <Typography.Ellipsis>{text}</Typography.Ellipsis>
@@ -47,13 +47,13 @@ function Mount_page() {
     {
       title: t('mount_status'),
       dataIndex: 'mounted',
-      width:'5.5rem',
+      width: '5.5rem',
     },
     {
       title: t('actions'),
       dataIndex: 'actions',
       align: 'right',
-      width:'14.3rem'
+      width: '14.3rem'
     }
   ]
 
@@ -112,8 +112,8 @@ function Mount_page() {
                 } else {
                   Message.error(t('install_failed'))
                 }
-                setWinFspInstalling(false)
                 await getWinFspState()
+                setWinFspInstalling(false)
               }} loading={winFspInstalling}>{t('install')}</Button>
             </>} />
             <br />
@@ -124,21 +124,21 @@ function Mount_page() {
             const mounted = isMounted(item.mountPath)
             return {
               ...item,
-              mountPath_: <div style={{ display: 'flex', alignItems:'center' }}><Typography.Ellipsis className='singe-line' showTooltip>{item.mountPath}</Typography.Ellipsis>{rcloneInfo.endpoint.isLocal&&osInfo.osType==='Windows_NT' &&mounted&&
-              <Button title={t('show_path_in_explorer')} onClick={async () => {
-                await showPathInExplorer(item.mountPath,true)
-               }} type='text' icon={<IconEye />}></Button>}</div>,
+              mountPath_: <div style={{ display: 'flex', alignItems: 'center' }}><Typography.Ellipsis className='singe-line' showTooltip>{item.mountPath}</Typography.Ellipsis>{rcloneInfo.endpoint.isLocal && osInfo.osType === 'Windows_NT' && mounted &&
+                <Button title={t('show_path_in_explorer')} onClick={async () => {
+                  await showPathInExplorer(item.mountPath, true)
+                }} type='text' icon={<IconEye />}></Button>}</div>,
               mounted: mounted ? t('mounted') : t('unmounted'),
               actions: <Space>
                 {
-                  mounted ? <>  
+                  mounted ? <>
                     <Button onClick={() => { unmountStorage(item.mountPath) }} status='danger' >{t('unmount')}</Button>
                   </> :
                     <>
                       <Button onClick={() => { delMountStorage(item.mountPath) }} status='danger' >{t('delete')}</Button>
-                      <Button onClick={() => {  navigate('./add?edit=true&mountPath='+item.mountPath) }} >{t('edit')}</Button>
+                      <Button onClick={() => { navigate('./add?edit=true&mountPath=' + item.mountPath) }} >{t('edit')}</Button>
                       <Button onClick={() => { mountStorage(item) }} type='primary' >{t('mount')}</Button>
-                      </>
+                    </>
                 }
               </Space>
             }
