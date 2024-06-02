@@ -2,9 +2,7 @@
   "identifier": "migrated",
   "description": "permissions that were migrated from v1",
   "local": true,
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
   "permissions": [
     "path:default",
     "event:default",
@@ -24,9 +22,7 @@
     "fs:allow-exists",
     {
       "identifier": "fs:scope",
-      "allow": [
-        "res/*"
-      ]
+      "allow": ["res/*"]
     },
     "window:allow-create",
     "window:allow-center",
@@ -61,13 +57,14 @@
     "window:allow-set-ignore-cursor-events",
     "window:allow-start-dragging",
     "webview:allow-print",
+    "shell:allow-kill",
     {
       "identifier": "shell:allow-execute",
       "allow": [
         {
           "args": true,
           "cmd": "res/bin/aria2c",
-          "name": "ria2c",
+          "name": "aria2c",
           "sidecar": false
         },
         {
@@ -142,7 +139,8 @@
           "sidecar": false
         }
       ]
-    },  {
+    },
+    {
       "identifier": "shell:allow-open",
       "allow": [
         {

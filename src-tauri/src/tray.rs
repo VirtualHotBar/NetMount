@@ -30,17 +30,20 @@ impl Tray {
                         if button == tauri::tray::MouseButton::Left
                             && button_state == tauri::tray::MouseButtonState::Up
                         {
-                            icon.app_handle().main_window().toggle_visibility(None).ok();
+                            icon.app_handle()
+                                .app_main_window()
+                                .toggle_visibility(None)
+                                .ok();
                         }
                     }
                     _ => {}
                 })
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "show" => {
-                        app.main_window().toggle_visibility(Some(true)).ok();
+                        app.app_main_window().toggle_visibility(Some(true)).ok();
                     }
                     "quit" => {
-                        app.quit();
+                        app.app_quit();
                     }
                     _ => {}
                 })

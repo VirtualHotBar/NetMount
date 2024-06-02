@@ -1,4 +1,3 @@
-use std::env::current_dir;
 #[cfg(not(target_os = "windows"))]
 use std::os::unix::fs::PermissionsExt;
 use std::process::exit;

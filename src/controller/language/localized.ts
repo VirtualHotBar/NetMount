@@ -1,19 +1,15 @@
 //本地化
 
 import { invoke } from "@tauri-apps/api/core";
-import i18next, { t } from "i18next";
 import i18n from "../../services/i18n";
 import { roConfig } from "../../services/config";
 import { hooks } from "../../services/hook";
 
 async function setLocalized(lang: string) {
   lang = lang.toLowerCase();
-
   hooks.setLocaleStr(getLangCode(lang));
   const pack: Record<string, string> = await invoke("get_language_pack");
-  console.log(pack);
-  i18next.addResourceBundle(lang, "translation", pack);
-
+  i18n.addResourceBundle(lang, "translation", pack);
   i18n.changeLanguage(lang);
   // TODO: remove comment
   // await invoke('set_localized', {

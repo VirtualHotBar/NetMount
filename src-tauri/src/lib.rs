@@ -1,23 +1,18 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::path::PathBuf;
+use std::{env, fs::File, ops::Deref, path::Path, sync::RwLock};
+
 use config::Config;
+use fs::{fs_exist_dir, fs_make_dir};
 use locale::Locale;
-use serde_json::{to_string_pretty, Value};
-use std::fs::File;
-use std::ops::Deref;
-use std::sync::RwLock;
 use tray::Tray;
-//use tauri::AppHandle;
-use std::env;
-//use std::error::Error;
-use std::fs;
-use std::path::Path;
 
 mod autostart;
 mod config;
+mod fs;
 mod locale;
-mod localized;
 mod tray;
 mod utils;
 
@@ -27,7 +22,6 @@ use crate::utils::download_with_progress;
 // use crate::utils::ensure_single_instance;
 #[cfg(target_os = "windows")]
 use crate::utils::find_first_available_drive_letter;
-use crate::utils::get_home_dir;
 #[cfg(target_os = "windows")]
 use crate::utils::is_winfsp_installed;
 #[cfg(target_os = "windows")]
@@ -39,18 +33,19 @@ pub trait State: Send + Sync + 'static {}
 pub struct StateWrapper<T: State>(RwLock<T>);
 
 pub trait AppExt {
-    fn main_window(&self) -> tauri::WebviewWindow<Runtime>;
+    fn app_main_window(&self) -> tauri::WebviewWindow<Runtime>;
     fn with_app_state<T: State, R>(&self, closure: impl FnOnce(&T) -> R) -> R;
     fn set_app_state<T: State>(&self, state: T);
     fn update_app_config(&self) -> anyhow::Result<()>;
     fn write_app_config(&self, config: Config) -> anyhow::Result<()>;
     fn app_data_dir(&self) -> PathBuf;
     fn app_config_file(&self) -> PathBuf;
-    fn quit(&self);
+    fn app_quit(&self);
+    fn app_restart(&self);
 }
 
 impl<M: tauri::Manager<Runtime>> AppExt for M {
-    fn main_window(&self) -> tauri::WebviewWindow {
+    fn app_main_window(&self) -> tauri::WebviewWindow {
         self.get_webview_window("main").unwrap()
     }
 
@@ -100,8 +95,12 @@ impl<M: tauri::Manager<Runtime>> AppExt for M {
         self.app_data_dir().join("config.json")
     }
 
-    fn quit(&self) {
+    fn app_quit(&self) {
         self.app_handle().exit(0)
+    }
+
+    fn app_restart(&self) {
+        self.app_handle().restart()
     }
 }
 
@@ -132,17 +131,8 @@ impl WindowExt for tauri::WebviewWindow<Runtime> {
     }
 }
 
-const USER_DATA_PATH: &str = ".netmount";
-const CONFIG_FILE: &str = "config.json";
-
 pub fn init() -> anyhow::Result<()> {
-    let home_dir = get_home_dir();
-
-    if home_dir.join(USER_DATA_PATH).exists() {
-        fs::create_dir_all(home_dir.join(USER_DATA_PATH)).unwrap()
-    }
-
-    //设置运行目录
+    // 设置运行目录
     let exe_dir = env::current_exe()
         .expect("无法获取当前可执行文件路径")
         .parent()
@@ -182,17 +172,13 @@ pub fn init() -> anyhow::Result<()> {
         }
     }
 
-    //run_command("ls").expect("运行ls命令失败");
-    //run_command("dir").expect("运行ls命令失败");
-
-    // 根据不同的操作系统配置Tauri Builder
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
-            app.main_window().toggle_visibility(Some(true)).ok();
+            app.app_main_window().toggle_visibility(Some(true)).ok();
         }))
         .invoke_handler(tauri::generate_handler![
             toggle_devtools,
@@ -216,7 +202,7 @@ pub fn init() -> anyhow::Result<()> {
             };
             app.update_app_config()?;
             #[cfg(debug_assertions)]
-            app.main_window().toggle_devtools(Some(true));
+            app.app_main_window().toggle_devtools(Some(true));
             Ok(())
         })
         .run(tauri::generate_context!())?;
@@ -238,86 +224,24 @@ fn get_language_pack(app: tauri::AppHandle<Runtime>) -> serde_json::Value {
     .into()
 }
 
-use std::io::ErrorKind;
-use std::path::PathBuf;
-
 #[tauri::command]
-fn fs_exist_dir(path: &str) -> bool {
-    let home_dir = get_home_dir();
-    // 替换路径中的波浪线 (~) 为用home目录
-    let mut resolved_path = PathBuf::new();
-    if path.starts_with("~") {
-        resolved_path.push(home_dir);
-        resolved_path.push(&path[1..]); // 跳过波浪线
-    } else {
-        resolved_path.push(path);
-    }
-    is_directory(path)
+fn get_config(app: tauri::AppHandle<Runtime>) -> serde_json::Value {
+    app.with_app_state::<Config, _>(|config| config.0.clone())
 }
 
 #[tauri::command]
-fn fs_make_dir(path: &str) -> bool {
-    let home_dir = get_home_dir();
-    // 替换路径中的波浪线 (~) 为用home目录
-    let mut resolved_path = PathBuf::new();
-    if path.starts_with("~") {
-        resolved_path.push(home_dir);
-        resolved_path.push(&path[1..]); // 跳过波浪线
-    } else {
-        resolved_path.push(path);
-    }
-
-    // 创建所有必要的父目录
-    if let Some(parent) = resolved_path.parent() {
-        if let Err(e) = fs::create_dir_all(parent) {
-            match e.kind() {
-                ErrorKind::NotFound => (),
-                _ => {
-                    eprintln!("Error preparing directory structure: {}", e);
-                    return false;
-                }
-            }
-        }
-    }
-
-    // 尝试创建目标目录
-    match fs::create_dir(&resolved_path) {
-        Ok(_) => true,
-        Err(e) => {
-            eprintln!("Error creating directory: {}", e);
-            false
-        }
-    }
-}
-
-fn is_directory(path: &str) -> bool {
-    match fs::metadata(path) {
-        Ok(metadata) => metadata.is_dir(),
-        Err(_) => false,
-    }
-}
-
-#[tauri::command]
-fn restart_self() {
-    utils::restart_self()
-}
-
-use std::error::Error;
-use std::process::Command;
-fn run_command(cmd: &str) -> Result<(), Box<dyn Error>> {
-    let cmd_str = if cfg!(target_os = "windows") {
-        format!("{}", cmd.replace("/", "\\"))
-    } else {
-        format!("{}", cmd)
-    };
-
-    let child = if cfg!(target_os = "windows") {
-        Command::new("cmd").arg("/c").arg(cmd_str).spawn()?
-    } else {
-        Command::new("sh").arg("-c").arg(cmd_str).spawn()?
-    };
-    child.wait_with_output()?;
+fn update_config(
+    app: tauri::AppHandle<Runtime>,
+    data: serde_json::Value,
+) -> anyhow_tauri::TAResult<()> {
+    app.write_app_config(Config(data))?;
+    app.update_app_config()?;
     Ok(())
+}
+
+#[tauri::command]
+fn restart_self(app: tauri::AppHandle<Runtime>) {
+    app.restart()
 }
 
 #[tauri::command]
@@ -371,56 +295,3 @@ fn get_available_drive_letter() -> Result<String, String> {
         Err(e) => Ok(format!("{}", e)),
     }
 }
-
-#[tauri::command]
-fn get_config(app: tauri::AppHandle<Runtime>) -> serde_json::Value {
-    app.with_app_state::<Config, _>(|config| config.0.clone())
-}
-
-#[tauri::command]
-fn update_config(
-    app: tauri::AppHandle<Runtime>,
-    data: serde_json::Value,
-) -> anyhow_tauri::TAResult<()> {
-    app.write_app_config(Config(data))?;
-    app.update_app_config()?;
-    Ok(())
-}
-
-// #[tauri::command]
-// fn read_config_file(path: Option<&str>) -> Result<Value, String> {
-//     let path = path.unwrap_or(CONFIG_FILE);
-//     let home_dir = get_home_dir();
-//     let content_result = fs::read_to_string(if path == CONFIG_FILE {
-//         home_dir.join(USER_DATA_PATH).join(path)
-//     } else {
-//         PathBuf::from(path)
-//     });
-//     match content_result {
-//         Ok(content) => match serde_json::from_str(&content) {
-//             Ok(config) => Ok(config),
-//             Err(json_error) => Err(format!("Failed to parse JSON from file: {}", json_error)),
-//         },
-//         Err(io_error) => Err(format!("Failed to read file: {}", io_error)),
-//     }
-// }
-
-// #[tauri::command]
-// async fn write_config_file(config_data: Value, path: Option<&str>) -> Result<(), String> {
-//     let path = path.unwrap_or(CONFIG_FILE);
-//     let home_dir = get_home_dir();
-//     let pretty_config = to_string_pretty(&config_data)
-//         .map_err(|json_error| format!("Failed to serialize JSON: {}", json_error))?;
-
-//     fs::write(
-//         if path == CONFIG_FILE {
-//             home_dir.join(USER_DATA_PATH).join(path)
-//         } else {
-//             PathBuf::from(path)
-//         },
-//         pretty_config,
-//     )
-//     .map_err(|io_error| format!("Failed to write file: {}", io_error))?;
-
-//     Ok(())
-// }

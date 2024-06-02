@@ -85,7 +85,7 @@ dependencies = [
 
 [[package]]
 name = "app"
-version = "1.0.5"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "anyhow-tauri",
@@ -95,7 +95,6 @@ dependencies = [
  "futures-util",
  "indicatif",
  "itertools",
- "lazy_static",
  "once_cell",
  "phf 0.11.2",
  "rand 0.8.5",

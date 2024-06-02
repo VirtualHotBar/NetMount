@@ -154,9 +154,14 @@ export async function fs_exist_dir(path: string) {
 }
 
 export async function fs_make_dir(path: string) {
-    return await invoke('fs_make_dir', {
-        path: path
-    }) as boolean
+    try {
+      await invoke('fs_make_dir', {
+              path: path
+          })
+      return true;
+    } catch {
+      return false;
+    }
 }
 
 export function formatPath(path: string, isWindows: boolean = false) {

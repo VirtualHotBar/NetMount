@@ -10,7 +10,6 @@ impl Locale {
     }
 
     pub fn get(&self, id: &'static str) -> &'static str {
-        println!("{:?} {}", self.0, id);
         self.0.get(id).unwrap()
     }
 }
