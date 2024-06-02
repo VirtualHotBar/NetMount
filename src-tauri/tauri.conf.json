@@ -49,8 +49,7 @@
   },
   "productName": "NetMount",
   "identifier": "com.vhbs.netmount",
-  "plugins": {
-  },
+  "plugins": {},
   "app": {
     "withGlobalTauri": true,
     "macOSPrivateApi": true,
@@ -68,6 +67,7 @@
       }
     ],
     "trayIcon": {
+      "id": "main",
       "iconPath": "img/icons/icon.png",
       "iconAsTemplate": true
     },
