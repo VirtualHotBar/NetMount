@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api"
+import { invoke } from "@tauri-apps/api/core"
 import runCmd from "../tauri/cmd"
 import { addParams, alistDataDir } from "./process"
 import { alistInfo } from "../../services/alist"

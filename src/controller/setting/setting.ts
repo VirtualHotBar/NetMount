@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { nmConfig } from "../../services/config";
 
 // 设置颜色模式

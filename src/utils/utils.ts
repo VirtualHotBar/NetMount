@@ -1,5 +1,7 @@
-import { fs, invoke, shell } from "@tauri-apps/api";
+import * as fs from "@tauri-apps/plugin-fs";
+import * as shell from "@tauri-apps/plugin-shell";
 import { runCmd } from "./tauri/cmd";
+import { invoke } from "@tauri-apps/api/core";
 
 export function isEmptyObject(back: any): boolean {
     return Object.keys(back).length === 0 && back.constructor === Object;

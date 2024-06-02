@@ -1,10 +1,10 @@
-import { Child, Command } from '@tauri-apps/api/shell';
+import { Child, Command } from '@tauri-apps/plugin-shell';
 import { takeMidStr, takeRightStr } from '../utils';
 import { Aria2Attrib } from '../../type/utils/aria2';
 
 class Aria2 {
     private filePath: string = '';
-    private command: Command;
+    private command: Command<string>;
     private process: Child | null = null;
 
     constructor(url: string, saveDir: string, saveName: string, thread: number = 8, callback: (attrib: Aria2Attrib) => void) {
@@ -21,9 +21,9 @@ class Aria2 {
             url
         ]
 
-        this.command = new Command('ria2c', args);
+        this.command =  Command.create('aria2c', args);
 
-        this.command.stdout.on('data', (data) => {
+        this.command.stdout.on('data', (data:string) => {
             const output = data.toString();
             if (output.includes('NOTICE') || output.includes('#')) {
                 callback(this.parseOutput(output));

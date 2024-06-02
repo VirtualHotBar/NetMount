@@ -1,5 +1,5 @@
-import { invoke } from "@tauri-apps/api";
-import { Command } from "@tauri-apps/api/shell";
+import { invoke } from "@tauri-apps/api/core";
+import { Command } from "@tauri-apps/plugin-shell";
 import { rcloneInfo } from "../../services/rclone";
 import { formatPath, randomString, sleep } from "../utils";
 import { alistInfo } from "../../services/alist";
@@ -9,7 +9,7 @@ import { getAlistToken, modifyAlistConfig, setAlistPass } from "./alist";
 import { alist_api_ping } from "./request";
 
 const alistDataDir = () => {
-    return formatPath(roConfig.env.path.homeDir + '/.netmount/alist/',osInfo.osType==='Windows_NT')
+    return formatPath(roConfig.env.path.homeDir + '/.netmount/alist/',osInfo.osType==="windows")
 }
 
 const addParams = (): string[] => {
@@ -31,7 +31,7 @@ async function startAlist() {
         ...addParams()
     ];
 
-    alistInfo.process.command = new Command('alist', args)
+    alistInfo.process.command =  Command.create('alist', args)
 
     alistInfo.process.log = ''
     const addLog = (data: string) => {
@@ -39,8 +39,8 @@ async function startAlist() {
         console.log(data);
     }
 
-    alistInfo.process.command.stdout.on('data', (data) => addLog(data))
-    alistInfo.process.command.stderr.on('data', (data) => addLog(data))
+    alistInfo.process.command.stdout.on('data', (data:string) => addLog(data))
+    alistInfo.process.command.stderr.on('data', (data:string) => addLog(data))
 
     alistInfo.process.child = await alistInfo.process.command.spawn()
 

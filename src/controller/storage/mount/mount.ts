@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api"
+import { invoke } from "@tauri-apps/api/core"
 import { nmConfig, saveNmConfig } from "../../../services/config"
 import { hooks } from "../../../services/hook"
 import { rcloneInfo } from "../../../services/rclone"

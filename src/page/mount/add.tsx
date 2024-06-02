@@ -41,7 +41,7 @@ export default function AddMount_page() {
     const mountPathuIsDriveLetter = isWindows && (mountPath === '*' || mountPath.endsWith(':') || mountPath.endsWith(':/'));
 
     const checkWinFspState = async () => {
-        if (osInfo.osType === 'Windows_NT' && rcloneInfo.endpoint.isLocal) {
+        if (osInfo.osType === "windows" && rcloneInfo.endpoint.isLocal) {
             const winFspInstallState = await getWinFspInstallState();
             if (!winFspInstallState) {
                 navigate('/mount')

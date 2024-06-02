@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api"
+import { invoke } from "@tauri-apps/api/core"
 import { NMConfig, OSInfo } from "../type/config"
 import { randomString } from "../utils/utils"
 

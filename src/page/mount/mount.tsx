@@ -58,7 +58,7 @@ function Mount_page() {
 
   useEffect(() => {
     hooks.upMount = forceUpdate
-    if (osInfo.osType === 'Windows_NT' && rcloneInfo.endpoint.isLocal && winFspInstallState === undefined) {
+    if (osInfo.osType === "windows" && rcloneInfo.endpoint.isLocal && winFspInstallState === undefined) {
       getWinFspState()
     }
   }, [ignored])
@@ -107,7 +107,7 @@ function Mount_page() {
             const mounted = isMounted(item.mountPath)
             return {
               ...item,
-              mountPath_: <div style={{ display: 'flex', alignItems:'center' }}><Typography.Ellipsis className='singe-line' showTooltip>{item.mountPath}</Typography.Ellipsis>{rcloneInfo.endpoint.isLocal&&osInfo.osType==='Windows_NT' &&mounted&&
+              mountPath_: <div style={{ display: 'flex', alignItems:'center' }}><Typography.Ellipsis className='singe-line' showTooltip>{item.mountPath}</Typography.Ellipsis>{rcloneInfo.endpoint.isLocal&&osInfo.osType==='windows' &&mounted&&
               <Button title={t('show_path_in_explorer')} onClick={async () => {
                 await showPathInExplorer(item.mountPath,true)
                }} type='text' icon={<IconEye />}></Button>}</div>,

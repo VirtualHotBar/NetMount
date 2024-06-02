@@ -1,6 +1,6 @@
 //本地化
 
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { t } from "i18next";
 import i18n from "../../services/i18n";
 import { roConfig } from "../../services/config";

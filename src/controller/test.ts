@@ -1,9 +1,8 @@
 import { rclone_api_post } from "../utils/rclone/request";
 import { createStorage } from "./storage/create";
 import { convertStoragePath, getFileList, reupStorage } from "./storage/storage";
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 
-import { appWindow } from "@tauri-apps/api/window";
 import { app } from "@tauri-apps/api";
 import { nmConfig, osInfo, roConfig } from "../services/config";
 import { Aria2 } from "../utils/aria2/aria2";

@@ -1,4 +1,4 @@
-import { os } from "@tauri-apps/api";
+import * as os from "@tauri-apps/plugin-os";
 import { OSInfo } from "../../type/config";
 import { setOsInfo } from "../../services/config";
 
@@ -7,7 +7,8 @@ async function getOsInfo() {
         arch: await os.arch(),
         osType: await os.type(),
         platform: await os.platform(),
-        tempDir: await os.tempdir(),
+        // TODO: wtf
+        tempDir: "/tmp",
         osVersion: await os.version(),
     })
 }

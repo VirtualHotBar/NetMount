@@ -1,3 +1,4 @@
+use std::env::current_dir;
 #[cfg(not(target_os = "windows"))]
 use std::os::unix::fs::PermissionsExt;
 use std::process::exit;
@@ -12,9 +13,49 @@ struct ResBinUrls {
     alist: &'static str,
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     check_res_bin();
-    tauri_build::build()
+    compile_locale(&[
+        ("en", Path::new("locales/en.json")),
+        ("zh-cn", Path::new("locales/zh-cn.json")),
+        ("zh-hant", Path::new("locales/zh-hant.json")),
+    ])?;
+    tauri_build::try_build(Attributes::default())?;
+    Ok(())
+}
+
+fn escape(str: &str) -> String {
+    let bound = "#".repeat(3);
+    format!("r{bound}\"{str}\"{bound}")
+}
+
+fn compile_locale(locales: &[(&str, &Path)]) -> anyhow::Result<()> {
+    let mut file =
+        File::create(Path::new(&env::var("OUT_DIR").unwrap()).join(format!("codegen.rs")))?;
+
+    write!(&mut file, "type Pack=phf::Map<&'static str,&'static str>;")?;
+    let get_name = |name: &str| format!("LANG_{}", name.replace("-", "_").to_uppercase());
+    for (name, path) in locales {
+        let json: Map<String, Value> = serde_json::from_reader(File::open(path)?)?;
+        write!(
+            &mut file,
+            "static {}:Pack=phf::phf_map!{{{}}};",
+            get_name(name),
+            json.iter()
+                .map(|(key, value)| format!("{}=>{}", escape(key), escape(value.as_str().unwrap())))
+                .join(",")
+        )?;
+    }
+    write!(
+        &mut file,
+        "fn get_lang(name:&'static str)->Pack{{match name{{{}}}}}",
+        locales
+            .iter()
+            .map(|(name, _)| format!("{}=>{}", escape(name), get_name(name)))
+            .join(",")
+    )?;
+
+    Ok(())
 }
 
 fn check_res_bin() {
@@ -44,7 +85,7 @@ fn check_res_bin() {
             },
         },
         "macos" => match arch {
-            
+
             "x86_64" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-darwin-amd64.tar.gz",
@@ -127,12 +168,12 @@ fn check_res_bin() {
         let _ = std::fs::copy(temp_file_path, reclone_path);
         // 尝试设置权限
         #[cfg(not(target_os = "windows"))]
-        match fs::metadata(&reclone_path) {
+        match std::fs::metadata(&reclone_path) {
             Ok(metadata) => {
                 let mut permissions = metadata.permissions();
                 // 直接设置权限位
                 permissions.set_mode(0o755); // 设置为所有者可读写执行，同组用户可读执行，其他用户可读执行
-                if let Err(e) = fs::set_permissions(&reclone_path, permissions) {
+                if let Err(e) = std::fs::set_permissions(&reclone_path, permissions) {
                     eprintln!("设置文件权限时出错: {}", e);
                 }
             }
@@ -161,7 +202,7 @@ fn check_res_bin() {
         }
 
         if !Path::new(alist_path).parent().unwrap().exists() {
-            fs::create_dir_all(Path::new(alist_path).parent().unwrap()).unwrap();
+            std::fs::create_dir_all(Path::new(alist_path).parent().unwrap()).unwrap();
         }
 
         // 下载 alist
@@ -187,12 +228,12 @@ fn check_res_bin() {
 
         // 尝试设置权限
         #[cfg(not(target_os = "windows"))]
-        match fs::metadata(&alist_path) {
+        match std::fs::metadata(&alist_path) {
             Ok(metadata) => {
                 let mut permissions = metadata.permissions();
                 // 直接设置权限位
                 permissions.set_mode(0o755); // 设置为所有者可读写执行，同组用户可读执行，其他用户可读执行
-                if let Err(e) = fs::set_permissions(&alist_path, permissions) {
+                if let Err(e) = std::fs::set_permissions(&alist_path, permissions) {
                     eprintln!("设置文件权限时出错: {}", e);
                 }
             }
@@ -212,28 +253,24 @@ fn check_res_bin() {
     let _ = std::fs::remove_dir_all(temp_dir);
 }
 
-fn get_arch()->String{
+fn get_arch() -> String {
     #[cfg(not(target_os = "windows"))]
     {
-    use std::process::Command;
+        use std::process::Command;
 
-    let output = Command::new("uname")
-    .arg("-m")
-    .output()
-    .expect("failed to execute process");
-    
-    return String::from_utf8_lossy(&output.stdout).into_owned();
+        let output = Command::new("uname")
+            .arg("-m")
+            .output()
+            .expect("failed to execute process");
+
+        return String::from_utf8_lossy(&output.stdout).into_owned();
     }
-    return  env::consts::ARCH.to_owned();
+    return env::consts::ARCH.to_owned();
 }
-
-
-
-use std::fs;
 
 fn get_first_entry<P: AsRef<Path>>(path: P) -> Result<String, String> {
     let path = path.as_ref();
-    let mut entries = fs::read_dir(path).unwrap();
+    let mut entries = std::fs::read_dir(path).unwrap();
 
     if let Some(entry) = entries.next() {
         let entry = entry.unwrap();
@@ -249,9 +286,13 @@ fn get_first_entry<P: AsRef<Path>>(path: P) -> Result<String, String> {
 }
 
 use futures_util::stream::StreamExt;
+use itertools::Itertools as _;
 use reqwest::Client;
+use serde_json::{Map, Value};
 use std::fs::File;
-use std::io::{self, Write}; // 此处使用futures_util
+use std::io::{self, Write};
+use tauri_build::Attributes;
+use tokio::fs::read_to_string; // 此处使用futures_util
 #[tokio::main]
 pub async fn download_with_progress<F>(
     url: &str,
@@ -261,9 +302,9 @@ pub async fn download_with_progress<F>(
 where
     F: FnMut(usize, usize),
 {
-let mut url=url.to_owned();
-    if url.to_owned().contains("//github.com"){
-        url=format!("https://mirror.ghproxy.com/{}",url)//github镜像
+    let mut url = url.to_owned();
+    if url.to_owned().contains("//github.com") {
+        url = format!("https://mirror.ghproxy.com/{}", url) //github镜像
     }
 
     let response = Client::new()
@@ -360,14 +401,14 @@ fn decompress_tar_gz(
         match entry.header().entry_type() {
             EntryType::Regular => {
                 if let Some(parent) = outpath.parent() {
-                    fs::create_dir_all(parent)?;
+                    std::fs::create_dir_all(parent)?;
                 }
 
                 let mut outfile = File::create(&outpath)?;
                 io::copy(&mut entry, &mut outfile)?;
             }
             EntryType::Directory => {
-                fs::create_dir_all(&outpath)?;
+                std::fs::create_dir_all(&outpath)?;
             }
             _ => {
                 // 忽略其他类型的条目，如符号链接等

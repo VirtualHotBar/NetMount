@@ -3,10 +3,10 @@ use std::io;
 
 #[cfg(target_os = "macos")]
 pub fn set_autostart(enabled: bool) -> io::Result<()> {
-    use std::io::prelude::*;
     use std::fs::File;
-    use std::path::Path;
     use std::fs::OpenOptions;
+    use std::io::prelude::*;
+    use std::path::Path;
 
     let label = "com.vhbs.netmount"; // 你的程序标识符
     let exe_path = env::current_exe()?;
@@ -86,7 +86,7 @@ pub fn is_autostart() -> io::Result<bool> {
 #[cfg(target_os = "windows")]
 pub fn set_autostart(enabled: bool) -> io::Result<()> {
     use std::{os::windows::process::CommandExt, process::Command};
-    
+
     let exe_path = env::current_exe()?;
     let exe_path_str = exe_path.to_string_lossy().into_owned();
 
@@ -100,8 +100,11 @@ pub fn set_autostart(enabled: bool) -> io::Result<()> {
             .to_string()
     };
 
-    let cmd = Command::new("cmd").arg("/C").arg(command.clone()).creation_flags(0x08000000).spawn();
-
+    let cmd = Command::new("cmd")
+        .arg("/C")
+        .arg(command.clone())
+        .creation_flags(0x08000000)
+        .spawn();
 
     let output = cmd.unwrap().wait_with_output()?;
 
@@ -122,8 +125,8 @@ pub fn set_autostart(enabled: bool) -> io::Result<()> {
 #[cfg(target_os = "windows")]
 pub fn is_autostart() -> io::Result<bool> {
     extern crate winreg;
-    use winreg::RegKey;
     use winreg::enums::*;
+    use winreg::RegKey;
 
     let app_name = "NetMount";
     let exe_path = env::current_exe()?;

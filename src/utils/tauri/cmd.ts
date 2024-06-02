@@ -1,8 +1,8 @@
-import { Command } from '@tauri-apps/api/shell';
+import { Command } from '@tauri-apps/plugin-shell';
 
 async function runCmd(cmd: string, args: string[]): Promise<string> {
     // Create a new Command instance with the provided command and arguments.
-    const commandInstance = new Command(cmd, args);
+    const commandInstance = Command.create(cmd,args);
     let resultStr = '';
     try {
         // Execute the command and wait for its completion.
