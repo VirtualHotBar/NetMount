@@ -20,7 +20,6 @@ async function setAlistPass(pass:string){
 }
 
 async function modifyAlistConfig(rewriteData:any=alistInfo.alistConfig){
-    // TODO: remove this
     // const path = alistDataDir()+'config.json'
     // const oldAlistConfig =await invoke('read_config_file',{path}) as object
     // const newAlistConfig = {...oldAlistConfig, ...rewriteData}

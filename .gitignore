@@ -25,6 +25,3 @@ dist-ssr
 
 # bin
 src-tauri/res/bin
-
-# TODO: .
-scripts

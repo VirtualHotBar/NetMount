@@ -11,14 +11,6 @@ async function setLocalized(lang: string) {
   const pack: Record<string, string> = await invoke("get_language_pack");
   i18n.addResourceBundle(lang, "translation", pack);
   i18n.changeLanguage(lang);
-  // TODO: remove comment
-  // await invoke('set_localized', {
-  //     localizedData: {
-  //         quit: t("quit"),
-  //         show: t("tray_show"),
-  //         hide: t("tray_hide")
-  //     }
-  // })
 }
 
 function getLangCode(lang: string): string {
