@@ -1,5 +1,5 @@
 use app::init;
 
-fn main(){
-    init()
+fn main() {
+    init().unwrap();
 }

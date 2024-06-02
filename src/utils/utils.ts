@@ -142,8 +142,8 @@ export function compareVersions(v1: string, v2: string) {
 }
 
 export async function set_devtools_state(state: boolean) {
-    await invoke('set_devtools_state', {
-        state: state
+    await invoke('toggle_devtools', {
+       preferred_open: state
     })
 }
 

@@ -2,28 +2,21 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use config::Config;
-use config::ConfigState;
 use locale::Locale;
-use locale::LocaleState;
 use serde_json::{to_string_pretty, Value};
 use std::fs::File;
 use std::ops::Deref;
 use std::sync::RwLock;
 use tray::Tray;
-use tray::TrayState;
 //use tauri::AppHandle;
 use std::env;
 //use std::error::Error;
 use std::fs;
 use std::path::Path;
 
-//use std::io::Read;
-//use std::path::Path;
-use tauri::Manager as _;
-
 mod autostart;
 mod config;
-pub mod locale;
+mod locale;
 mod localized;
 mod tray;
 mod utils;
@@ -42,10 +35,13 @@ use crate::utils::set_window_shadow;
 
 pub(crate) type Runtime = tauri::Wry;
 
+pub trait State: Send + Sync + 'static {}
+pub struct StateWrapper<T: State>(RwLock<T>);
+
 pub trait AppExt {
     fn main_window(&self) -> tauri::WebviewWindow<Runtime>;
-    fn app_locale(&self) -> &Locale;
-    fn app_config(&self) -> &Config;
+    fn with_app_state<T: State, R>(&self, closure: impl FnOnce(&T) -> R) -> R;
+    fn set_app_state<T: State>(&self, state: T);
     fn update_app_config(&self) -> anyhow::Result<()>;
     fn write_app_config(&self, config: Config) -> anyhow::Result<()>;
     fn app_data_dir(&self) -> PathBuf;
@@ -58,44 +54,41 @@ impl<M: tauri::Manager<Runtime>> AppExt for M {
         self.get_webview_window("main").unwrap()
     }
 
-    fn app_locale(&self) -> &Locale {
-        self.state::<LocaleState>()
-            .deref()
-            .0
-            .read()
-            .unwrap()
-            .deref()
-            .as_ref()
-            .unwrap()
+    fn with_app_state<T: State, R>(&self, closure: impl FnOnce(&T) -> R) -> R {
+        let wrapper = self.state::<StateWrapper<T>>();
+        let state = wrapper.deref().0.read().unwrap();
+        closure(state.deref())
     }
 
-    fn app_config(&self) -> &Config {
-        self.state::<ConfigState>()
-            .deref()
-            .0
-            .read()
-            .unwrap()
-            .deref()
+    fn set_app_state<T: State>(&self, state: T) {
+        if let Some(wrapper) = self.try_state::<StateWrapper<T>>() {
+            *wrapper.deref().0.write().unwrap() = state;
+        } else {
+            self.manage(StateWrapper(RwLock::new(state)));
+        }
     }
 
     fn update_app_config(&self) -> anyhow::Result<()> {
-        let config = self.app_config();
-
-        let current_locale = tauri_plugin_os::locale().unwrap_or_else(|| "C".into());
-        *self.state::<LocaleState>().deref().0.write().unwrap() = Some(Locale::new(
-            config.0["settings"]
-                .get("language")
-                .map(|item| item.as_str().unwrap())
-                .unwrap_or_else(|| &current_locale),
-        ));
-        *self.state::<TrayState>().deref().0.write().unwrap() = Some(Tray::new(self.app_handle())?);
-        Ok(())
+        self.with_app_state::<Config, _>(|config| {
+            let current_locale = tauri_plugin_os::locale().unwrap_or_else(|| "C".into());
+            self.set_app_state(Locale::new(
+                config.0["settings"]
+                    .get("language")
+                    .map(|item| item.as_str().unwrap())
+                    .unwrap_or_else(|| &current_locale),
+            ));
+            self.set_app_state(Tray::new(self.app_handle())?);
+            Ok(())
+        })
     }
 
     fn write_app_config(&self, config: Config) -> anyhow::Result<()> {
-        *self.state::<ConfigState>().deref().0.write().unwrap() = config;
-        let mut file = File::create(self.app_config_file())?;
-        serde_json::to_writer_pretty(file, &self.app_config().0)?;
+        self.set_app_state(config);
+        let file = File::create(self.app_config_file())?;
+        serde_json::to_writer_pretty(
+            file,
+            &self.with_app_state::<Config, _>(|config| config.0.clone()),
+        )?;
         Ok(())
     }
 
@@ -117,7 +110,7 @@ pub trait WindowExt {
     fn toggle_visibility(&self, preferred_show: Option<bool>) -> anyhow::Result<()>;
 }
 
-impl WindowExt for tauri::WebviewWindow {
+impl WindowExt for tauri::WebviewWindow<Runtime> {
     fn toggle_devtools(&self, preferred_open: Option<bool>) {
         let open = preferred_open.unwrap_or_else(|| !self.is_devtools_open());
         if open {
@@ -193,40 +186,34 @@ pub fn init() -> anyhow::Result<()> {
     //run_command("dir").expect("运行ls命令失败");
 
     // 根据不同的操作系统配置Tauri Builder
-    let builder = tauri::Builder::default()
+    tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
-            app.main_window().toggle_visibility(Some(true));
+            app.main_window().toggle_visibility(Some(true)).ok();
         }))
         .invoke_handler(tauri::generate_handler![
-            // TODO: alternatives?
-            // set_localized,
-            read_config_file,
-            write_config_file,
+            toggle_devtools,
+            get_config,
+            update_config,
+            get_language_pack,
             download_file,
             get_autostart_state,
             set_autostart_state,
             get_winfsp_install_state,
             get_available_drive_letter,
-            // TODO: alternatives?
-            // set_devtools_state,
             fs_exist_dir,
             fs_make_dir,
             restart_self
         ])
         .setup(|app| {
-            app.manage(ConfigState(RwLock::new(
-                if let Some(file) = File::open(app.app_config_file()).ok() {
-                    Config(serde_json::from_reader(file)?)
-                } else {
-                    Config::default()
-                },
-            )));
-            app.manage(LocaleState(RwLock::new(None)));
-            app.manage(TrayState(RwLock::new(None)));
+            if let Some(file) = File::open(app.app_config_file()).ok() {
+                app.set_app_state(Config(serde_json::from_reader(file)?))
+            } else {
+                app.write_app_config(Config::default())?
+            };
             app.update_app_config()?;
             #[cfg(debug_assertions)]
             app.main_window().toggle_devtools(Some(true));
@@ -237,8 +224,18 @@ pub fn init() -> anyhow::Result<()> {
 }
 
 #[tauri::command]
-fn toggle_devtools(window: tauri::WebviewWindow, preferred_open: Option<bool>) {
+fn toggle_devtools(window: tauri::WebviewWindow<Runtime>, preferred_open: Option<bool>) {
     window.toggle_devtools(preferred_open)
+}
+
+#[tauri::command]
+fn get_language_pack(app: tauri::AppHandle<Runtime>) -> serde_json::Value {
+    serde_json::Value::Object(serde_json::value::Map::from_iter(
+        app.with_app_state::<Locale, _>(|locale| locale.0)
+            .entries()
+            .map(|(&key, &value)| (key.into(), serde_json::Value::String(value.into()))),
+    ))
+    .into()
 }
 
 use std::io::ErrorKind;
@@ -376,51 +373,54 @@ fn get_available_drive_letter() -> Result<String, String> {
 }
 
 #[tauri::command]
-fn get_config(app: tauri::AppHandle) -> Config {
-    app.app_config().clone()
+fn get_config(app: tauri::AppHandle<Runtime>) -> serde_json::Value {
+    app.with_app_state::<Config, _>(|config| config.0.clone())
 }
 
 #[tauri::command]
-fn update_config(app: tauri::AppHandle, data: Value) -> anyhow_tauri::TAResult<()> {
-    app.write_app_config(Config(data));
+fn update_config(
+    app: tauri::AppHandle<Runtime>,
+    data: serde_json::Value,
+) -> anyhow_tauri::TAResult<()> {
+    app.write_app_config(Config(data))?;
     app.update_app_config()?;
     Ok(())
 }
 
-#[tauri::command]
-fn read_config_file(path: Option<&str>) -> Result<Value, String> {
-    let path = path.unwrap_or(CONFIG_FILE);
-    let home_dir = get_home_dir();
-    let content_result = fs::read_to_string(if path == CONFIG_FILE {
-        home_dir.join(USER_DATA_PATH).join(path)
-    } else {
-        PathBuf::from(path)
-    });
-    match content_result {
-        Ok(content) => match serde_json::from_str(&content) {
-            Ok(config) => Ok(config),
-            Err(json_error) => Err(format!("Failed to parse JSON from file: {}", json_error)),
-        },
-        Err(io_error) => Err(format!("Failed to read file: {}", io_error)),
-    }
-}
+// #[tauri::command]
+// fn read_config_file(path: Option<&str>) -> Result<Value, String> {
+//     let path = path.unwrap_or(CONFIG_FILE);
+//     let home_dir = get_home_dir();
+//     let content_result = fs::read_to_string(if path == CONFIG_FILE {
+//         home_dir.join(USER_DATA_PATH).join(path)
+//     } else {
+//         PathBuf::from(path)
+//     });
+//     match content_result {
+//         Ok(content) => match serde_json::from_str(&content) {
+//             Ok(config) => Ok(config),
+//             Err(json_error) => Err(format!("Failed to parse JSON from file: {}", json_error)),
+//         },
+//         Err(io_error) => Err(format!("Failed to read file: {}", io_error)),
+//     }
+// }
 
-#[tauri::command]
-async fn write_config_file(config_data: Value, path: Option<&str>) -> Result<(), String> {
-    let path = path.unwrap_or(CONFIG_FILE);
-    let home_dir = get_home_dir();
-    let pretty_config = to_string_pretty(&config_data)
-        .map_err(|json_error| format!("Failed to serialize JSON: {}", json_error))?;
+// #[tauri::command]
+// async fn write_config_file(config_data: Value, path: Option<&str>) -> Result<(), String> {
+//     let path = path.unwrap_or(CONFIG_FILE);
+//     let home_dir = get_home_dir();
+//     let pretty_config = to_string_pretty(&config_data)
+//         .map_err(|json_error| format!("Failed to serialize JSON: {}", json_error))?;
 
-    fs::write(
-        if path == CONFIG_FILE {
-            home_dir.join(USER_DATA_PATH).join(path)
-        } else {
-            PathBuf::from(path)
-        },
-        pretty_config,
-    )
-    .map_err(|io_error| format!("Failed to write file: {}", io_error))?;
+//     fs::write(
+//         if path == CONFIG_FILE {
+//             home_dir.join(USER_DATA_PATH).join(path)
+//         } else {
+//             PathBuf::from(path)
+//         },
+//         pretty_config,
+//     )
+//     .map_err(|io_error| format!("Failed to write file: {}", io_error))?;
 
-    Ok(())
-}
+//     Ok(())
+// }
