@@ -190,6 +190,7 @@ pub fn init() -> anyhow::Result<()> {
             set_autostart_state,
             get_winfsp_install_state,
             get_available_drive_letter,
+            get_available_ports,
             fs_exist_dir,
             fs_make_dir,
             restart_self
@@ -294,4 +295,9 @@ fn get_available_drive_letter() -> Result<String, String> {
         Ok(None) => Ok(String::from("")),
         Err(e) => Ok(format!("{}", e)),
     }
+}
+
+#[tauri::command]
+fn get_available_ports(count: usize) -> Vec<u16> {
+    return utils::get_available_ports(count);
 }

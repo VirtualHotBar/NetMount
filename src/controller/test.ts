@@ -7,7 +7,7 @@ import { app } from "@tauri-apps/api";
 import { nmConfig, osInfo, roConfig } from "../services/config";
 import { Aria2 } from "../utils/aria2/aria2";
 import { checkUpdate } from "./update/update";
-import { getWinFspInstallState, installWinFsp, showPathInExplorer } from "../utils/utils";
+import { getAvailablePorts, getWinFspInstallState, installWinFsp, showPathInExplorer } from "../utils/utils";
 import { t } from "i18next";
 import { FilterType, StorageInfoType, StorageParamItemType } from "../type/controller/storage/info";
 import { storageInfoList, updateStorageInfoList } from "./storage/allList";
@@ -17,6 +17,7 @@ import { alistInfo } from "../services/alist";
 import { addAlistInRclone } from "../utils/alist/alist";
 import { restartRclone } from "../utils/rclone/process";
 import { restartAlist } from "../utils/alist/process";
+import { exit } from "./main";
 
 export async function Test() {
     console.log(nmConfig);
@@ -25,6 +26,10 @@ export async function Test() {
 
     console.log(await rclone_api_post('/options/get'));
     console.log(await rclone_api_post('/rc/list'),);
+
+    console.log((await getAvailablePorts(2))[1]);
+    
+    //exit(true)
 
     /* console.log(await rclone_api_post('/operations/publiclink',{
         fs: convertStoragePath('S3_new',undefined,undefined,undefined,true),
