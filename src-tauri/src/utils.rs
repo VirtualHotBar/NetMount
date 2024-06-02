@@ -5,7 +5,10 @@ use tauri::{Manager, Runtime};
 use std::error::Error;
 #[cfg(target_os = "windows")]
 use std::fs;
-use std::io::{self, Write};
+use std::{
+    io::{self, Write},
+    path::PathBuf,
+};
 
 pub fn get_available_ports(count: usize) -> Vec<u16> {
     use std::net::TcpListener;

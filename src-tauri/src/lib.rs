@@ -191,6 +191,7 @@ pub fn init() -> anyhow::Result<()> {
             get_winfsp_install_state,
             get_available_drive_letter,
             get_available_ports,
+            get_temp_dir,
             fs_exist_dir,
             fs_make_dir,
             restart_self
@@ -300,4 +301,9 @@ fn get_available_drive_letter() -> Result<String, String> {
 #[tauri::command]
 fn get_available_ports(count: usize) -> Vec<u16> {
     return utils::get_available_ports(count);
+}
+
+#[tauri::command]
+fn get_temp_dir() -> String {
+    std::env::temp_dir().to_str().unwrap().to_owned()
 }
