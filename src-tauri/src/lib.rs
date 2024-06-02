@@ -24,8 +24,8 @@ use crate::utils::download_with_progress;
 use crate::utils::find_first_available_drive_letter;
 #[cfg(target_os = "windows")]
 use crate::utils::is_winfsp_installed;
-#[cfg(target_os = "windows")]
-use crate::utils::set_window_shadow;
+//#[cfg(target_os = "windows")]
+//use crate::utils::set_window_shadow;
 
 pub(crate) type Runtime = tauri::Wry;
 
