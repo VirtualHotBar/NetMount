@@ -26,10 +26,25 @@ pub fn get_available_ports(count: usize) -> Vec<u16> {
 #[cfg(target_os = "windows")]
 pub fn set_window_shadow<R: Runtime>(app: &tauri::App<R>) {
     {
-        let window = app.get_window("main").unwrap();
-        set_shadow(&window, true).expect("Unsupported platform!");
+        use raw_window_handle::HasRawWindowHandle;
+        fn set_shadow<W: HasRawWindowHandle>(_window: &W, enabled: bool) -> Result<(), Box<dyn Error>> {
+            set_shadow(_window, true).expect("Unsupported platform!");
+            Ok(())
+        }
+
+        let window_map = app.get_webview_window("main").unwrap().webview_windows();
+        
+        // 假设webview_windows返回了一个包含窗口名（String）和窗口实例（WebviewWindow）的映射
+        // 我们需要获取映射中的值（即WebviewWindow实例）
+        if let Some(webview_window) = window_map.values().next() {
+            
+        } else {
+            eprintln!("No webview window found.");
+        }
     }
 }
+
+
 #[cfg(target_os = "windows")]
 #[tauri::command]
 pub fn find_first_available_drive_letter() -> Result<Option<String>, io::Error> {

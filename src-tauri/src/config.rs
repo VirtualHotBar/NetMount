@@ -14,7 +14,7 @@ pub struct Config(pub serde_json::Value);
 impl Config {
     pub fn get(&self, key: String) -> Option<serde_json::Value> {
         let parts = key.split(".");
-        Some(parts.fold(self.0, |value, part| *value.get(part).unwrap()))
+        Some(parts.fold(self.0.clone(), |value, part| value.get(part).unwrap().clone()))
     }
 }
 

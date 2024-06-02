@@ -58,13 +58,12 @@ impl<M: tauri::Manager<Runtime>> AppExt for M {
         self.get_webview_window("main").unwrap()
     }
 
-    fn app_locale(&self) -> &Locale {
+    fn app_locale(&self) -> Locale {
         self.state::<LocaleState>()
             .deref()
             .0
             .read()
             .unwrap()
-            .deref()
             .as_ref()
             .unwrap()
     }
@@ -215,7 +214,8 @@ pub fn init() -> anyhow::Result<()> {
             // set_devtools_state,
             fs_exist_dir,
             fs_make_dir,
-            restart_self
+            restart_self,
+            get_available_ports
         ])
         .setup(|app| {
             app.manage(ConfigState(RwLock::new(
@@ -423,4 +423,9 @@ async fn write_config_file(config_data: Value, path: Option<&str>) -> Result<(),
     .map_err(|io_error| format!("Failed to write file: {}", io_error))?;
 
     Ok(())
+}
+
+#[tauri::command]
+fn get_available_ports(count: usize) -> Vec<u16> {
+    return utils::get_available_ports(count);
 }

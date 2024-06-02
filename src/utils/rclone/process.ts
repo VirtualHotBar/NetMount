@@ -34,14 +34,14 @@ async function startRclone() {
         `--rc-user=${nmConfig.framework.rclone.user}`,
         `--rc-pass=${nmConfig.framework.rclone.password}`,
         '--rc-allow-origin=' + window.location.origin || '*',
-        '--config=' +formatPath( rcloneDataDir() + '/rclone.conf', osInfo.osType === "windows"),
+        '--config=' + formatPath(rcloneDataDir() + '/rclone.conf', osInfo.osType === "windows"),
     ];
 
     if (nmConfig.framework.rclone.user === '') {
         args.push('--rc-no-auth')
     }
 
-    rcloneInfo.process.command =  Command.create('rclone', args)
+    rcloneInfo.process.command = Command.create('rclone', args)
 
     rcloneInfo.process.log = ''
     const addLog = (data: string) => {
@@ -49,8 +49,8 @@ async function startRclone() {
         rcloneInfo.process.log += data;
     }
 
-    rcloneInfo.process.command.stdout.on('data', (data:string) => addLog(data))
-    rcloneInfo.process.command.stderr.on('data', (data:string) => addLog(data))
+    rcloneInfo.process.command.stdout.on('data', (data: string) => addLog(data))
+    rcloneInfo.process.command.stderr.on('data', (data: string) => addLog(data))
 
     rcloneInfo.process.child = await rcloneInfo.process.command.spawn()
 
