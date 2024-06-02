@@ -48,6 +48,7 @@ export default function Setting_page() {
                 defaultValue={nmConfig.settings.language}
                 onChange={async (value) => {
                   nmConfig.settings.language = value
+                  await saveNmConfig()
                   await setLocalized(nmConfig.settings.language!)
                 }}
                 style={{ width: '8rem' }}

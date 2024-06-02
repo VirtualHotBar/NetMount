@@ -17,10 +17,10 @@ fn main() -> anyhow::Result<()> {
     compile_locale(
         &[
             ("en", Path::new("locales/en.json")),
-            ("zh-cn", Path::new("locales/zh-cn.json")),
-            ("zh-hant", Path::new("locales/zh-hant.json")),
+            ("cn", Path::new("locales/zh-cn.json")),
+            ("ct", Path::new("locales/zh-hant.json")),
         ],
-        "zh-cn",
+        "cn",
     )?;
     tauri_build::try_build(Attributes::default())?;
     Ok(())
