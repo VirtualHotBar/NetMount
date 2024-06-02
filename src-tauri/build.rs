@@ -295,7 +295,7 @@ use serde_json::{Map, Value};
 use std::fs::File;
 use std::io::{self, Write};
 use tauri_build::Attributes;
-use tokio::fs::read_to_string; // 此处使用futures_util
+//use tokio::fs::read_to_string; // 此处使用futures_util
 #[tokio::main]
 pub async fn download_with_progress<F>(
     url: &str,

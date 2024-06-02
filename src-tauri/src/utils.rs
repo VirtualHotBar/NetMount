@@ -1,14 +1,10 @@
 #[cfg(target_os = "windows")]
-use tauri::{Manager, Runtime};
 
 #[cfg(target_os = "windows")]
 use std::error::Error;
 #[cfg(target_os = "windows")]
 use std::fs;
-use std::{
-    io::{self, Write},
-    path::PathBuf,
-};
+use std::io::{self, Write};
 
 pub fn get_available_ports(count: usize) -> Vec<u16> {
     use std::net::TcpListener;

@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::{env, fs::File, ops::Deref, path::Path, sync::RwLock};
 
 use config::Config;
-use fs::{fs_exist_dir, fs_make_dir};
+use fs::{fs_exist_dir, fs_make_dir,read_json_file,write_json_file};
 use locale::Locale;
 use tray::Tray;
 
@@ -194,7 +194,9 @@ pub fn init() -> anyhow::Result<()> {
             get_temp_dir,
             fs_exist_dir,
             fs_make_dir,
-            restart_self
+            restart_self,
+            read_json_file,
+            write_json_file
         ])
         .setup(|app| {
             if let Some(file) = File::open(app.app_config_file()).ok() {
