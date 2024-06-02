@@ -34,11 +34,7 @@ async function startRclone() {
         `--rc-user=${nmConfig.framework.rclone.user}`,
         `--rc-pass=${nmConfig.framework.rclone.password}`,
         '--rc-allow-origin=' + window.location.origin || '*',
-<<<<<<< HEAD
-        '--config=' +formatPath( rcloneDataDir() + '/rclone.conf', osInfo.osType === "windows"),
-=======
-        '--config=' + formatPath(rcloneDataDir() + '/rclone.conf', osInfo.osType === 'Windows_NT'),
->>>>>>> upstream/main
+        '--config=' + formatPath(rcloneDataDir() + '/rclone.conf', osInfo.osType === "windows"),
     ];
 
     if (nmConfig.framework.rclone.user === '') {

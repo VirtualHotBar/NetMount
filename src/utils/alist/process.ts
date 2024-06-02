@@ -9,11 +9,7 @@ import { getAlistToken, modifyAlistConfig, setAlistPass } from "./alist";
 import { alist_api_ping } from "./request";
 
 const alistDataDir = () => {
-<<<<<<< HEAD
-    return formatPath(roConfig.env.path.homeDir + '/.netmount/alist/',osInfo.osType==="windows")
-=======
-    return formatPath(roConfig.env.path.homeDir + '/.netmount/alist/', osInfo.osType === 'Windows_NT')
->>>>>>> upstream/main
+    return formatPath(roConfig.env.path.homeDir + '/.netmount/alist/', osInfo.osType === "windows")
 }
 
 const addParams = (): string[] => {
