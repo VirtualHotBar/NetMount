@@ -1,10 +1,8 @@
-use std::sync::RwLock;
+use crate::State;
 
-include!(concat!(env!("OUT_DIR"), "/codegen.rs"));
+include!(concat!(env!("OUT_DIR"), "/language.rs"));
 
-pub struct LocaleState(pub RwLock<Option<Locale>>);
-
-pub struct Locale(pub Pack);
+pub struct Locale(pub &'static Pack);
 
 impl Locale {
     pub fn new(name: &str) -> Self {
@@ -15,3 +13,5 @@ impl Locale {
         self.0.get(id).unwrap()
     }
 }
+
+impl State for Locale {}

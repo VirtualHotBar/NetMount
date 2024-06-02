@@ -1,4 +1,3 @@
-use std::env::current_dir;
 #[cfg(not(target_os = "windows"))]
 use std::os::unix::fs::PermissionsExt;
 use std::process::exit;
@@ -15,11 +14,14 @@ struct ResBinUrls {
 
 fn main() -> anyhow::Result<()> {
     check_res_bin();
-    compile_locale(&[
-        ("en", Path::new("locales/en.json")),
-        ("zh-cn", Path::new("locales/zh-cn.json")),
-        ("zh-hant", Path::new("locales/zh-hant.json")),
-    ])?;
+    compile_locale(
+        &[
+            ("en", Path::new("locales/en.json")),
+            ("zh-cn", Path::new("locales/zh-cn.json")),
+            ("zh-hant", Path::new("locales/zh-hant.json")),
+        ],
+        "zh-cn",
+    )?;
     tauri_build::try_build(Attributes::default())?;
     Ok(())
 }
@@ -29,9 +31,9 @@ fn escape(str: &str) -> String {
     format!("r{bound}\"{str}\"{bound}")
 }
 
-fn compile_locale(locales: &[(&str, &Path)]) -> anyhow::Result<()> {
+fn compile_locale(locales: &[(&str, &Path)], default: &str) -> anyhow::Result<()> {
     let mut file =
-        File::create(Path::new(&env::var("OUT_DIR").unwrap()).join(format!("codegen.rs")))?;
+        File::create(Path::new(&env::var("OUT_DIR").unwrap()).join(format!("language.rs")))?;
 
     write!(&mut file, "type Pack=phf::Map<&'static str,&'static str>;")?;
     let get_name = |name: &str| format!("LANG_{}", name.replace("-", "_").to_uppercase());
@@ -48,11 +50,12 @@ fn compile_locale(locales: &[(&str, &Path)]) -> anyhow::Result<()> {
     }
     write!(
         &mut file,
-        "fn get_lang(name:&'static str)->Pack{{match name{{{}}}}}",
+        "fn get_lang(name:&str)->&'static Pack{{match name{{{}_=>&{}}}}}",
         locales
             .iter()
-            .map(|(name, _)| format!("{}=>{}", escape(name), get_name(name)))
-            .join(",")
+            .map(|(name, _)| format!("{}=>&{},", escape(name), get_name(name)))
+            .join(""),
+        get_name(default)
     )?;
 
     Ok(())

@@ -124,10 +124,10 @@ function Mount_page() {
             const mounted = isMounted(item.mountPath)
             return {
               ...item,
-              mountPath_: <div style={{ display: 'flex', alignItems:'center' }}><Typography.Ellipsis className='singe-line' showTooltip>{item.mountPath}</Typography.Ellipsis>{rcloneInfo.endpoint.isLocal&&osInfo.osType==='windows' &&mounted&&
-              <Button title={t('show_path_in_explorer')} onClick={async () => {
-                await showPathInExplorer(item.mountPath,true)
-               }} type='text' icon={<IconEye />}></Button>}</div>,
+              mountPath_: <div style={{ display: 'flex', alignItems: 'center' }}><Typography.Ellipsis className='singe-line' showTooltip>{item.mountPath}</Typography.Ellipsis>{rcloneInfo.endpoint.isLocal && osInfo.osType === 'windows' && mounted &&
+                <Button title={t('show_path_in_explorer')} onClick={async () => {
+                  await showPathInExplorer(item.mountPath, true)
+                }} type='text' icon={<IconEye />}></Button>}</div>,
               mounted: mounted ? t('mounted') : t('unmounted'),
               actions: <Space>
                 {
