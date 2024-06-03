@@ -1,5 +1,7 @@
-import { fs, invoke, shell } from "@tauri-apps/api";
+import * as fs from "@tauri-apps/plugin-fs";
+import * as shell from "@tauri-apps/plugin-shell";
 import { runCmd } from "./tauri/cmd";
+import { invoke } from "@tauri-apps/api/core";
 
 export function isEmptyObject(back: any): boolean {
     return Object.keys(back).length === 0 && back.constructor === Object;
@@ -140,8 +142,8 @@ export function compareVersions(v1: string, v2: string) {
 }
 
 export async function set_devtools_state(state: boolean) {
-    await invoke('set_devtools_state', {
-        state: state
+    await invoke('toggle_devtools', {
+       preferred_open: state
     })
 }
 
@@ -152,9 +154,14 @@ export async function fs_exist_dir(path: string) {
 }
 
 export async function fs_make_dir(path: string) {
-    return await invoke('fs_make_dir', {
-        path: path
-    }) as boolean
+    try {
+      await invoke('fs_make_dir', {
+              path: path
+          })
+      return true;
+    } catch {
+      return false;
+    }
 }
 
 export function formatPath(path: string, isWindows: boolean = false) {

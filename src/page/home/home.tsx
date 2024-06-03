@@ -6,7 +6,7 @@ import { rcloneInfo } from '../../services/rclone'
 import { hooks } from '../../services/hook';
 import { checkUpdate } from '../../controller/update/update';
 import { getVersion } from '@tauri-apps/api/app';
-import { shell } from '@tauri-apps/api';
+import * as shell from '@tauri-apps/plugin-shell';
 import { formatETA, formatSize } from '../../utils/utils';
 import { useTranslation } from 'react-i18next';
 import { nmConfig } from '../../services/config';

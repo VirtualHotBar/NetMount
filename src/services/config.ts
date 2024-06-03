@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api"
+import { invoke } from "@tauri-apps/api/core"
 import { NMConfig, OSInfo } from "../type/config"
 import { randomString } from "../utils/utils"
 
@@ -83,15 +83,15 @@ const setNmConfig = (config: NMConfig) => {
 }
 
 const readNmConfig = async () => {
-    await invoke('read_config_file').then(configData => {
+    await invoke('get_config').then(configData => {
         setNmConfig({ ...nmConfig, ...(configData as NMConfig) })
     }).catch(err => {
         console.log(err);
     })
 }
 const saveNmConfig = async () => {
-    await invoke('write_config_file', {
-        configData: nmConfig
+    await invoke('update_config', {
+        data: nmConfig
     });
 }
 

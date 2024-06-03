@@ -1,4 +1,4 @@
-import { fs } from "@tauri-apps/api";
+import * as fs from "@tauri-apps/plugin-fs";
 import { compareVersions, downloadFile, takeRightStr } from "../../utils/utils";
 import { ResItem, ResList } from "../../type/controller/update";
 import { nmConfig, osInfo } from "../../services/config";

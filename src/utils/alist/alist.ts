@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api"
+import { invoke } from "@tauri-apps/api/core"
 import runCmd from "../tauri/cmd"
 import { addParams, alistDataDir } from "./process"
 import { alistInfo } from "../../services/alist"
@@ -20,10 +20,10 @@ async function setAlistPass(pass:string){
 }
 
 async function modifyAlistConfig(rewriteData:any=alistInfo.alistConfig){
-    const path = alistDataDir()+'config.json'
-    const oldAlistConfig =await invoke('read_config_file',{path}) as object
-    const newAlistConfig = {...oldAlistConfig, ...rewriteData}
-    await invoke('write_config_file',{configData:newAlistConfig,path:path})
+    // const path = alistDataDir()+'config.json'
+    // const oldAlistConfig =await invoke('read_config_file',{path}) as object
+    // const newAlistConfig = {...oldAlistConfig, ...rewriteData}
+    // await invoke('write_config_file',{configData:newAlistConfig,path:path})
 }
 
 async function addAlistInRclone(){

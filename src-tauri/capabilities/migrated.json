@@ -1,0 +1,199 @@
+{
+  "identifier": "migrated",
+  "description": "permissions that were migrated from v1",
+  "local": true,
+  "windows": ["main"],
+  "permissions": [
+    "path:default",
+    "event:default",
+    "window:default",
+    "app:default",
+    "resources:default",
+    "menu:default",
+    "tray:default",
+    "fs:allow-read-file",
+    "fs:allow-write-file",
+    "fs:allow-read-dir",
+    "fs:allow-copy-file",
+    "fs:allow-mkdir",
+    "fs:allow-remove",
+    "fs:allow-remove",
+    "fs:allow-rename",
+    "fs:allow-exists",
+    {
+      "identifier": "fs:scope",
+      "allow": ["res/*"]
+    },
+    "window:allow-create",
+    "window:allow-center",
+    "window:allow-request-user-attention",
+    "window:allow-set-resizable",
+    "window:allow-set-maximizable",
+    "window:allow-set-minimizable",
+    "window:allow-set-closable",
+    "window:allow-set-title",
+    "window:allow-maximize",
+    "window:allow-unmaximize",
+    "window:allow-minimize",
+    "window:allow-unminimize",
+    "window:allow-show",
+    "window:allow-hide",
+    "window:allow-close",
+    "window:allow-set-decorations",
+    "window:allow-set-always-on-top",
+    "window:allow-set-content-protected",
+    "window:allow-set-size",
+    "window:allow-set-min-size",
+    "window:allow-set-max-size",
+    "window:allow-set-position",
+    "window:allow-set-fullscreen",
+    "window:allow-set-focus",
+    "window:allow-set-icon",
+    "window:allow-set-skip-taskbar",
+    "window:allow-set-cursor-grab",
+    "window:allow-set-cursor-visible",
+    "window:allow-set-cursor-icon",
+    "window:allow-set-cursor-position",
+    "window:allow-set-ignore-cursor-events",
+    "window:allow-start-dragging",
+    "webview:allow-print",
+    "shell:allow-kill",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "args": true,
+          "cmd": "res/bin/aria2c",
+          "name": "aria2c",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "res/bin/rclone",
+          "name": "rclone",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "msiexec",
+          "name": "msiexec",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "curl",
+          "name": "curl",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "explorer",
+          "name": "explorer",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "res/bin/alist/alist",
+          "name": "alist",
+          "sidecar": false
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "args": true,
+          "cmd": "res/bin/aria2c",
+          "name": "ria2c",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "res/bin/rclone",
+          "name": "rclone",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "msiexec",
+          "name": "msiexec",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "curl",
+          "name": "curl",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "explorer",
+          "name": "explorer",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "res/bin/alist/alist",
+          "name": "alist",
+          "sidecar": false
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-open",
+      "allow": [
+        {
+          "args": true,
+          "cmd": "res/bin/aria2c",
+          "name": "ria2c",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "res/bin/rclone",
+          "name": "rclone",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "msiexec",
+          "name": "msiexec",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "curl",
+          "name": "curl",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "explorer",
+          "name": "explorer",
+          "sidecar": false
+        },
+        {
+          "args": true,
+          "cmd": "res/bin/alist/alist",
+          "name": "alist",
+          "sidecar": false
+        }
+      ]
+    },
+    "os:allow-platform",
+    "os:allow-version",
+    "os:allow-os-type",
+    "os:allow-family",
+    "os:allow-arch",
+    "os:allow-exe-extension",
+    "os:allow-locale",
+    "os:allow-hostname",
+    "process:allow-restart",
+    "process:allow-exit",
+    "fs:default",
+    "shell:default",
+    "process:default",
+    "os:default"
+  ]
+}

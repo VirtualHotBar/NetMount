@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api"
 import { hooks } from "../../services/hook"
 import { rcloneInfo } from "../../services/rclone"
 import { FileInfo, StorageList, StorageSpace } from "../../type/rclone/rcloneInfo"

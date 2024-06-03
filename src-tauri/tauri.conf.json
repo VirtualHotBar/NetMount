@@ -3,134 +3,55 @@
   "build": {
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run dev",
-    "devPath": "http://localhost:5173",
-    "distDir": "../dist"
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173"
   },
-  "package": {
-    "productName": "NetMount"
-  },
-  "tauri": {
-    "systemTray": {
-      "iconPath": "img/icons/icon.png",
-      "iconAsTemplate": true
-    },
-    "allowlist": {
-      "all": false,
-      "window": {
-        "all": true
+  "bundle": {
+    "targets": "all",
+    "active": true,
+    "category": "DeveloperTool",
+    "copyright": "(C) 2024-Present  VirtualHotBar",
+    "shortDescription": "Cloud storage management tools",
+    "longDescription": "Unified management and mounting of cloud storage facilities",
+    "resources": ["res/bin/**/*"],
+    "externalBin": [],
+    "icon": ["img/icons/icon.png", "img/icons/icon.icns", "img/icons/icon.ico"],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
       },
-      "process": {
-        "all": true
+      "wix": {
+        "bannerPath": "img/wix/banner.png",
+        "dialogImagePath": "img/wix/dialog.png",
+        "language": ["zh-CN", "en-US"],
+        "template": "pack/wix.wxs"
       },
-      "fs": {
-        "all": true,
-        "scope": [
-          "res/*"
-        ]
-      },
-      "os": {
-        "all": true
-      },
-      "path": {
-        "all": true
-      },
-      "shell": {
-        "all": false,
-        "execute": true,
-        "open": true,
-        "scope": [
-          {
-            "name": "ria2c",
-            "cmd": "res/bin/aria2c",
-            "args": true
-          },
-          {
-            "name": "rclone",
-            "cmd": "res/bin/rclone",
-            "args": true
-          },
-          {
-            "name": "msiexec",
-            "cmd": "msiexec",
-            "args": true
-          },
-          {
-            "name": "curl",
-            "cmd": "curl",
-            "args": true
-          },
-          {
-            "name": "explorer",
-            "cmd": "explorer",
-            "args": true
-          },
-          {
-            "name": "alist",
-            "cmd": "res/bin/alist/alist",
-            "args": true
-          }
-        ],
-        "sidecar": false
+      "nsis": {
+        "sidebarImage": "img/nsis/sidebar.bmp",
+        "headerImage": "img/nsis/header.bmp",
+        "languages": ["SimpChinese", "English"],
+        "installerIcon": "img/icons/icon.ico"
       }
     },
-    "bundle": {
-      "targets": "all",
-      "active": true,
-      "category": "DeveloperTool",
-      "copyright": "(C) 2024-Present  VirtualHotBar",
-      "shortDescription": "Cloud storage management tools",
-      "longDescription": "Unified management and mounting of cloud storage facilities",
-      "deb": {},
-      "externalBin": [],
-      "icon": [
-        "img/icons/icon.png",
-        "img/icons/icon.icns",
-        "img/icons/icon.ico"
-      ],
-      "identifier": "com.vhbs.netmount",
-      "macOS": {
-        "entitlements": "pack/macos/entitlements.plist",
-        "exceptionDomain": "localhost",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [
-        "res/bin/**/*"
-      ],
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": "",
-        "webviewInstallMode": {
-          "type": "embedBootstrapper"
-        },
-        "wix": {
-          "bannerPath": "img/wix/banner.png",
-          "dialogImagePath": "img/wix/dialog.png",
-          "language": [
-            "zh-CN",
-            "en-US"
-          ],
-          "template": "pack/wix.wxs"
-        },
-        "nsis": {
-          "sidebarImage": "img/nsis/sidebar.bmp",
-          "headerImage": "img/nsis/header.bmp",
-          "languages": [
-            "SimpChinese",
-            "English"
-          ],
-          "installerIcon": "img/icons/icon.ico"
-        }
-      }
+    "macOS": {
+      "entitlements": "pack/macos/entitlements.plist",
+      "exceptionDomain": "localhost",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null
     },
-    "security": {
-      "csp": null
-    },
-    "updater": {
-      "active": false
-    },
+    "linux": {
+      "deb": {}
+    }
+  },
+  "productName": "NetMount",
+  "identifier": "com.vhbs.netmount",
+  "plugins": {},
+  "app": {
+    "withGlobalTauri": true,
     "macOSPrivateApi": true,
     "windows": [
       {
@@ -144,6 +65,14 @@
         "transparent": true,
         "decorations": false
       }
-    ]
+    ],
+    "trayIcon": {
+      "id": "main",
+      "iconPath": "img/icons/icon.png",
+      "iconAsTemplate": true
+    },
+    "security": {
+      "csp": null
+    }
   }
 }

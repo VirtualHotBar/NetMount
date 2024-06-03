@@ -6,7 +6,7 @@ import { nmConfig, osInfo, roConfig, saveNmConfig } from '../../services/config'
 import { getAutostartState, setAutostartState, setThemeMode } from '../../controller/setting/setting';
 import { useTranslation } from 'react-i18next';
 import { getVersion } from '@tauri-apps/api/app';
-import { shell } from '@tauri-apps/api';
+import * as shell from '@tauri-apps/plugin-shell';
 import { rcloneInfo } from '../../services/rclone';
 import { setLocalized } from '../../controller/language/localized';
 import { openUrlInBrowser, set_devtools_state } from '../../utils/utils';
