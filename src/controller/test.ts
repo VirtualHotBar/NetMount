@@ -29,6 +29,8 @@ export async function Test() {
 
     console.log((await getAvailablePorts(2))[1]);
     
+    console.log(storageInfoList);
+    
     //exit(true)
 
     /* console.log(await rclone_api_post('/operations/publiclink',{

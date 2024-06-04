@@ -27,4 +27,4 @@ dist-ssr
 src-tauri/res/bin
 
 
-src-tauri/gen/schemas
+/src-tauri/gen

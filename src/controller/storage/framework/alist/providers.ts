@@ -60,6 +60,10 @@ async function updateAlistStorageInfoList() {
                     storageParam.hide = true
                 }
 
+                //设置webdav代理
+                if (option.name === 'webdav_policy') {
+                    storageParam.default = "native_proxy"//本机代理
+                }
 
                 storageParams.push(storageParam)
             }
@@ -67,9 +71,9 @@ async function updateAlistStorageInfoList() {
         }
 
         alistStorageInfoList.push({
-            label: 'storage.'+provider.config.name,
+            label: 'storage.' + provider.config.name,
             type: key,
-            description: 'description.'+key.toLocaleLowerCase(),
+            description: 'description.' + key.toLocaleLowerCase(),
             framework: 'alist',
             defaultParams: {
                 name: provider.config.name + '_new',
