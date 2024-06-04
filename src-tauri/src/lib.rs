@@ -202,12 +202,22 @@ pub fn init() -> anyhow::Result<()> {
             write_json_file
         ])
         .setup(|app| {
+            //判断配置目录是否存在，如不存在创建配置目录
+            let config_dir = app.app_data_dir();
+            if !config_dir.exists() {
+                std::fs::create_dir_all(&config_dir).expect("创建配置目录失败");
+                println!("创建配置目录成功");
+            }
+
+            //配置文件
             if let Some(file) = File::open(app.app_config_file()).ok() {
                 app.set_app_state(Config(serde_json::from_reader(file)?))
             } else {
                 app.write_app_config(Config::default())?
             };
             app.update_app_config()?;
+
+            //开发者工具
             #[cfg(debug_assertions)]
             app.app_main_window().toggle_devtools(Some(true));
             Ok(())
