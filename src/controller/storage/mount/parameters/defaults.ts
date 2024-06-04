@@ -23,7 +23,7 @@ const defaultVfsConfig: VfsOptions = {
     ReadOnly: false,
     CacheMaxAge: 3600000000000,
     CacheMaxSize: -1,
-    CacheMode: 'full',
+    CacheMode: 'writes',
     CachePollInterval: 60000000000,
     CaseInsensitive: false,
     ChunkSize: 67108864,
