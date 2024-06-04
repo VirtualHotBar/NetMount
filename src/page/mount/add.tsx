@@ -165,7 +165,7 @@ export default function AddMount_page() {
 
                 </FormItem>
 
-                <FormItem label={t('VolumeName') + '(' + t('optional') + ')'} hidden={!mountPathuIsDriveLetter}>
+                <FormItem label={t('VolumeName') + '(' + t('optional') + ')'} hidden={!mountPathuIsDriveLetter ||showAllOptions}>
                     <Input /* bordered={false} */ value={parameters.mountOpt.VolumeName} placeholder={t('please_input')} onChange={(value) =>
                         setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, VolumeName: value } })
                     } />
