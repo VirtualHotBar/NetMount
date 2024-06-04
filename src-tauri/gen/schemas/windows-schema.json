@@ -2423,6 +2423,54 @@
           ]
         },
         {
+          "type": "string",
+          "enum": [
+            "autostart:default"
+          ]
+        },
+        {
+          "description": "autostart:allow-disable -> Enables the disable command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "autostart:allow-disable"
+          ]
+        },
+        {
+          "description": "autostart:allow-enable -> Enables the enable command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "autostart:allow-enable"
+          ]
+        },
+        {
+          "description": "autostart:allow-is-enabled -> Enables the is_enabled command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "autostart:allow-is-enabled"
+          ]
+        },
+        {
+          "description": "autostart:deny-disable -> Denies the disable command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "autostart:deny-disable"
+          ]
+        },
+        {
+          "description": "autostart:deny-enable -> Denies the enable command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "autostart:deny-enable"
+          ]
+        },
+        {
+          "description": "autostart:deny-is-enabled -> Denies the is_enabled command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "autostart:deny-is-enabled"
+          ]
+        },
+        {
           "description": "event:default -> Default permissions for the plugin.",
           "type": "string",
           "enum": [

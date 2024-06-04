@@ -5,20 +5,19 @@ use std::path::PathBuf;
 use std::{env, fs::File, ops::Deref, path::Path, sync::RwLock};
 
 use config::Config;
-use fs::{fs_exist_dir, fs_make_dir,read_json_file,write_json_file};
+use fs::{fs_exist_dir, fs_make_dir, read_json_file, write_json_file};
 use locale::Locale;
 use tray::Tray;
 
-mod autostart;
 mod config;
 mod fs;
 mod locale;
 mod tray;
 mod utils;
 
-use crate::autostart::is_autostart;
-use crate::autostart::set_autostart;
 use crate::utils::download_with_progress;
+use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_autostart::ManagerExt;
 // use crate::utils::ensure_single_instance;
 #[cfg(target_os = "windows")]
 use crate::utils::find_first_available_drive_letter;
@@ -180,6 +179,10 @@ pub fn init() -> anyhow::Result<()> {
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             app.app_main_window().toggle_visibility(Some(true)).ok();
         }))
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            Some(vec![]),
+        ))
         .invoke_handler(tauri::generate_handler![
             toggle_devtools,
             get_config,
@@ -261,17 +264,22 @@ fn get_winfsp_install_state() -> Result<bool, usize> {
 }
 
 #[tauri::command]
-fn get_autostart_state() -> Result<bool, usize> {
-    match is_autostart() {
+fn get_autostart_state(app: tauri::AppHandle<Runtime>) -> Result<bool, usize> {
+    let autostart_manager = app.autolaunch();
+    match autostart_manager.is_enabled() {
         Ok(is_enabled) => Ok(is_enabled),
         Err(_) => Ok(false),
     }
 }
 
 #[tauri::command]
-fn set_autostart_state(enabled: bool) -> Result<(), ()> {
-    let _ = set_autostart(enabled);
-    Ok(())
+fn set_autostart_state(app: tauri::AppHandle<Runtime>, enabled: bool) -> Result<bool, ()> {
+    let autostart_manager = app.autolaunch();
+    Ok(if enabled {
+        autostart_manager.enable().is_ok()
+    } else {
+        autostart_manager.disable().is_ok()
+    })
 }
 
 #[tauri::command]

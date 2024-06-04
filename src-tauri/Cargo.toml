@@ -47,7 +47,7 @@ tauri-plugin-shell = "2.0.0-beta.7"
 tauri-plugin-os = "2.0.0-beta.6"
 tauri-plugin-fs = "2.0.0-beta.9"
 tauri-plugin-process = "2.0.0-beta.6"
-# tauri-plugin-autostart = "2.0.0-beta.7"
+tauri-plugin-autostart = "2.0.0-beta.7"
 tauri-plugin-single-instance = "2.0.0-beta.9"
 [target.'cfg(windows)'.dependencies]
 winreg = "0.10.1"
