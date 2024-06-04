@@ -273,7 +273,7 @@ fn get_arch() -> String {
         if !output.status.success() {
             panic!("uname command failed");
         }
-        return String::from_utf8_lossy(&output.stdout).trim().to_string();;
+        return String::from_utf8_lossy(&output.stdout).trim().to_string();
     }
     return env::consts::ARCH.to_owned();
 }
