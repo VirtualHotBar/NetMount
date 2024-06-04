@@ -22,9 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# bin
-src-tauri/res/bin
-
-
-/src-tauri/gen
