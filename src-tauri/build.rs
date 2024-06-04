@@ -68,7 +68,7 @@ fn check_res_bin() {
 
     let res_bin_urls = match OS_TYPE {
         "windows" => match arch {
-            "aarch64" => ResBinUrls {
+            "aarch64"|"arm" |"arm64"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-windows-386.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-windows-arm64.zip",
             },
@@ -78,7 +78,7 @@ fn check_res_bin() {
             },
         },
         "linux" => match arch {
-            "aarch64" => ResBinUrls {
+            "aarch64" |"arm"|"arm64"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-linux-arm64.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-linux-arm64.tar.gz",
             },
@@ -88,14 +88,17 @@ fn check_res_bin() {
             },
         },
         "macos" => match arch {
-
-            "x86_64" => ResBinUrls {
+            "x86_64" | "x86"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-darwin-amd64.tar.gz",
             },
-            _ => ResBinUrls {
+            "arm64"|"aarch64"|"arm"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-arm64.zip",
                 alist: "https://github.com/alist-org/alist/releases/latest/download/alist-darwin-arm64.tar.gz",
+            },
+            _ => ResBinUrls {
+                rclone: "",
+                alist: "",
             },
         },
         _ => ResBinUrls {
@@ -266,7 +269,11 @@ fn get_arch() -> String {
             .output()
             .expect("failed to execute process");
 
-        return String::from_utf8_lossy(&output.stdout).into_owned();
+        
+        if !output.status.success() {
+            panic!("uname command failed");
+        }
+        return String::from_utf8_lossy(&output.stdout).trim().to_string();;
     }
     return env::consts::ARCH.to_owned();
 }
