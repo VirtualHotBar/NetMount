@@ -3,7 +3,7 @@
     windows_subsystem = "windows"
 )]
 
-use app::init;
+use netmount::init;
 
 fn main() {
     init().unwrap();
