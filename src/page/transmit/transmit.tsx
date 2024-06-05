@@ -35,7 +35,7 @@ function Transmit_page() {
 
         <Space direction='vertical' style={{ width: '100%' }}>
           {
-            transmitList.length > 0 && rcloneInfo.stats.realSpeed === 0 &&
+            transmitList.length > 0 && rcloneInfo.stats.realSpeed === 0 && rcloneInfo.stats.speed === 0 &&
             <Alert
               style={{ margin: '0.1rem' }}
               type='info'
