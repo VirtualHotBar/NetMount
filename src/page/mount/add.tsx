@@ -66,13 +66,6 @@ export default function AddMount_page() {
     }
 
     useEffect(() => {
-        setMountPath(mountPath.replace(/\\/g, '/').replace(/\/+/g, '/'))
-        /*  if (mountPathuIsDriveLetter) {
-             mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
-         } */
-    }, [mountPath])
-
-    useEffect(() => {
         checkWinFspState()
 
         if (storageList.length === 0) {
@@ -95,13 +88,20 @@ export default function AddMount_page() {
     }, [])
 
     useEffect(() => {
+        setMountPath(mountPath.replace(/\\/g, '/').replace(/\/+/g, '/'))
+        //默认卷标
+        if (mountPathuIsDriveLetter && parameters.mountOpt.VolumeName === '') {
+            setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, VolumeName: storageName ? storageName : '' } })
+            mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
+        }
+    }, [mountPath])
+
+    useEffect(() => {
         if (!isEditMode) {
             //默认挂载路径
             if (isWindows) {
                 //setMountPath('*')
                 setMountPath('~/Desktop/' + storageName)
-
-
             } else {
                 if (storageName) {
                     if (rcloneInfo.version.os.toLowerCase().includes('darwin')) {
@@ -110,6 +110,11 @@ export default function AddMount_page() {
                         setMountPath('/mnt/' + storageName)
                     }
                 }
+            }
+
+            //默认卷标
+            if (mountPathuIsDriveLetter) {
+                mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
             }
         }
 
@@ -124,7 +129,7 @@ export default function AddMount_page() {
     return (
         <div>
 
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{!isEditMode ?  t('add_mount'):t('edit_mount') }</h2>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{!isEditMode ? t('add_mount') : t('edit_mount')}</h2>
             <Form>
                 <FormItem label={t('storage')}>
                     <Select /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) =>
@@ -165,7 +170,7 @@ export default function AddMount_page() {
 
                 </FormItem>
 
-                <FormItem label={t('VolumeName') + '(' + t('optional') + ')'} hidden={!mountPathuIsDriveLetter ||showAllOptions}>
+                <FormItem label={t('VolumeName') + '(' + t('optional') + ')'} hidden={!mountPathuIsDriveLetter || showAllOptions}>
                     <Input /* bordered={false} */ value={parameters.mountOpt.VolumeName} placeholder={t('please_input')} onChange={(value) =>
                         setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, VolumeName: value } })
                     } />
