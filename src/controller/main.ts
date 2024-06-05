@@ -22,6 +22,7 @@ import { alist_api_get } from "../utils/alist/request"
 import { alistInfo } from "../services/alist"
 import { addAlistInRclone } from "../utils/alist/alist"
 import { Test } from "./test"
+import { Notification } from "@arco-design/web-react"
 
 async function init(setStartStr: Function) {
 
@@ -60,7 +61,7 @@ async function init(setStartStr: Function) {
     await checkNotice()
 
     startUpdateCont()
-    
+
     await reupRcloneVersion()
     await reupAlistVersion()
     await updateStorageInfoList()
@@ -68,13 +69,25 @@ async function init(setStartStr: Function) {
     await addAlistInRclone()
     //await reupStorage()//addAlistInRclone中结尾有reupStorage所以注释
     await reupMount()
-    
+
     //自动挂载
     await autoMount()
 
     //await Test()
     //开始任务队列
-    await startTaskScheduler()    
+    await startTaskScheduler()
+
+    await main()
+}
+
+async function main() {
+    if (window.location.pathname.includes('mount')) {
+        Notification.success({
+            id: 'install_success',
+            title: t('success'),
+            content: 'WinFsp '+t('install_success'),
+        })
+    }
 }
 
 async function reupRcloneVersion() {
@@ -92,9 +105,7 @@ async function reupAlistVersion() {
 
 }
 
-function main() {
 
-}
 
 async function exit(isRestartSelf: boolean = false) {
     try {
@@ -104,7 +115,8 @@ async function exit(isRestartSelf: boolean = false) {
         await saveNmConfig()
     } finally {
         if (isRestartSelf) {
-            await restartSelf()
+            //await restartSelf()
+            location.reload()
         } else {
             await process.exit();
         }

@@ -31,7 +31,7 @@ export async function Test() {
     
     console.log(storageInfoList);
     
-    //exit(true)
+    exit(true)
 
     /* console.log(await rclone_api_post('/operations/publiclink',{
         fs: convertStoragePath('S3_new',undefined,undefined,undefined,true),

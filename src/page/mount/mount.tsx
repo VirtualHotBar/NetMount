@@ -93,8 +93,9 @@ function Mount_page() {
               <Button type='primary' onClick={async () => {
                 setWinFspInstalling(true)
                 if (await installWinFsp()) {
+                  await exit(true)
                   //await restartRclone()
-                  Modal.success({
+                  /* Modal.success({
                     title: t('install_success'),
                     simple: true,
                     maskClosable: false,
@@ -103,7 +104,7 @@ function Mount_page() {
                     onOk: () => {
                       exit(true);
                     },
-                  });
+                  }); */
 
                   /* Message.info(t('about_to_restart_self'))
                   setTimeout(() => {
