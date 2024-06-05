@@ -56,6 +56,7 @@
     "window:allow-set-cursor-position",
     "window:allow-set-ignore-cursor-events",
     "window:allow-start-dragging",
+    "window:allow-destroy",
     "webview:allow-print",
     "shell:allow-kill",
     {
