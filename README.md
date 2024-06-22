@@ -31,8 +31,8 @@
 ![image](https://github.com/VirtualHotBar/NetMount/assets/96966978/a919b68e-a165-411f-a99b-d184b3f264b0)
 
 ## 鸣谢
-- [缤纷云](https://www.bitiful.com/) - 为本项目提供CDN和存储资源。
-- 
+- [缤纷云 Bitiful](https://www.bitiful.com/) - 为本项目提供CDN和存储资源。
+
 ## 许可证
 
 NetMount的自编代码基于 AGPL-3.0 许可证开源。[详细信息请参阅](https://docs.netmount.cn/license/)
