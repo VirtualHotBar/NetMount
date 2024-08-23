@@ -6,18 +6,17 @@ import { getVersion } from "@tauri-apps/api/app";
 import { Modal } from "@arco-design/web-react";
 
 
-async function checkUpdate(updateCall: (resList: ResItem,localVersions:String ) => void) {
+async function checkUpdate(updateCall: (resList: ResItem, localVersions: String) => void) {
     const localVersions = await getVersion()
-try{
-    const resList: ResItem = (await (await fetch(nmConfig.api.url + '/GetUpdate/?arch=' + osInfo.arch + '&osType=' + osInfo.osType)).json()).data
+    try {
+        const resList: ResItem = (await (await fetch(nmConfig.api.url + '/GetUpdate/?arch=' + osInfo.arch + '&osType=' + osInfo.osType)).json()).data
+        if (resList.id && compareVersions(resList.id, localVersions) === 1) {
+            updateCall(resList, localVersions)
+        }
+    } catch {
+        console.error('checkUpdate error')
 
-    if (resList.id && compareVersions( resList.id , localVersions)===1) {
-        updateCall(resList,localVersions)
     }
-}catch{
-    console.error('checkUpdate error')
-    
-}
 
 }
 

@@ -21,6 +21,9 @@ const addParams = (): string[] => {
 
 
 async function startAlist() {
+    //设置默认临时(缓存)目录
+    alistInfo.alistConfig.temp_dir = formatPath(nmConfig.settings.path.cacheDir + '/alist/', osInfo.osType === "windows")
+    
     //自动分配端口
     alistInfo.alistConfig.scheme!.http_port != (await getAvailablePorts(2))[1]
 
@@ -34,7 +37,7 @@ async function startAlist() {
         ...addParams()
     ];
 
-    alistInfo.process.command =  Command.create('alist', args)
+    alistInfo.process.command = Command.create('alist', args)
 
     alistInfo.process.log = ''
     const addLog = (data: string) => {
@@ -42,8 +45,8 @@ async function startAlist() {
         console.log(data);
     }
 
-    alistInfo.process.command.stdout.on('data', (data:string) => addLog(data))
-    alistInfo.process.command.stderr.on('data', (data:string) => addLog(data))
+    alistInfo.process.command.stdout.on('data', (data: string) => addLog(data))
+    alistInfo.process.command.stderr.on('data', (data: string) => addLog(data))
 
     alistInfo.process.child = await alistInfo.process.command.spawn()
 

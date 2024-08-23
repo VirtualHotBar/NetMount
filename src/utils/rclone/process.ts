@@ -16,6 +16,9 @@ async function startRclone() {
         await stopRclone()
     }
 
+    //设置缓存目录
+    rcloneInfo.localArgs.path.tempDir = formatPath(nmConfig.settings.path.cacheDir + '/rclone/', osInfo.osType === "windows")
+
     /*if (process.env.NODE_ENV != 'development') {
             rcloneInfo.endpoint.auth.user = randomString(32)
             rcloneInfo.endpoint.auth.pass = randomString(128)
@@ -35,6 +38,7 @@ async function startRclone() {
         `--rc-pass=${nmConfig.framework.rclone.password}`,
         '--rc-allow-origin=' + window.location.origin || '*',
         '--config=' + formatPath(rcloneDataDir() + '/rclone.conf', osInfo.osType === "windows"),
+        '--cache-dir=' + rcloneInfo.localArgs.path.tempDir
     ];
 
     if (nmConfig.framework.rclone.user === '') {

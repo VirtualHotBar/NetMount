@@ -18,6 +18,11 @@ interface RcloneInfo {
             port: number,
         }
     },
+    localArgs:{
+        path:{
+            tempDir?:string
+        }
+    }
     version: RcloneVersion,
     stats: RcloneStats,
     storageList: Array<StorageList>,

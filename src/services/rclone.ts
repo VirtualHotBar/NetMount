@@ -2,6 +2,8 @@
 import { t } from "i18next"
 import { RcloneInfo } from "../type/rclone/rcloneInfo"
 import { RcloneStats } from "../type/rclone/stats"
+import { nmConfig, osInfo } from "./config"
+import { formatPath } from "../utils/utils"
 
 let rcloneInfo: RcloneInfo = {
     process:{
@@ -20,6 +22,11 @@ let rcloneInfo: RcloneInfo = {
     },
     storageList: [],
     mountList: [],
+    localArgs:{
+        path:{
+            tempDir:'rclone-temp'
+        }
+    },
     version: {
         arch: "",
         decomposed: [],

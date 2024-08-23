@@ -1,10 +1,11 @@
 import { Child, Command } from "@tauri-apps/plugin-shell";
-import { randomString } from "../utils/utils";
+import { formatPath, randomString } from "../utils/utils";
 import { AlistInfo } from "../type/alist/alistInfo";
+import { nmConfig, osInfo } from "./config";
 
 
 let alistInfo: AlistInfo = {
-    markInRclone:'.netmount-alist.',
+    markInRclone: '.netmount-alist.',
     endpoint: {
         url: '',
         isLocal: true,
@@ -18,7 +19,8 @@ let alistInfo: AlistInfo = {
         force: true,
         scheme: {
             http_port: 9751//随机
-        }
+        },
+        temp_dir: 'data\\temp'
     },
     version: {
         version: ''

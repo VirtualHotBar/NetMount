@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core"
 import { NMConfig, OSInfo } from "../type/config"
-import { randomString } from "../utils/utils"
+import { mergeObjects, randomString } from "../utils/utils"
 
 const roConfig = {
     url: {
@@ -65,6 +65,9 @@ let nmConfig: NMConfig = {
     settings: {
         themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex],
         startHide: false,
+        path:{
+            cacheDir:"C:/TEST-TEMP"
+        }
     },
     framework: {
         rclone: {
@@ -83,8 +86,10 @@ const setNmConfig = (config: NMConfig) => {
 }
 
 const readNmConfig = async () => {
+    
     await invoke('get_config').then(configData => {
-        setNmConfig({ ...nmConfig, ...(configData as NMConfig) })
+        
+        setNmConfig(mergeObjects(nmConfig, configData as NMConfig))
     }).catch(err => {
         console.log(err);
     })

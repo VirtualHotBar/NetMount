@@ -44,7 +44,7 @@
     "error": "错误",
     "success": "成功",
     "dev_tips": "正在开发，敬请期待",
-    "mount_the_storage_to_download_files":"挂载存储以下载文件",
+    "mount_the_storage_to_download_files": "挂载存储以下载文件",
     "confirm_delete_question": "确定要删除吗？",
     "dir": "目录",
     "create_directory": "创建目录",
@@ -210,7 +210,7 @@
     "transmission_overview": "传输概览",
     "view_more": "详细",
     "technology_stack": "技术栈",
-    "show_all":"显示全部",
+    "show_all": "显示全部",
     "about_text": "由独立开发者 VirtualHotBar 开发并发布",
     "licence": "许可证",
     "error_tips": "请尝试重启程序，并记录控制台错误信息向开发者反馈",
@@ -318,7 +318,7 @@
     "custom_crack_ua": "自定义UA",
     "custom_host": "自定义主机",
     "share_pwd": "分享密码",
-    "cookie":"Cookie",
+    "cookie": "Cookie",
     "cookies": "Cookies",
     "remove_bucket_acl": "移除桶ACL",
     "add_filename_to_dispname": "添加文件名到dispname",
@@ -550,12 +550,14 @@
     "storage.NeteaseMusic": "网易云音乐",
     "storage.Lark": "Lark Drive",
     "storage.ThunderX": "迅雷X",
-    "storage.ThunderXExpert":"迅雷X专家版",
+    "storage.ThunderXExpert": "迅雷X专家版",
     "description.lark": "Lark Drive允许您随时随地在任何设备上保存和管理云存储中的所有内容。",
-    "description.neteasemusic":"网易云音乐是一款专注于发现与分享的音乐产品。",
+    "description.neteasemusic": "网易云音乐是一款专注于发现与分享的音乐产品。",
     "description.thunderx": "迅雷X",
     "description.thunderxexpert": "迅雷X专家版",
-
     "restartself_to_take_effect": "重启软件以使更改生效",
-    "unable_to_obtain_transmission_speed":"当前可能无法获取具体传输速度，但传输仍在进行。"
+    "unable_to_obtain_transmission_speed": "当前可能无法获取具体传输速度，但传输仍在进行。",
+    
+    "temp_path": "临时路径",
+    "cache_path": "缓存路径"
 }

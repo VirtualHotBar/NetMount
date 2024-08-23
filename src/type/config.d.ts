@@ -13,7 +13,10 @@ interface NMConfig {
     settings: {
         themeMode: 'dark' | 'light' | 'auto' | string,
         startHide: boolean,
-        language?: string
+        language?: string,
+        path: {
+            cacheDir:string
+        }
     },
     notice?: Notice,
     framework: {

@@ -2,6 +2,7 @@ import * as fs from "@tauri-apps/plugin-fs";
 import * as shell from "@tauri-apps/plugin-shell";
 import { runCmd } from "./tauri/cmd";
 import { invoke } from "@tauri-apps/api/core";
+import { osInfo } from "../services/config";
 
 export function isEmptyObject(back: any): boolean {
     return Object.keys(back).length === 0 && back.constructor === Object;
@@ -186,6 +187,27 @@ export function formatPath(path: string, isWindows: boolean = false) {
     return path
 }
 
+export function mergeObjects<T>(target: T, source: Partial<T>): T {
+    for (const key in source) {
+      if (source.hasOwnProperty(key)) {
+        const sourceValue = source[key];
+        const targetValue = target[key];
+  
+        if (typeof sourceValue === 'object' && !Array.isArray(sourceValue) && sourceValue !== null) {
+          if (typeof targetValue === 'object' && !Array.isArray(targetValue) && targetValue !== null) {
+            target[key] = mergeObjects(targetValue, sourceValue);
+          } else {
+            target[key] = sourceValue as T[Extract<keyof T, string>];
+          }
+        } else {
+          // 如果不是对象，则直接覆盖
+          target[key] = sourceValue as T[Extract<keyof T, string>];
+        }
+      }
+    }
+    return target;
+  }
+  
 export async function restartSelf() {
     await invoke('restart_self')
 }

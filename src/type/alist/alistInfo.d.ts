@@ -16,6 +16,7 @@ interface AlistInfo {
         scheme?: {
             http_port?: number;
         };
+        temp_dir?: string;
     };
     version:{
         version: string;
