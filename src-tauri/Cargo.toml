@@ -48,6 +48,8 @@ tauri-plugin-fs = "2.0.0-rc.0"
 tauri-plugin-process = "2.0.0-rc.0"
 tauri-plugin-autostart = "2.0.0-rc.0"
 tauri-plugin-single-instance = "2.0.0-rc.0"
+tauri-plugin-dialog = "2.0.0-rc.0"
+
 [target.'cfg(windows)'.dependencies]
 winreg = "0.10.1"
 winapi = "0.3"
