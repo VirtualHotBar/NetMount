@@ -195,6 +195,7 @@
     "fs:default",
     "shell:default",
     "process:default",
-    "os:default"
+    "os:default",
+    "dialog:allow-open"
   ]
 }

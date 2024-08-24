@@ -559,5 +559,9 @@
     "unable_to_obtain_transmission_speed": "当前可能无法获取具体传输速度，但传输仍在进行。",
     
     "temp_path": "临时路径",
-    "cache_path": "缓存路径"
+    "cache_path": "缓存路径",
+    "please_select_cache_dir": "请选择缓存目录",
+    "select":"选择",
+    "ask_restartself":"是否重启软件？",
+    "after_changing_the_cache_directory_tips":"更改缓存目录后，请手动清理旧缓存目录，重启软件以生效。"
 }

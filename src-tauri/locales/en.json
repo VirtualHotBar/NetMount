@@ -490,5 +490,9 @@
     "unable_to_obtain_transmission_speed":"The specific transmission speed may not be available at present, but the transmission is still in progress.",
 
     "temp_path":"Temporary path",
-    "cache_path":"Cache path"
+    "cache_path":"Cache path",
+    "please_select_cache_dir":"Please select a cache directory",
+    "select":"Select",
+    "ask_restartself":"Do you want to restart the software?",
+    "after_changing_the_cache_directory_tips":"After changing the cache directory, please manually clear the old cache directory and restart the software for it to take effect."
 }

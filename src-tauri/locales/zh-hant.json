@@ -559,5 +559,9 @@
     "unable_to_obtain_transmission_speed":"當前可能無法獲取具體傳送速率，但傳輸仍在進行。",
 
     "temp_path":"臨時路徑",
-    "cache_path":"緩存路徑"
+    "cache_path":"緩存路徑",
+    "please_select_cache_dir":"請選擇緩存路徑",
+    "select":"選擇",
+    "ask_restartself":"是否重啓軟件？",
+    "after_changing_the_cache_directory_tips":"更改緩存目錄後，請手動清理舊緩存目錄，重啓軟件以生效。"
 }

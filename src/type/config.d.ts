@@ -15,7 +15,7 @@ interface NMConfig {
         startHide: boolean,
         language?: string,
         path: {
-            cacheDir:string
+            cacheDir?:string
         }
     },
     notice?: Notice,

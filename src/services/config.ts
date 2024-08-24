@@ -65,8 +65,9 @@ let nmConfig: NMConfig = {
     settings: {
         themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex],
         startHide: false,
-        path:{
-            cacheDir:"C:/TEST-TEMP"
+        language: undefined,
+        path: {
+            cacheDir: undefined
         }
     },
     framework: {
@@ -86,9 +87,9 @@ const setNmConfig = (config: NMConfig) => {
 }
 
 const readNmConfig = async () => {
-    
+
     await invoke('get_config').then(configData => {
-        
+
         setNmConfig(mergeObjects(nmConfig, configData as NMConfig))
     }).catch(err => {
         console.log(err);

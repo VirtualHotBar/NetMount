@@ -9,9 +9,12 @@ import { getVersion } from '@tauri-apps/api/app';
 import * as shell from '@tauri-apps/plugin-shell';
 import { rcloneInfo } from '../../services/rclone';
 import { setLocalized } from '../../controller/language/localized';
-import { openUrlInBrowser, set_devtools_state } from '../../utils/utils';
+import { formatPath, openUrlInBrowser, restartSelf, set_devtools_state } from '../../utils/utils';
 import { showLog } from '../other/modal';
 import { alistInfo } from '../../services/alist';
+import * as dialog from '@tauri-apps/plugin-dialog';
+import { exit } from '../../controller/main';
+
 const CollapseItem = Collapse.Item;
 const FormItem = Form.Item;
 const Row = Grid.Row;
@@ -90,16 +93,31 @@ export default function Setting_page() {
               }} />
             </FormItem>
             <FormItem label={t('cache_path')}>
-              <Input value={nmConfig.settings.path.cacheDir} onChange={(value) => {
-                nmConfig.settings.path.cacheDir = value
-                forceUpdate()
-              }
-              } onClick={
-                async () => {
+              <Input.Group compact>
+                <Input style={{ width: 'calc(100% - 4rem)' }} value={nmConfig.settings.path.cacheDir} />
+                <Button style={{ width: '4rem' }} onClick={async () => {
+                  let dirPath = await dialog.open({
+                    title: t('please_select_cache_dir'),
+                    multiple: false,
+                    directory: true,
+                    defaultPath: nmConfig.settings.path.cacheDir
+                  });
+                  dirPath = dirPath ? formatPath(dirPath, osInfo.platform === 'windows') : dirPath
+                  if (dirPath && dirPath !== nmConfig.settings.path.cacheDir) {
+                    nmConfig.settings.path.cacheDir = dirPath
+                    forceUpdate()
 
-                  
-                }
-              }/>
+                    Modal.confirm({
+                      title: t('ask_restartself'),
+                      content: t('after_changing_the_cache_directory_tips'),
+                      onOk: () => {
+                        exit(true)
+                      },
+                    });
+                  }
+                }}>{t('select')}</Button>
+              </Input.Group>
+
             </FormItem>
 
             <div style={{ width: '100%', textAlign: 'right' }}><Button type='primary' onClick={async () => {
