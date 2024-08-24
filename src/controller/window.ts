@@ -2,9 +2,9 @@ import { listen } from "@tauri-apps/api/event";
 import { exit } from "./main";
 import { saveNmConfig } from "../services/config";
 import { webviewWindow } from "@tauri-apps/api";
-import { getCurrent } from "@tauri-apps/api/webview";
+import { getCurrentWebview  } from "@tauri-apps/api/webview";
 
-export const window = webviewWindow.getCurrent()
+export const window = webviewWindow.getCurrentWebviewWindow()
 
 function listenWindow() {
     window.listen('tauri://close-requested', () => {
