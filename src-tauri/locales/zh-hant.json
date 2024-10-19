@@ -287,7 +287,7 @@
     "is_sharepoint": "是否為SharePoint",
     "internal_upload": "內部上傳",
     "site_id": "網站ID",
-    "meta_password": "原資料密碼",
+    "meta_password": "元信息密碼",
     "share_name": "分享名稱",
     "account": "帳號",
     "bearer_token": "Bearer Token",

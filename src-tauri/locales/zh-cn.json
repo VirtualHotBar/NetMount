@@ -287,7 +287,7 @@
     "is_sharepoint": "是否为SharePoint",
     "internal_upload": "内部上传",
     "site_id": "站点ID",
-    "meta_password": "原数据密码",
+    "meta_password": "元信息密码",
     "share_name": "分享名称",
     "account": "账号",
     "bearer_token": "Bearer Token",
