@@ -14,10 +14,13 @@
   <a href="https://blog.hotpe.top">博客</a> 
 </p>
 
+
 ## 发布版
 在仓库的 [Releases](https://github.com/VirtualHotBar/NetMount/releases) 页面或[官方站点](https://www.netmount.cn/download)可以下载到最新发布的版本。
 
 ## 开发
+招募本项目的维护者，如果你觉得本项目有价值或对你有帮助，请一起完善本项目。
+
 技术栈：Rust + TypeScript + Tauri + React + Vite
 
 开发环境:Nodejs(包管理PNPM) + Rust
