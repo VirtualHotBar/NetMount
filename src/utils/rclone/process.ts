@@ -3,7 +3,7 @@ import { Command } from "@tauri-apps/plugin-shell";
 import { rcloneInfo } from "../../services/rclone";
 import { rclone_api_noop, rclone_api_post } from "./request";
 import { formatPath, getAvailablePorts, randomString, sleep } from "../utils";
-import { alistInfo } from "../../services/alist";
+import { openlistInfo } from "../../services/openlist";
 import { delStorage } from "../../controller/storage/storage";
 import { nmConfig, osInfo, roConfig } from "../../services/config";
 
@@ -68,7 +68,7 @@ async function startRclone() {
 }
 
 async function stopRclone() {
-    await delStorage(alistInfo.markInRclone)
+    await delStorage(openlistInfo.markInRclone)
     await rclone_api_post('/core/quit')
     if (rcloneInfo.process.child) {
         await rcloneInfo.process.child.kill()
