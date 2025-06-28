@@ -314,7 +314,7 @@ where
 {
     let mut url = url.to_owned();
     if url.to_owned().contains("//github.com") {
-        url = format!("https://mirror.ghproxy.com/{}", url) //github镜像
+        url = format!("https://gh-proxy.com/{}", url) //github镜像
     }
 
     let response = Client::new()
