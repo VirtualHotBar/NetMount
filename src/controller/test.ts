@@ -14,9 +14,9 @@ import { storageInfoList, updateStorageInfoList } from "./storage/allList";
 import { rcloneInfo } from "../services/rclone";
 import { openlist_api_get, } from "../utils/openlist/request";
 import { openlistInfo } from "../services/openlist";
-import { addAlistInRclone } from "../utils/openlist/openlist";
+import { addOpenlistInRclone } from "../utils/openlist/openlist";
 import { restartRclone } from "../utils/rclone/process";
-import { restartAlist } from "../utils/openlist/process";
+import { restartOpenlist } from "../utils/openlist/process";
 import { exit } from "./main";
 
 export async function Test() {
@@ -43,11 +43,11 @@ export async function Test() {
 
     //console.log(storageInfoList);
     
-    //await addAlistInRclone()
+    //await addOpenlistInRclone()
 
-    //await restartAlist()
+    //await restartOpenlist()
     //await restartRclone()
-    //console.log(await getAlistToken());
+    //console.log(await getOpenlistToken());
 
 
     /*     let data = await invoke('read_config_file') as any;

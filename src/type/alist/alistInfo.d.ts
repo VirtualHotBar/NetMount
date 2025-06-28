@@ -1,6 +1,6 @@
 import { Child, Command } from "@tauri-apps/plugin-shell";
 
-interface AlistInfo {
+interface OpenlistInfo {
     markInRclone:string;
     endpoint:{
         url: string,
@@ -28,4 +28,4 @@ interface AlistInfo {
     },
 }
 
-export  { AlistInfo };
+export  { OpenlistInfo };

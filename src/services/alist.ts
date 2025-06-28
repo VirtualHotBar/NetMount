@@ -1,10 +1,10 @@
 import { Child, Command } from "@tauri-apps/plugin-shell";
 import { formatPath, randomString } from "../utils/utils";
-import { AlistInfo } from "../type/openlist/openlistInfo";
+import { OpenlistInfo } from "../type/openlist/openlistInfo";
 import { nmConfig, osInfo } from "./config";
 
 
-let openlistInfo: AlistInfo = {
+let openlistInfo: OpenlistInfo = {
     markInRclone: '.netmount-openlist.',
     endpoint: {
         url: '',

@@ -5,7 +5,7 @@ import { formatPath, getAvailablePorts, randomString, sleep } from "../utils";
 import { openlistInfo } from "../../services/openlist";
 import { homeDir } from "@tauri-apps/api/path";
 import { nmConfig, osInfo, roConfig } from "../../services/config";
-import { getAlistToken, modifyAlistConfig, setAlistPass } from "./openlist";
+import { getOpenlistToken, modifyOpenlistConfig, setOpenlistPass } from "./openlist";
 import { openlist_api_ping } from "./request";
 
 const openlistDataDir = () => {
@@ -20,7 +20,7 @@ const addParams = (): string[] => {
 
 
 
-async function startAlist() {
+async function startOpenlist() {
     //设置默认临时(缓存)目录
     openlistInfo.openlistConfig.temp_dir = formatPath(nmConfig.settings.path.cacheDir + '/openlist/', osInfo.osType === "windows")
     
@@ -28,10 +28,10 @@ async function startAlist() {
     openlistInfo.openlistConfig.scheme!.http_port != (await getAvailablePorts(2))[1]
 
     openlistInfo.endpoint.url = 'http://localhost:' + (openlistInfo.openlistConfig.scheme?.http_port || 5573)
-    await setAlistPass(nmConfig.framework.openlist.password)
+    await setOpenlistPass(nmConfig.framework.openlist.password)
 
-    openlistInfo.endpoint.auth.token = await getAlistToken()
-    await modifyAlistConfig()
+    openlistInfo.endpoint.auth.token = await getOpenlistToken()
+    await modifyOpenlistConfig()
     let args: string[] = [
         'server',
         ...addParams()
@@ -58,13 +58,13 @@ async function startAlist() {
     }
 }
 
-async function stopAlist() {
+async function stopOpenlist() {
     openlistInfo.process.child && await openlistInfo.process.child.kill()
 }
 
-async function restartAlist() {
-    await stopAlist()
-    await startAlist()
+async function restartOpenlist() {
+    await stopOpenlist()
+    await startOpenlist()
 }
 
-export { addParams, startAlist, stopAlist, openlistDataDir, restartAlist }
+export { addParams, startOpenlist, stopOpenlist, openlistDataDir, restartOpenlist }

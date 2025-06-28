@@ -16,11 +16,11 @@ import { setThemeMode } from "./setting/setting"
 import { setLocalized } from "./language/localized"
 import { checkNotice } from "./update/notice"
 import { updateStorageInfoList } from "./storage/allList"
-import { startAlist, stopAlist } from "../utils/openlist/process"
+import { startOpenlist, stopOpenlist } from "../utils/openlist/process"
 import { homeDir } from "@tauri-apps/api/path"
 import { openlist_api_get } from "../utils/openlist/request"
 import { openlistInfo } from "../services/openlist"
-import { addAlistInRclone } from "../utils/openlist/openlist"
+import { addOpenlistInRclone } from "../utils/openlist/openlist"
 import { Test } from "./test"
 import { Notification } from "@arco-design/web-react"
 
@@ -60,7 +60,7 @@ async function init(setStartStr: Function) {
     setStartStr(t('start_framework'))
 
     await startRclone()
-    await startAlist()
+    await startOpenlist()
 
     setStartStr(t('get_notice'))
     await checkNotice()
@@ -68,11 +68,11 @@ async function init(setStartStr: Function) {
     startUpdateCont()
 
     await reupRcloneVersion()
-    await reupAlistVersion()
+    await reupOpenlistVersion()
     await updateStorageInfoList()
     await reupStorage()
-    await addAlistInRclone()
-    //await reupStorage()//addAlistInRclone中结尾有reupStorage所以注释
+    await addOpenlistInRclone()
+    //await reupStorage()//addOpenlistInRclone中结尾有reupStorage所以注释
     await reupMount()
 
     //自动挂载
@@ -99,11 +99,11 @@ async function reupRcloneVersion() {
     rcloneInfo.version = await rclone_api_post('/core/version',)
 }
 
-async function reupAlistVersion() {
+async function reupOpenlistVersion() {
     let version = await openlist_api_get('/api/admin/setting/get', { key: 'version' })
     if (version.code !== 200) {
         await sleep(500)
-        await reupAlistVersion()
+        await reupOpenlistVersion()
         return
     }
     openlistInfo.version.version = version.data.value || ''
@@ -116,7 +116,7 @@ async function exit(isRestartSelf: boolean = false) {
     try {
         await saveNmConfig()
         await stopRclone()
-        await stopAlist()
+        await stopOpenlist()
         await saveNmConfig()
     } finally {
         if (isRestartSelf) {

@@ -133,7 +133,7 @@ export default function Setting_page() {
             rcloneInfo.process.log && showLog(modal, rcloneInfo.process.log)
           }}>{t('log')}</Link>): {rcloneInfo.version.version}
           <br />
-          <Link onClick={() => { shell.open(roConfig.url.openlist) }}>Alist</Link>(<Link onClick={() => {
+          <Link onClick={() => { shell.open(roConfig.url.openlist) }}>Openlist</Link>(<Link onClick={() => {
             openlistInfo.process.log && showLog(modal, openlistInfo.process.log)
           }}>{t('log')}</Link>): {openlistInfo.version.version}
           <br />

@@ -1,6 +1,6 @@
 import { FilterType, ParamItemOptionType, StorageInfoType, StorageParamItemType } from "../../type/controller/storage/info";
 import { rclone_api_post } from "../../utils/rclone/request";
-import { updateAlistStorageInfoList } from "./framework/openlist/providers";
+import { updateOpenlistStorageInfoList } from "./framework/openlist/providers";
 import { updateRcloneStorageInfoList } from "./framework/rclone/providers";
 
 let storageInfoList: StorageInfoType[] = []
@@ -8,7 +8,7 @@ let storageInfoList: StorageInfoType[] = []
 async function updateStorageInfoList() {
     storageInfoList = []
     storageInfoList.push(
-        ...(await updateAlistStorageInfoList()),
+        ...(await updateOpenlistStorageInfoList()),
         ...(await updateRcloneStorageInfoList()),)
 
     //移除不需要的存储

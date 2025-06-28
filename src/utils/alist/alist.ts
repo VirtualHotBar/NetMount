@@ -8,27 +8,27 @@ import { nmConfig } from "../../services/config"
 
 
 
-async function getAlistToken() {
+async function getOpenlistToken() {
     const resultStr = await runCmd('openlist', ['admin', 'token', ...addParams()])
     const mark = 'Admin token:'
     return resultStr.substring(resultStr.indexOf(mark) + mark.length).split(' ').join('')
 }
 
-async function setAlistPass(pass:string){
+async function setOpenlistPass(pass:string){
     const resultStr = await runCmd('openlist', ['admin', 'set',  pass,...addParams()])
     console.log(resultStr);
 }
 
-async function modifyAlistConfig(rewriteData:any=openlistInfo.openlistConfig){
+async function modifyOpenlistConfig(rewriteData:any=openlistInfo.openlistConfig){
     console.log(rewriteData);
     
      const path = openlistDataDir()+'config.json'
-     const oldAlistConfig =await invoke('read_json_file',{path}) as object
-     const newAlistConfig = {...oldAlistConfig, ...rewriteData}
-     await invoke('write_json_file',{configData:newAlistConfig,path:path})
+     const oldOpenlistConfig =await invoke('read_json_file',{path}) as object
+     const newOpenlistConfig = {...oldOpenlistConfig, ...rewriteData}
+     await invoke('write_json_file',{configData:newOpenlistConfig,path:path})
 }
 
-async function addAlistInRclone(){
+async function addOpenlistInRclone(){
     //await delStorage(openlistInfo.markInRclone)
     await createStorage(openlistInfo.markInRclone,'webdav',{
         'url':openlistInfo.endpoint.url+'/dav',
@@ -39,4 +39,4 @@ async function addAlistInRclone(){
 }
 
 
-export{ getAlistToken,modifyAlistConfig,setAlistPass,addAlistInRclone}
+export{ getOpenlistToken,modifyOpenlistConfig,setOpenlistPass,addOpenlistInRclone}

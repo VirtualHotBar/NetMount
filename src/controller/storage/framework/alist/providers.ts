@@ -3,7 +3,7 @@ import { openlist_api_get } from "../../../../utils/openlist/request";
 import { rclone_api_post } from "../../../../utils/rclone/request";
 import { storageInfoList } from "../../allList";
 
-async function updateAlistStorageInfoList() {
+async function updateOpenlistStorageInfoList() {
     const openlistProviders = (await openlist_api_get('/api/admin/driver/list')).data//openlist driver list
     const openlistStorageInfoList: StorageInfoType[] = []
 
@@ -93,4 +93,4 @@ async function updateAlistStorageInfoList() {
 }
 
 
-export { updateAlistStorageInfoList }
+export { updateOpenlistStorageInfoList }
