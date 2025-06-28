@@ -7,7 +7,7 @@ const roConfig = {
         website: 'https://www.netmount.cn',
         docs: 'https://api.hotpe.top/API/NetMount/GoLink?id=docs&path=',
         rclone: 'https://github.com/rclone/rclone',
-        alist: 'https://github.com/alist-org/alist',
+        openlist: 'https://github.com/OpenListTeam/OpenList',
         to: (id: string, path: string = '') => { return 'https://api.hotpe.top/API/NetMount/GoLink?id=' + id + '&path=' + path },
         vhbBlog: 'https://blog.hotpe.top'
 
@@ -75,7 +75,7 @@ let nmConfig: NMConfig = {
             user: randomString(32),
             password: randomString(128),
         },
-        alist: {
+        openlist: {
             user: 'admin',
             password: randomString(16),//process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),!!!!!密码长度为32时rclone会报错
         }
