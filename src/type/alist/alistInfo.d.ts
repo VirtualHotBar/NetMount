@@ -11,7 +11,7 @@ interface AlistInfo {
             token: string;
         };
     };
-    alistConfig: {//https://alist.nn.ci/zh/config/configuration.html
+    openlistConfig: {//https://docs.openlist.team/zh/config/configuration.html
         force?: boolean;
         scheme?: {
             http_port?: number;
