@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core"
 import runCmd from "../tauri/cmd"
-import { addParams, alistDataDir } from "./process"
-import { alistInfo } from "../../services/alist"
+import { addParams, openlistDataDir } from "./process"
+import { openlistInfo } from "../../services/openlist"
 import { createStorage } from "../../controller/storage/create"
 import { delStorage } from "../../controller/storage/storage"
 import { nmConfig } from "../../services/config"
@@ -9,32 +9,32 @@ import { nmConfig } from "../../services/config"
 
 
 async function getAlistToken() {
-    const resultStr = await runCmd('alist', ['admin', 'token', ...addParams()])
+    const resultStr = await runCmd('openlist', ['admin', 'token', ...addParams()])
     const mark = 'Admin token:'
     return resultStr.substring(resultStr.indexOf(mark) + mark.length).split(' ').join('')
 }
 
 async function setAlistPass(pass:string){
-    const resultStr = await runCmd('alist', ['admin', 'set',  pass,...addParams()])
+    const resultStr = await runCmd('openlist', ['admin', 'set',  pass,...addParams()])
     console.log(resultStr);
 }
 
-async function modifyAlistConfig(rewriteData:any=alistInfo.alistConfig){
+async function modifyAlistConfig(rewriteData:any=openlistInfo.openlistConfig){
     console.log(rewriteData);
     
-     const path = alistDataDir()+'config.json'
+     const path = openlistDataDir()+'config.json'
      const oldAlistConfig =await invoke('read_json_file',{path}) as object
      const newAlistConfig = {...oldAlistConfig, ...rewriteData}
      await invoke('write_json_file',{configData:newAlistConfig,path:path})
 }
 
 async function addAlistInRclone(){
-    //await delStorage(alistInfo.markInRclone)
-    await createStorage(alistInfo.markInRclone,'webdav',{
-        'url':alistInfo.endpoint.url+'/dav',
+    //await delStorage(openlistInfo.markInRclone)
+    await createStorage(openlistInfo.markInRclone,'webdav',{
+        'url':openlistInfo.endpoint.url+'/dav',
         'vendor':'other',
-        'user':nmConfig.framework.alist.user,
-        'pass':nmConfig.framework.alist.password,
+        'user':nmConfig.framework.openlist.user,
+        'pass':nmConfig.framework.openlist.password,
     })
 }
 

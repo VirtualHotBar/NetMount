@@ -45,14 +45,14 @@ interface RcloneVersion {
 }
 
 interface StorageList {
-    framework: 'rclone' | 'alist';//框架
+    framework: 'rclone' | 'openlist';//框架
     name: string,
     type: 'webdav' | string,
     space?: StorageSpace,
     other?: {
-        alist?: { 
+        openlist?: { 
             id?: number ,
-            driverPath?:string//alist存储的挂载路径
+            driverPath?:string//openlist存储的挂载路径
             status?:'work'|string
         }
     },

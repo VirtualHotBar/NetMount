@@ -1,14 +1,14 @@
 import { FilterType, ParamItemOptionType, StorageInfoType, StorageParamItemType } from "../../../../type/controller/storage/info";
-import { alist_api_get } from "../../../../utils/alist/request";
+import { openlist_api_get } from "../../../../utils/openlist/request";
 import { rclone_api_post } from "../../../../utils/rclone/request";
 import { storageInfoList } from "../../allList";
 
 async function updateAlistStorageInfoList() {
-    const alistProviders = (await alist_api_get('/api/admin/driver/list')).data//alist driver list
-    const alistStorageInfoList: StorageInfoType[] = []
+    const openlistProviders = (await openlist_api_get('/api/admin/driver/list')).data//openlist driver list
+    const openlistStorageInfoList: StorageInfoType[] = []
 
-    for (const key in alistProviders) {
-        const provider = alistProviders[key]
+    for (const key in openlistProviders) {
+        const provider = openlistProviders[key]
         const getStorageParams = (options: any[], prefix: string = '') => {
             let storageParams: StorageParamItemType[] = []
             for (const option of options) {
@@ -70,16 +70,16 @@ async function updateAlistStorageInfoList() {
             return storageParams
         }
 
-        alistStorageInfoList.push({
+        openlistStorageInfoList.push({
             label: 'storage.' + provider.config.name,
             type: key,
             description: 'description.' + key.toLocaleLowerCase(),
-            framework: 'alist',
+            framework: 'openlist',
             defaultParams: {
                 name: provider.config.name + '_new',
                 parameters: getStorageParams(provider.common).concat(getStorageParams(provider.additional, 'addition.')),
                 exParameters: {
-                    alist: {
+                    openlist: {
                         supplement: [],
                     }
                 }
@@ -89,7 +89,7 @@ async function updateAlistStorageInfoList() {
         //console.log(provider.config);
     }
 
-    return alistStorageInfoList
+    return openlistStorageInfoList
 }
 
 

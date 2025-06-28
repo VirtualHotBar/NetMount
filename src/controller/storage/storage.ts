@@ -3,9 +3,9 @@ import { rcloneInfo } from "../../services/rclone"
 import { FileInfo, StorageList, StorageSpace } from "../../type/rclone/rcloneInfo"
 import { ParametersType } from "../../type/defaults"
 import { getRcloneApiHeaders, rclone_api_post } from "../../utils/rclone/request"
-import { alist_api_get, alist_api_post } from "../../utils/alist/request"
+import { openlist_api_get, openlist_api_post } from "../../utils/openlist/request"
 import { formatPath } from "../../utils/utils"
-import { alistInfo } from "../../services/alist"
+import { openlistInfo } from "../../services/openlist"
 import { RequestOptions } from "@arco-design/web-react/es/Upload"
 import { delMountStorage, getMountStorage, isMounted, unmountStorage } from "./mount/mount"
 import { nmConfig } from "../../services/config"
@@ -24,19 +24,19 @@ async function reupStorage() {
             name: storageName,
             type: dump[storageName].type,
             space: await getStorageSpace(storageName),
-            hide: storageName.includes(alistInfo.markInRclone)
+            hide: storageName.includes(openlistInfo.markInRclone)
         })
     }
 
-    //alist
-    const list = (await alist_api_get('/api/admin/storage/list')).data.content as any[]
+    //openlist
+    const list = (await openlist_api_get('/api/admin/storage/list')).data.content as any[]
     for (const storage of list) {
         storageListTemp.push({
-            framework: 'alist',
+            framework: 'openlist',
             name: storage.mount_path.substring(1),
             type: storage.driver,
             other: {
-                alist: {
+                openlist: {
                     id: storage.id,
                     driverPath: storage.mount_path,
                     status: storage.status
@@ -91,8 +91,8 @@ async function delStorage(name: string) {
                 name: storage.name
             })
             break;
-        case 'alist':
-            await alist_api_post('/api/admin/storage/delete', undefined, { id: storage.other?.alist?.id })
+        case 'openlist':
+            await openlist_api_post('/api/admin/storage/delete', undefined, { id: storage.other?.openlist?.id })
             break;
     }
     reupStorage()
@@ -108,10 +108,10 @@ async function getStorageParams(name: string): Promise<ParametersType> {
                 '/config/get', {
                 name: storage?.name
             })
-        case 'alist':
-            let params = (await alist_api_get(
+        case 'openlist':
+            let params = (await openlist_api_get(
                 '/api/admin/storage/get', {
-                id: storage?.other?.alist?.id
+                id: storage?.other?.openlist?.id
             })).data;
             params.addition = JSON.parse(params.addition);
             return params
@@ -128,15 +128,15 @@ const convertStoragePath = (storageName: string, path?: string, isDir?: boolean,
     switch (storage?.framework) {
         case 'rclone':
             return (noStorageName ? '' : storageName + ':') + (onlyStorageName ? '' : (path ? formatPathRclone(path, isDir) : ''))
-        case 'alist':
-            return (noStorageName ? '' : alistInfo.markInRclone + ':') + (onlyStorageName ? '' : (path ? formatPathRclone(storageName + '/' + path, isDir) : storageName))
+        case 'openlist':
+            return (noStorageName ? '' : openlistInfo.markInRclone + ':') + (onlyStorageName ? '' : (path ? formatPathRclone(storageName + '/' + path, isDir) : storageName))
     }
 }
 
 
 function searchStorage(keyword: string) {
     for (const storage of rcloneInfo.storageList) {
-        if (storage.name === keyword || (storage.framework === 'alist' && storage.other?.alist?.driverPath === keyword)) {
+        if (storage.name === keyword || (storage.framework === 'openlist' && storage.other?.openlist?.driverPath === keyword)) {
             return storage;
         }
     }
@@ -178,7 +178,7 @@ async function getFileList(storageName: string, path: string): Promise<FileInfo[
     if (backData && backData.list) {
         fileList = []
         for (const file of backData.list) {
-            let filePath = storage?.framework === 'rclone' ? formatPathRclone(file.Path, false) : convertStoragePath(alistInfo.markInRclone, file.Path, undefined, true)?.substring(storageName.length + 1)!
+            let filePath = storage?.framework === 'rclone' ? formatPathRclone(file.Path, false) : convertStoragePath(openlistInfo.markInRclone, file.Path, undefined, true)?.substring(storageName.length + 1)!
 
             fileList.push({
                 path: filePath,

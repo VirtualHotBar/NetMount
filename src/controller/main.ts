@@ -16,11 +16,11 @@ import { setThemeMode } from "./setting/setting"
 import { setLocalized } from "./language/localized"
 import { checkNotice } from "./update/notice"
 import { updateStorageInfoList } from "./storage/allList"
-import { startAlist, stopAlist } from "../utils/alist/process"
+import { startAlist, stopAlist } from "../utils/openlist/process"
 import { homeDir } from "@tauri-apps/api/path"
-import { alist_api_get } from "../utils/alist/request"
-import { alistInfo } from "../services/alist"
-import { addAlistInRclone } from "../utils/alist/alist"
+import { openlist_api_get } from "../utils/openlist/request"
+import { openlistInfo } from "../services/openlist"
+import { addAlistInRclone } from "../utils/openlist/openlist"
 import { Test } from "./test"
 import { Notification } from "@arco-design/web-react"
 
@@ -100,13 +100,13 @@ async function reupRcloneVersion() {
 }
 
 async function reupAlistVersion() {
-    let version = await alist_api_get('/api/admin/setting/get', { key: 'version' })
+    let version = await openlist_api_get('/api/admin/setting/get', { key: 'version' })
     if (version.code !== 200) {
         await sleep(500)
         await reupAlistVersion()
         return
     }
-    alistInfo.version.version = version.data.value || ''
+    openlistInfo.version.version = version.data.value || ''
 
 }
 

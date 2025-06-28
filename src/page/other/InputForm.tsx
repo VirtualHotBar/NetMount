@@ -8,7 +8,7 @@ import { t } from "i18next";
 import { IconQuestionCircle } from "@arco-design/web-react/icon";
 import { getProperties } from "../../utils/utils";
 import { convertStoragePath, filterHideStorage, formatPathRclone, searchStorage } from "../../controller/storage/storage";
-import { alistInfo } from "../../services/alist";
+import { openlistInfo } from "../../services/openlist";
 const Row = Grid.Row;
 const Col = Grid.Col;
 const FormItem = Form.Item;
@@ -82,7 +82,7 @@ function filter(filters: FilterType[], formValuesResult: ParametersType) {
 
 function StorageAndPathInputer({ value, onChange }: { value?: string, onChange?(value: string): void }) {
     if (value == undefined) value = '';
-    if (value.includes(alistInfo.markInRclone)) {
+    if (value.includes(openlistInfo.markInRclone)) {
         let tempPath = formatPathRclone(value.substring(value.indexOf(':') + 1));
         if (tempPath.includes('/')) {
             value = tempPath.replace('/', ':')

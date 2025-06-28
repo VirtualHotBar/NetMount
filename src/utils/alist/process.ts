@@ -2,19 +2,19 @@ import { invoke } from "@tauri-apps/api/core";
 import { Command } from "@tauri-apps/plugin-shell";
 import { rcloneInfo } from "../../services/rclone";
 import { formatPath, getAvailablePorts, randomString, sleep } from "../utils";
-import { alistInfo } from "../../services/alist";
+import { openlistInfo } from "../../services/openlist";
 import { homeDir } from "@tauri-apps/api/path";
 import { nmConfig, osInfo, roConfig } from "../../services/config";
-import { getAlistToken, modifyAlistConfig, setAlistPass } from "./alist";
-import { alist_api_ping } from "./request";
+import { getAlistToken, modifyAlistConfig, setAlistPass } from "./openlist";
+import { openlist_api_ping } from "./request";
 
-const alistDataDir = () => {
-    return formatPath(roConfig.env.path.homeDir + '/.netmount/alist/', osInfo.osType === "windows")
+const openlistDataDir = () => {
+    return formatPath(roConfig.env.path.homeDir + '/.netmount/openlist/', osInfo.osType === "windows")
 }
 
 const addParams = (): string[] => {
     let params: string[] = []
-    params.push('--data', alistDataDir())
+    params.push('--data', openlistDataDir())
     return params
 }
 
@@ -22,44 +22,44 @@ const addParams = (): string[] => {
 
 async function startAlist() {
     //设置默认临时(缓存)目录
-    alistInfo.alistConfig.temp_dir = formatPath(nmConfig.settings.path.cacheDir + '/alist/', osInfo.osType === "windows")
+    openlistInfo.openlistConfig.temp_dir = formatPath(nmConfig.settings.path.cacheDir + '/openlist/', osInfo.osType === "windows")
     
     //自动分配端口
-    alistInfo.alistConfig.scheme!.http_port != (await getAvailablePorts(2))[1]
+    openlistInfo.openlistConfig.scheme!.http_port != (await getAvailablePorts(2))[1]
 
-    alistInfo.endpoint.url = 'http://localhost:' + (alistInfo.alistConfig.scheme?.http_port || 5573)
-    await setAlistPass(nmConfig.framework.alist.password)
+    openlistInfo.endpoint.url = 'http://localhost:' + (openlistInfo.openlistConfig.scheme?.http_port || 5573)
+    await setAlistPass(nmConfig.framework.openlist.password)
 
-    alistInfo.endpoint.auth.token = await getAlistToken()
+    openlistInfo.endpoint.auth.token = await getAlistToken()
     await modifyAlistConfig()
     let args: string[] = [
         'server',
         ...addParams()
     ];
 
-    alistInfo.process.command = Command.create('alist', args)
+    openlistInfo.process.command = Command.create('openlist', args)
 
-    alistInfo.process.log = ''
+    openlistInfo.process.log = ''
     const addLog = (data: string) => {
-        alistInfo.process.log += data;
+        openlistInfo.process.log += data;
         console.log(data);
     }
 
-    alistInfo.process.command.stdout.on('data', (data: string) => addLog(data))
-    alistInfo.process.command.stderr.on('data', (data: string) => addLog(data))
+    openlistInfo.process.command.stdout.on('data', (data: string) => addLog(data))
+    openlistInfo.process.command.stderr.on('data', (data: string) => addLog(data))
 
-    alistInfo.process.child = await alistInfo.process.command.spawn()
+    openlistInfo.process.child = await openlistInfo.process.command.spawn()
 
     while (true) {
         await sleep(500)
-        if (await alist_api_ping() && alistInfo.process.log.includes('start HTTP server')) {
+        if (await openlist_api_ping() && openlistInfo.process.log.includes('start HTTP server')) {
             break;
         }
     }
 }
 
 async function stopAlist() {
-    alistInfo.process.child && await alistInfo.process.child.kill()
+    openlistInfo.process.child && await openlistInfo.process.child.kill()
 }
 
 async function restartAlist() {
@@ -67,4 +67,4 @@ async function restartAlist() {
     await startAlist()
 }
 
-export { addParams, startAlist, stopAlist, alistDataDir, restartAlist }
+export { addParams, startAlist, stopAlist, openlistDataDir, restartAlist }

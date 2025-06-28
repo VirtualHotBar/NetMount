@@ -94,8 +94,8 @@
         },
         {
           "args": true,
-          "cmd": "res/bin/alist/alist",
-          "name": "alist",
+          "cmd": "res/bin/openlist/openlist",
+          "name": "openlist",
           "sidecar": false
         }
       ]
@@ -135,8 +135,8 @@
         },
         {
           "args": true,
-          "cmd": "res/bin/alist/alist",
-          "name": "alist",
+          "cmd": "res/bin/openlist/openlist",
+          "name": "openlist",
           "sidecar": false
         }
       ]
@@ -176,8 +176,8 @@
         },
         {
           "args": true,
-          "cmd": "res/bin/alist/alist",
-          "name": "alist",
+          "cmd": "res/bin/openlist/openlist",
+          "name": "openlist",
           "sidecar": false
         }
       ]

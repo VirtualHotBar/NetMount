@@ -41,14 +41,14 @@ interface StorageParamsType {
         /* rclone?:{
             
         } */
-        alist?:{
+        openlist?:{
             supplement?: StorageParamItemType[]
         }
     }
 }
 
 interface StorageInfoType {
-    framework: 'rclone'|'alist';//框架
+    framework: 'rclone'|'openlist';//框架
     label: string;//存储名称(显示)
     type: string;//存储类型
     description: string;//存储描述
@@ -58,7 +58,7 @@ interface StorageInfoType {
         rclone?:{
             
         }
-        alist?:{
+        openlist?:{
 
         }
     }

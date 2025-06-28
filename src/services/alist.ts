@@ -1,11 +1,11 @@
 import { Child, Command } from "@tauri-apps/plugin-shell";
 import { formatPath, randomString } from "../utils/utils";
-import { AlistInfo } from "../type/alist/alistInfo";
+import { AlistInfo } from "../type/openlist/openlistInfo";
 import { nmConfig, osInfo } from "./config";
 
 
-let alistInfo: AlistInfo = {
-    markInRclone: '.netmount-alist.',
+let openlistInfo: AlistInfo = {
+    markInRclone: '.netmount-openlist.',
     endpoint: {
         url: '',
         isLocal: true,
@@ -15,7 +15,7 @@ let alistInfo: AlistInfo = {
             token: ''
         }
     },
-    alistConfig: {// 修改默认alist的配置
+    openlistConfig: {// 修改默认openlist的配置
         force: true,
         scheme: {
             http_port: 9751//随机
@@ -28,5 +28,5 @@ let alistInfo: AlistInfo = {
     process: {}
 }
 
-export { alistInfo };
+export { openlistInfo };
 

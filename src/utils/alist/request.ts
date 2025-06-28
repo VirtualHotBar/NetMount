@@ -1,10 +1,10 @@
-import { alistInfo } from "../../services/alist";
+import { openlistInfo } from "../../services/openlist";
 import runCmd from "../tauri/cmd";
 import { addParams } from "./process";
 
-async function alist_api_ping(){
+async function openlist_api_ping(){
     try {
-        return await fetch(alistInfo.endpoint.url+'/ping',{method: 'GET'} ).then((res) =>  res.ok)
+        return await fetch(openlistInfo.endpoint.url+'/ping',{method: 'GET'} ).then((res) =>  res.ok)
     }catch (e) {
         console.log(e)
         return false
@@ -12,7 +12,7 @@ async function alist_api_ping(){
  }
 
 
-async function alist_api_get(path: string, queryData?: object, bodyData?: object) {
+async function openlist_api_get(path: string, queryData?: object, bodyData?: object) {
 
     // 将queryData对象转换为URLSearchParams对象以便于构建查询字符串
     const searchParams = new URLSearchParams();
@@ -23,13 +23,13 @@ async function alist_api_get(path: string, queryData?: object, bodyData?: object
     }
 
     // 将查询参数附加到路径上
-    const fullPath = `${alistInfo.endpoint.url}${path}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    const fullPath = `${openlistInfo.endpoint.url}${path}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
 
     return fetch(fullPath, {
         method: 'GET',
         redirect: 'follow',
         headers: {
-            'Authorization': alistInfo.endpoint.auth.token,
+            'Authorization': openlistInfo.endpoint.auth.token,
         },
         body: bodyData ? JSON.stringify(bodyData) : undefined,
     }).then((res) => {
@@ -38,7 +38,7 @@ async function alist_api_get(path: string, queryData?: object, bodyData?: object
 }
 
 
-function alist_api_post(path: string, bodyData?: object, queryData?: object,) {
+function openlist_api_post(path: string, bodyData?: object, queryData?: object,) {
     // 将queryData对象转换为URLSearchParams对象以便于构建查询字符串
     const searchParams = new URLSearchParams();
     if (queryData) {
@@ -46,13 +46,13 @@ function alist_api_post(path: string, bodyData?: object, queryData?: object,) {
             searchParams.append(key, String(value));
         });
     }
-    const fullPath = `${alistInfo.endpoint.url}${path}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    const fullPath = `${openlistInfo.endpoint.url}${path}${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
 
     return fetch(fullPath, {
         method: 'POST',
         redirect: 'follow',
         headers: {
-            'Authorization': alistInfo.endpoint.auth.token,
+            'Authorization': openlistInfo.endpoint.auth.token,
             'Content-Type': 'application/json'
         },
         body: bodyData ? JSON.stringify(bodyData) : undefined,
@@ -61,4 +61,4 @@ function alist_api_post(path: string, bodyData?: object, queryData?: object,) {
     });
 }
 
-export { alist_api_get, alist_api_post ,alist_api_ping}
+export { openlist_api_get, openlist_api_post ,openlist_api_ping}
