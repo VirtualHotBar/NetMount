@@ -1,7 +1,7 @@
 [package]
 name = "netmount"
 description = "NetMount"
-version = "beta"
+version = "1.1.3-beta"
 authors = ["VirtualHotBar"]
 license = "AGPL-3.0"
 repository = ""
