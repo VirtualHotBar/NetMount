@@ -59,10 +59,10 @@ function Storage_page() {
                 <br />
                 <Table style={{ height: "100%" }} noDataElement={<NoData_module />} columns={columns} pagination={false} data={
                      filterHideStorage (rcloneInfo.storageList).map(item => {
-                        const isNotWork = item.framework === 'alist' && item.other?.alist?.status !== 'work';
+                        const isNotWork = item.framework === 'openlist' && item.other?.openlist?.status !== 'work';
                         return {
                             ...item,
-                            name:<>{item.name}{(isNotWork)?<Tooltip content={item.other?.alist?.status} color="#FF6060" style={{marginRight:'10rem'}}> <Tag color="RED">{t('not_work')}</Tag></Tooltip>:''}</>,
+                            name:<>{item.name}{(isNotWork)?<Tooltip content={item.other?.openlist?.status} color="#FF6060" style={{marginRight:'10rem'}}> <Tag color="RED">{t('not_work')}</Tag></Tooltip>:''}</>,
                             type: t(searchStorageInfo(item.type).label),
                             actions: <Space>
                                 <Popconfirm

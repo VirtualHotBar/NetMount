@@ -12,11 +12,11 @@ import { t } from "i18next";
 import { FilterType, StorageInfoType, StorageParamItemType } from "../type/controller/storage/info";
 import { storageInfoList, updateStorageInfoList } from "./storage/allList";
 import { rcloneInfo } from "../services/rclone";
-import { alist_api_get, } from "../utils/alist/request";
-import { alistInfo } from "../services/alist";
-import { addAlistInRclone } from "../utils/alist/alist";
+import { openlist_api_get, } from "../utils/openlist/request";
+import { openlistInfo } from "../services/openlist";
+import { addOpenlistInRclone } from "../utils/openlist/openlist";
 import { restartRclone } from "../utils/rclone/process";
-import { restartAlist } from "../utils/alist/process";
+import { restartOpenlist } from "../utils/openlist/process";
 import { exit } from "./main";
 
 export async function Test() {
@@ -38,16 +38,16 @@ export async function Test() {
         remote :convertStoragePath('S3_new','Package/HotPE-V2.7.240201.7z',undefined,true,false),
     })); */
     
-    //console.log(await alist_api_get('/api/me'));
+    //console.log(await openlist_api_get('/api/me'));
     //console.log(roConfig.env.path.homeDir);
 
     //console.log(storageInfoList);
     
-    //await addAlistInRclone()
+    //await addOpenlistInRclone()
 
-    //await restartAlist()
+    //await restartOpenlist()
     //await restartRclone()
-    //console.log(await getAlistToken());
+    //console.log(await getOpenlistToken());
 
 
     /*     let data = await invoke('read_config_file') as any;

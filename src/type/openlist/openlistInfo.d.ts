@@ -1,6 +1,6 @@
 import { Child, Command } from "@tauri-apps/plugin-shell";
 
-interface AlistInfo {
+interface OpenlistInfo {
     markInRclone:string;
     endpoint:{
         url: string,
@@ -11,7 +11,7 @@ interface AlistInfo {
             token: string;
         };
     };
-    alistConfig: {//https://alist.nn.ci/zh/config/configuration.html
+    openlistConfig: {//https://docs.openlist.team/zh/config/configuration.html
         force?: boolean;
         scheme?: {
             http_port?: number;
@@ -28,4 +28,4 @@ interface AlistInfo {
     },
 }
 
-export  { AlistInfo };
+export  { OpenlistInfo };

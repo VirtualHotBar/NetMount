@@ -7,7 +7,7 @@ import { formatETA, formatSize } from '../../utils/utils'
 import { Area } from '@ant-design/charts'
 import { NoData_module } from '../other/noData'
 import { useTranslation } from 'react-i18next'
-import { alistInfo } from '../../services/alist'
+import { openlistInfo } from '../../services/openlist'
 const Row = Grid.Row;
 const Col = Grid.Col;
 
@@ -112,7 +112,7 @@ function Transmit_page() {
                         },
                         {
                           label: t('source'),
-                          value: (item.srcFs || '').replace(alistInfo.markInRclone + ':', '')
+                          value: (item.srcFs || '').replace(openlistInfo.markInRclone + ':', '')
                         },
                         {
                           label: t('speed_avg'),
@@ -127,7 +127,7 @@ function Transmit_page() {
                         ...(item.dstFs ? [
                           {
                             label: t('target'),
-                            value: (item.dstFs || '').replace(alistInfo.markInRclone + ':', '')
+                            value: (item.dstFs || '').replace(openlistInfo.markInRclone + ':', '')
                           }
                         ] : []),
                       ]} />

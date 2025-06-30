@@ -1,13 +1,13 @@
 import { Message } from "@arco-design/web-react";
 import { ParametersType } from "../../type/defaults";
-import { alist_api_post } from "../../utils/alist/request";
+import { openlist_api_post } from "../../utils/openlist/request";
 import { rclone_api_post } from "../../utils/rclone/request";
 import { isEmptyObject } from "../../utils/utils";
 import { searchStorageInfo } from "./allList";
 import { reupStorage, searchStorage } from "./storage";
 
 
-async function createStorage(name: string, type: string, parameters: ParametersType, exAdditional: ParametersType = {}/*  exParameters?: { alist?: { additional?: ParametersType } } */) {
+async function createStorage(name: string, type: string, parameters: ParametersType, exAdditional: ParametersType = {}/*  exParameters?: { openlist?: { additional?: ParametersType } } */) {
     const storageInfo = searchStorageInfo(type)
     const storage = searchStorage(name)
     let backData
@@ -21,11 +21,11 @@ async function createStorage(name: string, type: string, parameters: ParametersT
             })
             reupStorage()
             return isEmptyObject(backData);
-        case 'alist':
+        case 'openlist':
             parameters.addition = JSON.stringify(parameters.addition)
 
             if(!storage){
-                backData = await alist_api_post('/api/admin/storage/create', {
+                backData = await openlist_api_post('/api/admin/storage/create', {
                     ...parameters,
                     driver: storageInfo.type,
                     ...exAdditional
@@ -34,11 +34,11 @@ async function createStorage(name: string, type: string, parameters: ParametersT
                     Message.error(backData.message)
                 }
             }else{//修改
-                backData = await alist_api_post('/api/admin/storage/update', {
+                backData = await openlist_api_post('/api/admin/storage/update', {
                     ...parameters,
                     driver: storageInfo.type,
                     ...exAdditional,
-                    id: storage.other?.alist?.id
+                    id: storage.other?.openlist?.id
                 });
             }
             if (backData.code != 200) {

@@ -9,7 +9,7 @@ const OS_TYPE: &str = env::consts::OS;
 
 struct ResBinUrls {
     rclone: &'static str,
-    alist: &'static str,
+    openlist: &'static str,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -70,40 +70,40 @@ fn check_res_bin() {
         "windows" => match arch {
             "aarch64"|"arm" |"arm64"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-windows-386.zip",
-                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-windows-arm64.zip",
+                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-windows-arm64.zip",
             },
             _ => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-windows-amd64.zip",
-                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-windows-amd64.zip",
+                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-windows-amd64.zip",
             },
         },
         "linux" => match arch {
             "aarch64" |"arm"|"arm64"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-linux-arm64.zip",
-                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-linux-arm64.tar.gz",
+                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-linux-arm64.tar.gz",
             },
             _ => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-linux-amd64.zip",
-                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-linux-amd64.tar.gz",
+                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-linux-amd64.tar.gz",
             },
         },
         "macos" => match arch {
             "x86_64" | "x86"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
-                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-darwin-amd64.tar.gz",
+                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-darwin-amd64.tar.gz",
             },
             "arm64"|"aarch64"|"arm"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-arm64.zip",
-                alist: "https://github.com/alist-org/alist/releases/latest/download/alist-darwin-arm64.tar.gz",
+                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-darwin-arm64.tar.gz",
             },
             _ => ResBinUrls {
                 rclone: "",
-                alist: "",
+                openlist: "",
             },
         },
         _ => ResBinUrls {
             rclone: "",
-            alist: "",
+            openlist: "",
         },
     };
 
@@ -195,27 +195,27 @@ fn check_res_bin() {
         }
     };
 
-    let alist_name = match OS_TYPE {
-        "windows" => "alist.exe",
-        _ => "alist",
+    let openlist_name = match OS_TYPE {
+        "windows" => "openlist.exe",
+        _ => "openlist",
     };
-    let alist_dir = &format!("{}alist/", bin_path);
-    let alist_path = &format!("{}{}", alist_dir, alist_name);
+    let openlist_dir = &format!("{}openlist/", bin_path);
+    let openlist_path = &format!("{}{}", openlist_dir, openlist_name);
 
-    if !Path::new(alist_path).exists() {
-        if res_bin_urls.alist.is_empty() {
+    if !Path::new(openlist_path).exists() {
+        if res_bin_urls.openlist.is_empty() {
             panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
         }
 
-        if !Path::new(alist_path).parent().unwrap().exists() {
-            std::fs::create_dir_all(Path::new(alist_path).parent().unwrap()).unwrap();
+        if !Path::new(openlist_path).parent().unwrap().exists() {
+            std::fs::create_dir_all(Path::new(openlist_path).parent().unwrap()).unwrap();
         }
 
-        // 下载 alist
-        let zip_name: &str = &extract_filename_from_url(res_bin_urls.alist).unwrap();
+        // 下载 openlist
+        let zip_name: &str = &extract_filename_from_url(res_bin_urls.openlist).unwrap();
 
         let _ = download_with_progress(
-            res_bin_urls.alist,
+            res_bin_urls.openlist,
             temp_dir.join(zip_name).to_str().unwrap(),
             |total_size, downloaded| {
                 println!(
@@ -227,19 +227,19 @@ fn check_res_bin() {
             },
         );
 
-        // 解压 alist
-        let _ = decompress_file(temp_dir.join(zip_name).to_str().unwrap(), alist_dir);
+        // 解压 openlist
+        let _ = decompress_file(temp_dir.join(zip_name).to_str().unwrap(), openlist_dir);
 
         let _ = std::fs::remove_file(temp_dir.join(zip_name));
 
         // 尝试设置权限
         #[cfg(not(target_os = "windows"))]
-        match std::fs::metadata(&alist_path) {
+        match std::fs::metadata(&openlist_path) {
             Ok(metadata) => {
                 let mut permissions = metadata.permissions();
                 // 直接设置权限位
                 permissions.set_mode(0o755); // 设置为所有者可读写执行，同组用户可读执行，其他用户可读执行
-                if let Err(e) = std::fs::set_permissions(&alist_path, permissions) {
+                if let Err(e) = std::fs::set_permissions(&openlist_path, permissions) {
                     eprintln!("设置文件权限时出错: {}", e);
                 }
             }
@@ -247,10 +247,10 @@ fn check_res_bin() {
                 eprintln!("无法获取文件元数据: {}", e);
             }
         }
-        if Path::new(alist_path).exists() {
-            println!("添加成功 alist ");
+        if Path::new(openlist_path).exists() {
+            println!("添加成功 openlist ");
         } else {
-            println!("添加失败 alist ");
+            println!("添加失败 openlist ");
             exit(1);
         }
     };
@@ -314,7 +314,7 @@ where
 {
     let mut url = url.to_owned();
     if url.to_owned().contains("//github.com") {
-        url = format!("https://mirror.ghproxy.com/{}", url) //github镜像
+        url = format!("https://gh-proxy.com/{}", url) //github镜像
     }
 
     let response = Client::new()

@@ -24,7 +24,7 @@ interface NMConfig {
             user: string,
             password: string,
         },
-        alist: {
+        openlist: {
             user: string,
             password: string,
         }

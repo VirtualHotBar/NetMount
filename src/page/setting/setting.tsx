@@ -11,7 +11,7 @@ import { rcloneInfo } from '../../services/rclone';
 import { setLocalized } from '../../controller/language/localized';
 import { formatPath, openUrlInBrowser, restartSelf, set_devtools_state } from '../../utils/utils';
 import { showLog } from '../other/modal';
-import { alistInfo } from '../../services/alist';
+import { openlistInfo } from '../../services/openlist';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { exit } from '../../controller/main';
 
@@ -133,9 +133,9 @@ export default function Setting_page() {
             rcloneInfo.process.log && showLog(modal, rcloneInfo.process.log)
           }}>{t('log')}</Link>): {rcloneInfo.version.version}
           <br />
-          <Link onClick={() => { shell.open(roConfig.url.alist) }}>Alist</Link>(<Link onClick={() => {
-            alistInfo.process.log && showLog(modal, alistInfo.process.log)
-          }}>{t('log')}</Link>): {alistInfo.version.version}
+          <Link onClick={() => { shell.open(roConfig.url.openlist) }}>Openlist</Link>(<Link onClick={() => {
+            openlistInfo.process.log && showLog(modal, openlistInfo.process.log)
+          }}>{t('log')}</Link>): {openlistInfo.version.version}
           <br />
         </Card>
         <Card title={t('about')} style={{}} size='small'>

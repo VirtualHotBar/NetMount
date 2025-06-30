@@ -20,7 +20,7 @@ impl Default for Config {
             "settings": { "themeMode": "auto", "startHide": false },
             "framework": {
                 "rclone": { "user": random_str(32), "password":  random_str(128) },
-                "alist": { "user": "admin", "password":  random_str(16) }
+                "openlist": { "user": "admin", "password":  random_str(16) }
             }
         }))
     }

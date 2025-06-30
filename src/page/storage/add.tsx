@@ -71,7 +71,7 @@ function AddStorage_page() {
         setStorageName(storageInfo.defaultParams.name)
     }, [storageTypeName])
 
-    if (storageInfo.framework === 'alist') {
+    if (storageInfo.framework === 'openlist') {
         formHook?.setFieldValue('mount_path', '/' + storageName)
     }
 
@@ -111,7 +111,7 @@ function AddStorage_page() {
                                                             ...(checked ? { backgroundColor: 'var(--color-primary-light-1)' } : {})
                                                         }}>
                                                         <div style={{ display: 'flex', color: 'var(--color-text-1)' }}>
-                                                            {/* <img style={{ width: '1.2rem', height: '1.2rem' }} src={storageItem.framework === 'rclone' ?'/public/img/framework/rclone.png' : '/public/img/framework/alist.svg'} /> */}
+                                                            {/* <img style={{ width: '1.2rem', height: '1.2rem' }} src={storageItem.framework === 'rclone' ?'/public/img/framework/rclone.png' : '/public/img/framework/openlist.svg'} /> */}
                                                             {t(storageItem.label)}
                                                         </div>
                                                     </div>
@@ -171,7 +171,7 @@ function AddStorage_page() {
                         <Input value={storageName} onChange={(value) => {
                             setStorageName(value)
                         }} />
-                    </FormItem>} data={[...storageInfo.defaultParams.parameters/* ,...storageInfo.defaultParams.exParameters?.alist?.additional||[] */]}
+                    </FormItem>} data={[...storageInfo.defaultParams.parameters/* ,...storageInfo.defaultParams.exParameters?.openlist?.additional||[] */]}
                     showAdvanced={showAdvanced} overwriteValues={storageParams} setFormHook={(hook) => { setFormHook(hook) }} />
                 <br />
 
