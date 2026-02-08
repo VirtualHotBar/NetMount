@@ -11,7 +11,11 @@ let getRcloneApiHeaders = () => {
 
 async function rclone_api_noop(): Promise<boolean> {
     try {
-        return await fetch(rcloneInfo.endpoint.url + '/rc/noop', { method: 'POST', headers: { Authorization: getRcloneApiHeaders().Authorization } }).then(data => data.ok)
+        return await fetch(rcloneInfo.endpoint.url + '/rc/noop', { 
+            method: 'POST', 
+            headers: getRcloneApiHeaders(),
+            body: '{}'
+        }).then(data => data.ok)
     } catch (e) {
         console.log(e)
         return false;

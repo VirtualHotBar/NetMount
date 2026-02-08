@@ -1,3 +1,75 @@
+# netmount bug fixes using latest dependencies, long-term maintenance version | netmount 修复bug 使用最新依赖，长期维护版 最新release版
+-----
+更新日志/what's new：
+Before fix:  
+<img width="1348" height="648" alt="Please try restarting the program and record the console error information to report to the developer, ErrorTypeErrorFailed" src="https://github.com/user-attachments/assets/79e01121-c818-49db-a997-898ddb344679" />
+
+Key log: Headers: {"Authorization":"openlist-6d97cf79-36e9-4f01-b564-77105acc7d679bC6x49oLrmVKSHwPWNr5IuGjSHlVecqWcRanmbCUCurDmzzvdQZbJ5HTeoF2hk4\n\u001b[36mINFO\u001b[0m[2026-02-0817:25:28]readingconfigfile:...
+
+Analysis: The Authorization header contains the entire command line output, including multi-line text and ANSI color codes! This causes fetch to throw an "Invalid value" error because HTTP headers cannot contain newline characters or control characters.
+
+Conclusion: The issue is in the `getOpenlistToken()` function in openlist.ts, which does not correctly extract the token.
+
+Fixes:  
+- Modify the `getOpenlistToken()` function to extract only the first line containing the token.  
+- Remove excess logs and control characters.  
+- Add error handling.
+
+修复前 :
+<img width="1348" height="648" alt="请尝试重启程序，并记录控制台错误信息向开发者反馈,ErrorTypeErrorFailed" src="https://github.com/user-attachments/assets/79e01121-c818-49db-a997-898ddb344679" />
+
+关键日志：Headers: {"Authorization":"openlist-6d97cf79-36e9-4f01-b564-77105acc7d679bC6x49oLrmVKSHwPWNr5IuGjSHlVecqWcRanmbCUCurDmzzvdQZbJ5HTeoF2hk4\n\u001b[36mINFO\u001b[0m[2026-02-0817:25:28]readingconfigfile:...
+
+分析:Authorization header 包含了整个命令行输出，包括多行文本和 ANSI 颜色代码！
+这导致 fetch 抛出 "Invalid value" 错误，因为 HTTP header 不能包含换行符或控制字符，
+
+结论：问题在 openlist.ts   getOpenlistToken() 函数，它没有正确提取 token
+
+修复内容：getOpenlistToken() 函数
+只提取 token 所在的第一行
+移除多余的日志和控制字符
+添加错误处理
+
+----------------------------------------------------------
+
+修复前：<img width="1494" height="648" alt="error" src="https://github.com/user-attachments/assets/7c4052cd-07ea-4a51-b200-4d81f3d4f0d1" />
+1主要问题Rclone连接失败：前端重复尝试连接但收到 ERR_CONNECTION_REFUSED 错误
+2 pnpm tauri dev下偶尔发生netmount/openlist/config.json损坏
+
+分析：
+debug 发现 Rclone已经成功启动（日志显示Serving remote control on http://[::]:60021/），但前端连接失败的原因是：
+IPv4/IPv6地址不匹配问题：
+Rclone绑定到IPv6地址：http://[::]:60021/
+前端连接IPv4地址：http://localhost:60021/（Windows默认解析为 127.0.0.1）
+
+时序问题：
+Rclone进程启动后需要时间初始化服务，but进程启动后立即测试连接，，而此时服务尚未完全就绪
+
+其他问题：
+React DOM嵌套警告 ：<div> 不能作为 <p> 的子元素
+
+已实施的修复
+1. 修复React DOM嵌套警告
+文件：src/main.tsx 将  < p > 标签改为 < d iv> 标签
+
+2. 修复IPv4/IPv6地址不匹配
+文件：src/utils/rclone/process.ts 改为明确的IPv4地址 127.0.0.1
+
+3. 增加服务启动等待时间
+文件：src/utils/rclone/process.ts 在spawn后添加1秒等待时间
+
+4. 完善API请求头部
+文件：src/utils/rclone/request.ts 问题：只发送Authorization头，缺少Content-Type和请求体 修复：使用完整的headers并添加JSON请求体
+
+5. 增强netmount/openlist/config.json稳定性
+文件：src\utils\openlist\openlist.ts  修复modifyOpenlistConfig函数，在文件不存在时使用空对象
+
+修复后：
+<img width="1519" height="630" alt="image" src="https://github.com/user-attachments/assets/aeec791e-e240-4f1b-938a-d55283aede08" />
+----
+
+
+
 <h1 align="center">
   <br>
 <img src="https://raw.githubusercontent.com/VirtualHotBar/NetMount/main/public/img/color.svg" width="150"/>

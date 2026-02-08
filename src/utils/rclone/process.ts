@@ -27,7 +27,7 @@ async function startRclone() {
     //自动分配端口
     rcloneInfo.endpoint.localhost.port = (await getAvailablePorts(2))[1]
 
-    rcloneInfo.endpoint.url = 'http://localhost:' + rcloneInfo.endpoint.localhost.port.toString()
+    rcloneInfo.endpoint.url = 'http://127.0.0.1:' + rcloneInfo.endpoint.localhost.port.toString()
 
     let args: string[] = [
         'rcd',
@@ -57,6 +57,7 @@ async function startRclone() {
     rcloneInfo.process.command.stderr.on('data', (data: string) => addLog(data))
 
     rcloneInfo.process.child = await rcloneInfo.process.command.spawn()
+    await sleep(1000) // 等待rclone服务完全启动
 
     while (true) {
         await sleep(500)
@@ -64,7 +65,6 @@ async function startRclone() {
             break;
         }
     }
-
 }
 
 async function stopRclone() {

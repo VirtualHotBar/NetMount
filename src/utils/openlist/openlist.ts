@@ -34,7 +34,12 @@ async function modifyOpenlistConfig(rewriteData:any=openlistInfo.openlistConfig)
     console.log(rewriteData);
     
      const path = openlistDataDir()+'config.json'
-     const oldOpenlistConfig =await invoke('read_json_file',{path}) as object
+     let oldOpenlistConfig = {}
+     try {
+         oldOpenlistConfig = await invoke('read_json_file',{path}) as object
+     } catch (e) {
+         console.log('配置文件不存在或损坏，使用空配置:', e)
+     }
      const newOpenlistConfig = {...oldOpenlistConfig, ...rewriteData}
      await invoke('write_json_file',{configData:newOpenlistConfig,path:path})
 }
