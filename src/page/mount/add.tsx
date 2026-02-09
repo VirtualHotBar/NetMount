@@ -130,7 +130,9 @@ export default function AddMount_page() {
         <div>
 
             <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{!isEditMode ? t('add_mount') : t('edit_mount')}</h2>
-            <Form>
+            
+            {/* 基础选项 - 始终显示 */}
+            <div style={{ marginBottom: showAllOptions ? '1rem' : '0' }}>
                 <FormItem label={t('storage')}>
                     <Select /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) =>
                         setStorageName(value)
@@ -188,80 +190,81 @@ export default function AddMount_page() {
                         </Space>
                     </FormItem>
                 }
+            </div>
 
-                {
-                    <div style={{ display: showAllOptions ? 'block' : 'none' }}>
-                        <InputForm_module data={paramsType2FormItems(defaultMountConfig)} onChange={(data) => {
-                            setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, ...data } })
-                        }} overwriteValues={parameters.mountOpt} setFormHook={(form) => {
-                            //form.setFieldsValue(parameters.mountOpt)
-                            setMountOptFormHook(form)
-                        }} />
-                        <InputForm_module data={[vfsCacheModeParam, ...paramsType2FormItems(defaultVfsConfig, undefined, ['CacheMode'])]} onChange={(data) => {
-                            setParameters({ ...parameters, vfsOpt: { ...parameters.vfsOpt, ...data } })
-                        }} overwriteValues={{ ...parameters.vfsOpt, CacheMode: 'full' }} setFormHook={(form) => {
-                            //form.setFieldsValue(parameters.vfsOpt);
-                            setVfsOptFormHook(form)
-                        }} />
-                    </div>
-                }
-
-                {/* 按钮 */}
-                <div style={{ width: '100%', textAlign: 'right' }}>
-                    <Space>
-                        <Checkbox checked={autoMount} onChange={(checked) => { setAutoMount(checked) }} >{t('auto_mount')}</Checkbox>
-                        {!showAllOptions && <Button onClick={() => { setShowAllOptions(!showAllOptions) }} type='text'>{t('show_all_options')}</Button>}
-                        <Button onClick={() => { navigate('/mount') }} >{t('step_back')}</Button>
-                        <Button disabled={!storageName || !mountPath} onClick={async () => {
-                            if (!isEditMode && getMountStorage(mountPath)) {
-                                Notification.error({
-                                    title: t('error'),
-                                    content: t('mount_path_already_exists'),
-                                })
-                                return;
-                            }
-
-                            let mountPathTemp = mountPath
-                            if (mountPath === "*") {
-                                mountPathTemp = await getAvailableDriveLetter()
-                            } else if (/* !isWindows &&  */mountPath.startsWith('~/')) {
-                                let homeDirStr = await homeDir()
-                                if (!homeDirStr.endsWith('/')) {
-                                    homeDirStr = homeDirStr + '/'
-                                }
-                                mountPathTemp = mountPath.replace('~/', homeDirStr)
-                            }
-
-                            mountPathTemp = formatPath(mountPathTemp, isWindows)
-                            if (isEditMode) {
-                                console.log(parameters);
-
-                                await editMountStorage({ storageName: storageName!, mountPath: mountPathTemp, parameters: parameters, autoMount: autoMount })
-                            } else {
-                                await addMountStorage(storageName!, mountPathTemp, parameters, autoMount)
-                            }
-
-                            if (isEditMode) {
-                                Notification.success({
-                                    title: t('success'),
-                                    content: t('save_successfully'),
-                                })
-                            } else if (await mountStorage(getMountStorage(mountPathTemp)!)) {
-                                Notification.success({
-                                    title: t('success'),
-                                    content: t('mount_storage_successfully'),
-                                })
-                                if (isWindows && rcloneInfo.endpoint.isLocal) {
-                                    showPathInExplorer(mountPathTemp, true)
-                                }
-                            }
-                            navigate('/mount')
-                        }} type='primary'>
-                            {isEditMode ? t('save') : t('mount')}
-                        </Button>
-                    </Space>
+            {/* 高级选项 - 仅在展开时显示 */}
+            {
+                <div style={{ display: showAllOptions ? 'block' : 'none' }}>
+                    <InputForm_module data={paramsType2FormItems(defaultMountConfig)} onChange={(data) => {
+                        setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, ...data } })
+                    }} overwriteValues={parameters.mountOpt} setFormHook={(form) => {
+                        //form.setFieldsValue(parameters.mountOpt)
+                        setMountOptFormHook(form)
+                    }} />
+                    <InputForm_module data={[vfsCacheModeParam, ...paramsType2FormItems(defaultVfsConfig, undefined, ['CacheMode'])]} onChange={(data) => {
+                        setParameters({ ...parameters, vfsOpt: { ...parameters.vfsOpt, ...data } })
+                    }} overwriteValues={{ ...parameters.vfsOpt, CacheMode: 'full' }} setFormHook={(form) => {
+                        //form.setFieldsValue(parameters.vfsOpt);
+                        setVfsOptFormHook(form)
+                    }} />
                 </div>
-            </Form>
+            }
+
+            {/* 按钮 */}
+            <div style={{ width: '100%', textAlign: 'right', marginTop: '1rem' }}>
+                <Space>
+                    <Checkbox checked={autoMount} onChange={(checked) => { setAutoMount(checked) }} >{t('auto_mount')}</Checkbox>
+                    {!showAllOptions && <Button onClick={() => { setShowAllOptions(!showAllOptions) }} type='text'>{t('show_all_options')}</Button>}
+                    <Button onClick={() => { navigate('/mount') }} >{t('step_back')}</Button>
+                    <Button disabled={!storageName || !mountPath} onClick={async () => {
+                        if (!isEditMode && getMountStorage(mountPath)) {
+                            Notification.error({
+                                title: t('error'),
+                                content: t('mount_path_already_exists'),
+                            })
+                            return;
+                        }
+
+                        let mountPathTemp = mountPath
+                        if (mountPath === "*") {
+                            mountPathTemp = await getAvailableDriveLetter()
+                        } else if (/* !isWindows &&  */mountPath.startsWith('~/')) {
+                            let homeDirStr = await homeDir()
+                            if (!homeDirStr.endsWith('/')) {
+                                homeDirStr = homeDirStr + '/'
+                            }
+                            mountPathTemp = mountPath.replace('~/', homeDirStr)
+                        }
+
+                        mountPathTemp = formatPath(mountPathTemp, isWindows)
+                        if (isEditMode) {
+                            console.log(parameters);
+
+                            await editMountStorage({ storageName: storageName!, mountPath: mountPathTemp, parameters: parameters, autoMount: autoMount })
+                        } else {
+                            await addMountStorage(storageName!, mountPathTemp, parameters, autoMount)
+                        }
+
+                        if (isEditMode) {
+                            Notification.success({
+                                title: t('success'),
+                                content: t('save_successfully'),
+                            })
+                        } else if (await mountStorage(getMountStorage(mountPathTemp)!)) {
+                            Notification.success({
+                                title: t('success'),
+                                content: t('mount_storage_successfully'),
+                            })
+                            if (isWindows && rcloneInfo.endpoint.isLocal) {
+                                showPathInExplorer(mountPathTemp, true)
+                            }
+                        }
+                        navigate('/mount')
+                    }} type='primary'>
+                        {isEditMode ? t('save') : t('mount')}
+                    </Button>
+                </Space>
+            </div>
         </div>
     )
 }

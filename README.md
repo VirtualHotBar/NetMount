@@ -137,7 +137,12 @@ react-dom.development.js:86  Warning: validateDOMNesting(...): <div> cannot appe
 
 1)方案：将rowKey属性改为小写的'path'以匹配数据字段
 2)解决方案：将<Typography.Paragraph>改为普通的<div>元素 等等
+---
+修复前：‘添加挂载’页面react-dom.development.js:86  Warning: validateDOMNesting(...): <form> cannot appear as a descendant of <form>.
 
+分析：<form> 不能作为另一个 <form> 的后代出现。这是一个嵌套表单的警告，出现在 AddMount_page src/page/mount/add.tsx中，涉及 InputForm_module src/page/other/InputForm.tsx
+
+修复：移除外层 <Form> 标签，将表单项直接放在容器中  移除外层 <Form> 标签，用普通 <div> 容器包装表单项
 
 -----
 <h1 align="center">

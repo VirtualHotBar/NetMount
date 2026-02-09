@@ -84,7 +84,8 @@ function AddStorage_page() {
         case 'selectType':
             content = (<div style={{ width: '100%' }}>
 
-                <Form autoComplete='off'>
+                {/* 移除外层 Form 以避免与 InputForm_module 嵌套 */}
+                <div>
                     <FormItem style={{ width: '100%', }} label={t('storage_type')} >
                         <InputSearch value={searchStr} onChange={(value) => setSearchStr(value)} allowClear placeholder={t('enter_keyword_to_search')} style={{}} />
 
@@ -163,7 +164,7 @@ function AddStorage_page() {
                             <Button onClick={() => { setStep('setParams'); setShowAdvanced(false) }} disabled={!storageTypeName} type='primary'>{t('step_next')}</Button>
                         </Space>
                     </div>
-                </Form>
+                </div>
             </div >)
             break;
         case 'setParams':
