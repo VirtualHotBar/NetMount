@@ -143,7 +143,14 @@ react-dom.development.js:86  Warning: validateDOMNesting(...): <div> cannot appe
 分析：<form> 不能作为另一个 <form> 的后代出现。这是一个嵌套表单的警告，出现在 AddMount_page src/page/mount/add.tsx中，涉及 InputForm_module src/page/other/InputForm.tsx
 
 修复：移除外层 <Form> 标签，将表单项直接放在容器中  移除外层 <Form> 标签，用普通 <div> 容器包装表单项
+-----
+bug  ’添加挂载‘页面 点击’挂载‘后报错
+日志  react.development.js:209  Warning: Each child in a list should have a unique "key" prop.
+分析  表格数据映射时缺少唯一 key 属性
 
+修复  
+src/page/mount/mount.tsx - 添加了唯一 key 属性
+优化了 mountStorage 调用的异步处理添加 async 并使用 loading 状态优化体验
 -----
 <h1 align="center">
   <br>
