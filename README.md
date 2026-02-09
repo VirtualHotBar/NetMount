@@ -93,6 +93,37 @@ warnAboutRenderPhaseUpdatesInDEV @ react-dom.development.js:27540
 
 修复内容：src\page\storage\add.tsx 安全地设置 mount_path，避免在渲染阶段更新状态
 -----
+修复前：
+InputForm.tsx:224  Warning: Each child in a list should have a unique "key" prop.
+
+Check the render method of `InputForm_module`. See https://reactjs.org/link/warning-keys for more information.
+    at Item5 (http://localhost:5173/node_modules/.vite/deps/@arco-design_web-react.js?v=24e56973:30363:43)
+    at InputForm_module (http://localhost:5173/src/page/other/InputForm.tsx:254:3)
+    at div
+    at div
+    at AddStorage_page (http://localhost:5173/src/page/storage/add.tsx:47:17)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=24e56973:4028:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=24e56973:4467:5)
+    at main
+    at Content (http://localhost:5173/node_modules/.vite/deps/@arco-design_web-react.js?v=24e56973:18020:25)
+    at section
+    at Layout (http://localhost:5173/node_modules/.vite/deps/@arco-design_web-react.js?v=24e56973:18081:43)
+    at section
+    at Layout (http://localhost:5173/node_modules/.vite/deps/@arco-design_web-react.js?v=24e56973:18081:43)
+    at ConfigProvider (http://localhost:5173/node_modules/.vite/deps/@arco-design_web-react.js?v=24e56973:7478:15)
+    at App (http://localhost:5173/src/app.tsx:165:20)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=24e56973:4410:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=24e56973:5155:5)
+printWarning @ react-jsx-dev-runtime.development.js:87
+error @ react-jsx-dev-runtime.development.js:61
+
+分析：问题根源：在 InputForm.tsx 某循环中，渲染多个 <FormItem> 组件时未提供 key 属性
+
+修复方案：
+使用 dataItem.name 作为 key：
+name 字段是唯一的表单参数标识符
+
+-----
 <h1 align="center">
   <br>
 <img src="https://raw.githubusercontent.com/VirtualHotBar/NetMount/main/public/img/color.svg" width="150"/>
