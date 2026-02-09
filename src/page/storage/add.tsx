@@ -71,9 +71,12 @@ function AddStorage_page() {
         setStorageName(storageInfo.defaultParams.name)
     }, [storageTypeName])
 
-    if (storageInfo.framework === 'openlist') {
-        formHook?.setFieldValue('mount_path', '/' + storageName)
-    }
+    // 安全地设置 mount_path，避免在渲染阶段更新状态
+    useEffect(() => {
+        if (storageInfo.framework === 'openlist' && formHook) {
+            formHook.setFieldValue('mount_path', '/' + storageName);
+        }
+    }, [storageInfo.framework, formHook, storageName]);
 
     let content: JSX.Element
 

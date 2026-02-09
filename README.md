@@ -66,10 +66,33 @@ React DOM嵌套警告 ：<div> 不能作为 <p> 的子元素
 
 修复后：
 <img width="1519" height="630" alt="image" src="https://github.com/user-attachments/assets/aeec791e-e240-4f1b-938a-d55283aede08" />
+
 ----
+修复前：
+(匿名) @ react-dom.development.js:25690
+add.tsx:55 {label: 'storage.WebDav', type: 'WebDav', description: 'description.webdav', framework: 'openlist', defaultParams: {…}}
+add.tsx:75  Warning: Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.
+    at AddStorage_page (http://localhost:5173/src/page/storage/add.tsx:47:17)
+    at RenderedRoute (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=24e56973:4028:5)
+    at Routes (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=24e56973:4467:5)
+    at main
+    at Content (http://localhost:5173/node_modules/.vite/deps/@arco-design_web-react.js?v=24e56973:18020:25)
+    at section
+    at Layout (http://localhost:5173/node_modules/.vite/deps/@arco-design_web-react.js?v=24e56973:18081:43)
+    at section
+    at Layout (http://localhost:5173/node_modules/.vite/deps/@arco-design_web-react.js?v=24e56973:18081:43)
+    at ConfigProvider (http://localhost:5173/node_modules/.vite/deps/@arco-design_web-react.js?v=24e56973:7478:15)
+    at App (http://localhost:5173/src/app.tsx:165:20)
+    at Router (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=24e56973:4410:15)
+    at BrowserRouter (http://localhost:5173/node_modules/.vite/deps/react-router-dom.js?v=24e56973:5155:5)
+printWarning @ react-dom.development.js:86
+error @ react-dom.development.js:60
+warnAboutRenderPhaseUpdatesInDEV @ react-dom.development.js:27540
 
+分析：问题在于 在渲染阶段直接调用 setFieldValue，违反了 React 的渲染纯净性原则
 
-
+修复内容：src\page\storage\add.tsx 安全地设置 mount_path，避免在渲染阶段更新状态
+-----
 <h1 align="center">
   <br>
 <img src="https://raw.githubusercontent.com/VirtualHotBar/NetMount/main/public/img/color.svg" width="150"/>
