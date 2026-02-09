@@ -122,6 +122,22 @@ error @ react-jsx-dev-runtime.development.js:61
 修复方案：
 使用 dataItem.name 作为 key：
 name 字段是唯一的表单参数标识符
+-----
+修复前：
+1）存储‘管理’页面react.development.js:209  Warning: Each child in a list should have a unique "key" prop.
+2）存储‘浏览’页面
+react-dom.development.js:86  Warning: validateDOMNesting(...): <div> cannot appear as a descendant of <p>.
+
+
+1）问题分析：src\page\storage\storage.tsx
+在数据映射中，使用的是小写的item.path字段
+但Table组件的rowKey属性设置为大写的'Path'
+导致React无法找到正确的key字段，从而产生警告
+2）问题分析：src\page\storage\explorer.tsx 在<Typography.Paragraph>组件中包含了<div>元素 还有多处
+
+1)方案：将rowKey属性改为小写的'path'以匹配数据字段
+2)解决方案：将<Typography.Paragraph>改为普通的<div>元素 等等
+
 
 -----
 <h1 align="center">
