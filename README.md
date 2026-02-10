@@ -152,6 +152,19 @@ bug  ’添加挂载‘页面 点击’挂载‘后报错
 src/page/mount/mount.tsx - 添加了唯一 key 属性
 优化了 mountStorage 调用的异步处理添加 async 并使用 loading 状态优化体验
 -----
+![add。tsx bug](https://github.com/user-attachments/assets/fbd8e94f-7a62-4d2b-bddb-aafc8595b723)
+bug1  编辑挂载时候 无法修改挂载路径 没有添加挂载时候的前端选项  挂载路径桌面(推荐)自动分配盘符自定义
+bug2  编辑挂载页面 任何修改都无法保存 这个bug在原作2024年1.1.2release就存在
+分析：
+编辑模式下 mountPath 字段被设置为 hidden={isEditMode}
+保存按钮被禁用是因为：
+编辑模式下 mountPath 是隐藏字段导致!mountPath 为 true
+保存按钮的条件是 disabled={!storageName || !mountPath}，初始状态下 storageName 或 mountPath 为空值
+
+修复：
+添加UI编辑挂载时也能看到和修改挂载路径选项（桌面推荐、自动分配盘符、自定义）
+if（点‘编辑’）{载入上次保存的路径}
+-----
 <h1 align="center">
   <br>
 <img src="https://raw.githubusercontent.com/VirtualHotBar/NetMount/main/public/img/color.svg" width="150"/>

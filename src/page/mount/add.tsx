@@ -26,6 +26,7 @@ export default function AddMount_page() {
     const [showAllOptions, setShowAllOptions] = useState(false)
     const [mountPath, setMountPath] = useState<string>('')
     const [autoMount, setAutoMount] = useState(true)
+    const [allowEditMountPath, setAllowEditMountPath] = useState(false) // 新增：是否允许编辑挂载路径
     //const [autoMountPath, setAutoMountPath] = useState(true)//自动分配盘符
     //const [notification, contextHolder] = Notification.useNotification();
     const [parameters, setParameters] = useState<{ vfsOpt: VfsOptions, mountOpt: MountOptions }>({ mountOpt: defaultMountConfig, vfsOpt: defaultVfsConfig })
@@ -37,7 +38,11 @@ export default function AddMount_page() {
     const isEditMode = (getURLSearchParam('edit') === 'true')
     const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows');
 
-    const isMountPathCustom = mountPath !== '*' && !mountPath.startsWith('~/Desktop/');
+    // 判断是否为预定义路径：自动盘符、桌面路径
+    const isPredefinedPath = mountPath === '*' || mountPath.startsWith('~/Desktop/');
+    // 自定义路径：既不是自动盘符也不是桌面路径
+    const isMountPathCustom = !isPredefinedPath;
+    // 是否为盘符路径（Windows）：自动盘符或盘符格式
     const mountPathuIsDriveLetter = isWindows && (mountPath === '*' || mountPath.endsWith(':') || mountPath.endsWith(':/'));
 
     const checkWinFspState = async () => {
@@ -54,12 +59,34 @@ export default function AddMount_page() {
         }
     }
 
-    const editMode = () => {
+    const editMode = async () => {
         let mountPathTemp = getURLSearchParam('mountPath')
+        // 规范化路径以便查找
+        const normalizeMountPath = (path: string): string => {
+            if (!path) return path;
+            let normalized = path.replace(/\\/g, '/');
+            // 移除尾随斜杠（除了盘符后的冒号）
+            if (normalized.length > 2 && normalized.endsWith('/') && !normalized.endsWith(':/')) {
+                normalized = normalized.slice(0, -1);
+            }
+            return normalized;
+        };
+        mountPathTemp = normalizeMountPath(mountPathTemp);
         const mount = getMountStorage(mountPathTemp)
         if (mount) {
+            // 尝试将绝对路径转换回 ~/Desktop/ 形式（如果适用）
+            let displayMountPath = mount.mountPath;
+            try {
+                const homeDirStr = await homeDir();
+                const desktopPath = homeDirStr.replace(/\\/g, '/') + '/Desktop/';
+                if (displayMountPath.replace(/\\/g, '/').startsWith(desktopPath)) {
+                    displayMountPath = '~/Desktop/' + displayMountPath.replace(/\\/g, '/').substring(desktopPath.length);
+                }
+            } catch (e) {
+                // 忽略错误，使用原始路径
+            }
             setStorageName(mount.storageName)
-            setMountPath(mount.mountPath)
+            setMountPath(displayMountPath)
             setAutoMount(mount.autoMount)
             setParameters(mount.parameters as { vfsOpt: VfsOptions, mountOpt: MountOptions })
         }
@@ -83,7 +110,9 @@ export default function AddMount_page() {
         }
 
         if (isEditMode) {
-            editMode()
+            editMode();
+            // 编辑模式下默认不允许修改挂载路径，除非用户明确选择
+            setAllowEditMountPath(false)
         }
     }, [])
 
@@ -126,6 +155,10 @@ export default function AddMount_page() {
     }, [vfsOptFormHook, mountOptFormHook])
 
 
+
+
+
+
     return (
         <div>
 
@@ -147,7 +180,7 @@ export default function AddMount_page() {
                     </Select>
                 </FormItem>
 
-                <FormItem label={t('mount_path')} hidden={isEditMode}>
+                <FormItem label={t('mount_path')}>
                     {isMountPathCustom && (
                         <>
                             <Input
@@ -217,6 +250,9 @@ export default function AddMount_page() {
                     {!showAllOptions && <Button onClick={() => { setShowAllOptions(!showAllOptions) }} type='text'>{t('show_all_options')}</Button>}
                     <Button onClick={() => { navigate('/mount') }} >{t('step_back')}</Button>
                     <Button disabled={!storageName || !mountPath} onClick={async () => {
+                        // 编辑模式下获取原始路径
+                        const originalMountPath = isEditMode ? getURLSearchParam('mountPath') : '';
+                        
                         if (!isEditMode && getMountStorage(mountPath)) {
                             Notification.error({
                                 title: t('error'),
@@ -237,10 +273,14 @@ export default function AddMount_page() {
                         }
 
                         mountPathTemp = formatPath(mountPathTemp, isWindows)
+                        
                         if (isEditMode) {
-                            console.log(parameters);
-
-                            await editMountStorage({ storageName: storageName!, mountPath: mountPathTemp, parameters: parameters, autoMount: autoMount })
+                            await editMountStorage({ 
+                                storageName: storageName!, 
+                                mountPath: mountPathTemp, 
+                                parameters: parameters, 
+                                autoMount: autoMount 
+                            }, originalMountPath)
                         } else {
                             await addMountStorage(storageName!, mountPathTemp, parameters, autoMount)
                         }
