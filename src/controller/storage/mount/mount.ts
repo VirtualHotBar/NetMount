@@ -9,23 +9,22 @@ import { convertStoragePath } from "../storage";
 import {
   MountOptions,
   VfsOptions,
+  RcloneMountPoint,
 } from "../../../type/rclone/storage/mount/parameters";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 //列举存储
 async function reupMount(noRefreshUI?: boolean) {
-  const mountPoints: any[] =
-    (await rclone_api_post("/mount/listmounts"))?.mountPoints || [];
+  const response = await rclone_api_post("/mount/listmounts");
+  const mountPoints: RcloneMountPoint[] = response?.mountPoints || [];
 
   rcloneInfo.mountList = [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mountPoints.forEach((tiem: any) => {
-    const name = tiem.Fs;
+  mountPoints.forEach((item: RcloneMountPoint) => {
+    const name = item.Fs;
     rcloneInfo.mountList.push({
       storageName: name, //name.substring(0, name.length - 1)
-      mountPath: tiem.MountPoint,
-      mountedTime: new Date(tiem.MountedOn),
+      mountPath: item.MountPoint,
+      mountedTime: new Date(item.MountedOn),
     });
   });
   !noRefreshUI && hooks.upMount();

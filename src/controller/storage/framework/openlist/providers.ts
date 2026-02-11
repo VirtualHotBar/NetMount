@@ -23,29 +23,28 @@ interface DriverOption {
 }
 
 // 检测驱动列表数据结构类型
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function detectDriverListStructure(data: any): 'object-map' | 'array' | 'unknown' {
+function detectDriverListStructure(data: unknown): 'object-map' | 'array' | 'unknown' {
     if (!data) return 'unknown';
-    
+
     if (Array.isArray(data)) {
         return 'array';
     }
-    
+
     if (typeof data === 'object' && Object.keys(data).length > 0) {
         // 检查第一个值是否有 config/common/additional 字段
-        const firstKey = Object.keys(data)[0];
-        const firstValue = data[firstKey];
+        const record = data as Record<string, unknown>;
+        const firstKey = Object.keys(record)[0];
+        const firstValue = record[firstKey] as Record<string, unknown> | undefined;
         if (firstValue && (firstValue.config || firstValue.common || firstValue.additional)) {
             return 'object-map';
         }
     }
-    
+
     return 'unknown';
 }
 
 // 将数组结构转换为对象映射结构
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeDriverList(data: any): Record<string, DriverInfo> {
+function normalizeDriverList(data: unknown): Record<string, DriverInfo> {
     const structure = detectDriverListStructure(data);
     
     if (structure === 'object-map') {

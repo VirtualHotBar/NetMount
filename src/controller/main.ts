@@ -1,6 +1,7 @@
 import { nmConfig, osInfo, readNmConfig, roConfig, saveNmConfig } from "../services/config"
 import { rcloneInfo } from "../services/rclone"
 import { rclone_api_post } from "../utils/rclone/request"
+import { RcloneVersion } from "../type/rclone/rcloneInfo"
 import { startUpdateCont } from "./stats/continue"
 import { reupMount } from "./storage/mount/mount"
 import { reupStorage } from "./storage/storage"
@@ -96,37 +97,60 @@ async function main() {
 }
 
 async function reupRcloneVersion() {
-    rcloneInfo.version = await rclone_api_post('/core/version',)
+    const version = await rclone_api_post('/core/version');
+    if (version) {
+        rcloneInfo.version = version as RcloneVersion;
+    }
 }
 
 async function reupOpenlistVersion() {
-    // 主路径：尝试 /api/admin/setting/get
-    const version = await openlist_api_get('/api/admin/setting/get', { key: 'version' })
-    
-    if (version.code === 200 && version.data?.value) {
-        openlistInfo.version.version = version.data.value
-        console.log('OpenList version retrieved via /api/admin/setting/get:', version.data.value)
-        return
-    }
-    
-    console.log('Primary version endpoint failed, trying fallback...')
-    
-    // 回退路径：尝试 /api/public/settings
-    try {
-        const publicSettings = await openlist_api_get('/api/public/settings')
-        if (publicSettings.data?.version) {
-            openlistInfo.version.version = publicSettings.data.version
-            console.log('OpenList version retrieved via /api/public/settings:', publicSettings.data.version)
-            return
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY_MS = 500;
+    let attempts = 0;
+
+    while (attempts < MAX_RETRIES) {
+        attempts++;
+        
+        // 主路径：尝试 /api/admin/setting/get
+        try {
+            const version = await openlist_api_get('/api/admin/setting/get', { key: 'version' });
+            
+            if (version.code === 200 && version.data?.value) {
+                openlistInfo.version.version = version.data.value;
+                console.log('OpenList version retrieved via /api/admin/setting/get:', version.data.value);
+                return true;
+            }
+        } catch (primaryError) {
+            console.warn(`Primary version endpoint attempt ${attempts} failed:`, primaryError);
         }
-    } catch (fallbackError) {
-        console.error('Fallback version endpoint also failed:', fallbackError)
+
+        // 如果还有重试次数，尝试回退路径
+        if (attempts < MAX_RETRIES) {
+            console.log(`Primary version endpoint failed, trying fallback... (attempt ${attempts}/${MAX_RETRIES})`);
+            
+            try {
+                const publicSettings = await openlist_api_get('/api/public/settings');
+                if (publicSettings.data?.version) {
+                    openlistInfo.version.version = publicSettings.data.version;
+                    console.log('OpenList version retrieved via /api/public/settings:', publicSettings.data.version);
+                    return true;
+                }
+            } catch (fallbackError) {
+                console.warn(`Fallback version endpoint attempt ${attempts} failed:`, fallbackError);
+            }
+
+            // 等待后重试
+            if (attempts < MAX_RETRIES) {
+                console.log(`All version endpoints failed, retrying in ${RETRY_DELAY_MS}ms... (attempt ${attempts + 1}/${MAX_RETRIES})`);
+                await sleep(RETRY_DELAY_MS);
+            }
+        }
     }
-    
-    // 如果都失败了，等待后重试
-    console.log('All version endpoints failed, retrying in 500ms...')
-    await sleep(500)
-    await reupOpenlistVersion()
+
+    // 所有重试都失败了
+    console.error('All version endpoints failed after', MAX_RETRIES, 'attempts. Using fallback version.');
+    openlistInfo.version.version = 'unknown';
+    return false;
 }
 
 

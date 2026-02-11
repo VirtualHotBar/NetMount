@@ -39,21 +39,21 @@ function paramsType2FormItems(params: ParametersType, isAdvanced: boolean = fals
                 formItem.type = 'number'
                 break;
          case 'object':
-                if (item.value.select) {//选择器
+                if ((item.value as { select?: string[] })?.select) {//选择器
                     formItem.type = 'string'
-                    formItem.default = item.value.default
-                    formItem.select = item.value.select.map((item: string) => {
+                    formItem.default = (item.value as { default?: unknown })?.default
+                    formItem.select = (item.value as { select: string[] }).select.map((selectItem: string) => {
                         return {
-                            label: item,
-                            value: item,
-                            help: item
+                            label: selectItem,
+                            value: selectItem,
+                            help: selectItem
                         }
                     })
 
                 } else {
                     formItem.type = 'string'
                 }
-                break; 
+                break;
             default:
                 formItem.type = 'string'
                 break;

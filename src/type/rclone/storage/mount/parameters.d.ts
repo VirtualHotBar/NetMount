@@ -64,7 +64,19 @@ interface MountOptions {
 
 
 
-export { VfsOptions, MountOptions }
+// Rclone mount point 接口
+interface RcloneMountPoint {
+    Fs: string;
+    MountPoint: string;
+    MountedOn: string;
+}
+
+// Rclone mount list 响应接口
+interface RcloneMountListResponse {
+    mountPoints: RcloneMountPoint[];
+}
+
+export { VfsOptions, MountOptions, RcloneMountPoint, RcloneMountListResponse }
 
 
 

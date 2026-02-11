@@ -23,9 +23,6 @@ function ExplorerItem() {
     const { t } = useTranslation()
 
     const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
-    const { t } = useTranslation()
-
-    const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
     const [modal, contextHolder] = Modal.useModal();
     const [storageName, setStorageName] = useState<string>()
     const [path, setPath] = useState<string>()
@@ -78,6 +75,25 @@ function ExplorerItem() {
             setLoading(false)
         }
     }
+
+    // 路径处理函数：规范化路径格式
+    const sanitizePath = (inputPath: string): string => {
+        if (!inputPath) return '/';
+        let sanitized = inputPath.replace(/\\/g, '/');
+        if (!sanitized.startsWith('/')) {
+            sanitized = '/' + sanitized;
+        }
+        return sanitized;
+    };
+
+    // 获取父目录路径
+    const getParentPath = (inputPath: string): string => {
+        if (!inputPath || inputPath === '/') return '/';
+        const sanitized = sanitizePath(inputPath);
+        const parts = sanitized.split('/').filter(p => p);
+        parts.pop();
+        return parts.length === 0 ? '/' : '/' + parts.join('/');
+    };
 
     // 创建一个自定义函数用于更新路径，确保路径始终符合规范
     const updatePath = (newPath: string) => {
@@ -312,4 +328,4 @@ function ExplorerItem() {
 
 
 
-export { Explorer_page }
+export { ExplorerItem as Explorer_page }

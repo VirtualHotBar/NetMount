@@ -20,9 +20,8 @@ export function getURLSearchParam(name: string): string {
     return searchParams.get(name) || '';
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function getProperties(obj: Record<string, any>) {
-    const result: Array<{ key: string, value: any }> = []
+export function getProperties<T extends Record<string, unknown>>(obj: T): Array<{ key: string, value: unknown }> {
+    const result: Array<{ key: string, value: unknown }> = []
 
     for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {

@@ -82,4 +82,41 @@ interface OpenlistInfo {
     },
 }
 
-export  { OpenlistInfo };
+// OpenList 存储项接口
+interface OpenlistStorageItem {
+    id: number;
+    mount_path: string;
+    driver: string;
+    order: number;
+    status: 'work' | string;
+    addition: string | Record<string, unknown>;
+    remark: string;
+    modified: string;
+    disabled: boolean;
+    enable_sign: boolean;
+    order_by: string;
+    order_direction: string;
+    extract_folder: string;
+    web_proxy: boolean;
+    webdav_policy: string;
+    down_proxy_url: string;
+}
+
+// OpenList 存储列表响应
+interface OpenlistStorageListResponse {
+    code: number;
+    message: string;
+    data: {
+        content: OpenlistStorageItem[];
+        total: number;
+    };
+}
+
+// OpenList 存储详情响应
+interface OpenlistStorageGetResponse {
+    code: number;
+    message: string;
+    data: OpenlistStorageItem;
+}
+
+export { OpenlistInfo, OpenlistStorageItem, OpenlistStorageListResponse, OpenlistStorageGetResponse };

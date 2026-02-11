@@ -1,8 +1,35 @@
 
+// Rclone Provider 选项接口
+interface RcloneProviderOption {
+    Name: string;
+    Help: string;
+    Type: string;
+    Default: string | number | boolean;
+    DefaultStr: string;
+    ValueStr: string;
+    Required: boolean;
+    Advanced: boolean;
+    IsPassword: boolean;
+    Provider?: string;
+    ShortOpt?: string;
+    Examples?: Array<{
+        Value: string;
+        Help: string;
+    }>;
+}
+
+// Rclone Provider 接口
+interface RcloneProvider {
+    Name: string;
+    Prefix: string;
+    Description: string;
+    Options: RcloneProviderOption[];
+}
+
 //过滤器
 interface FilterType {
     name: string,//匹配参数名
-    value: any,//匹配值
+    value: string | number | boolean,//匹配值
     state: boolean,//是否过滤
 }
 
@@ -64,4 +91,4 @@ interface StorageInfoType {
     }
 }
 
-export { StorageInfoType, StorageParamsType, StorageParamItemType, ParamItemOptionType, FilterType }
+export { StorageInfoType, StorageParamsType, StorageParamItemType, ParamItemOptionType, FilterType, RcloneProvider, RcloneProviderOption }

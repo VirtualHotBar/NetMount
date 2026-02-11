@@ -199,7 +199,10 @@ function AddStorage_page() {
                                 } catch (error) {
                                     getProperties(formHook.getFieldsError()).forEach((err) => {
 
-                                        Message.error(t(err.key) + t(err.value.message.replace(err.key, '')))
+                                        const errorValue = err.value as { message?: string };
+                                        if (errorValue?.message) {
+                                            Message.error(t(err.key) + t(errorValue.message.replace(err.key, '')))
+                                        }
                                     })
                                     return
                                 }

@@ -1,9 +1,9 @@
-import { FilterType, ParamItemOptionType, StorageInfoType, StorageParamItemType } from "../../../../type/controller/storage/info";
+import { FilterType, ParamItemOptionType, StorageInfoType, StorageParamItemType, RcloneProvider } from "../../../../type/controller/storage/info";
 import { rclone_api_post } from "../../../../utils/rclone/request";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 async function updateRcloneStorageInfoList() {
-    const providers = (await rclone_api_post('/config/providers')).providers as Array<any>
+    const response = await rclone_api_post('/config/providers');
+    const providers = (response?.providers as RcloneProvider[]) || []
 
     const rcloneStorageInfoList: StorageInfoType[] = []
 
@@ -63,7 +63,10 @@ async function updateRcloneStorageInfoList() {
 
             //扩展类型
             if (type === 'string' && option.Type!== 'string') {
-                storageParam.exType = option.Type;
+                const validExTypes = ['SpaceSepList', 'CommaSepList', 'Encoding', 'SizeSuffix', 'Duration', 'Time', 'Tristate', 'Bits'] as const;
+                if (validExTypes.includes(option.Type as typeof validExTypes[number])) {
+                    storageParam.exType = option.Type as typeof validExTypes[number];
+                }
             }
 
             //特殊标记（实现选择本地数据）
@@ -101,7 +104,7 @@ async function updateRcloneStorageInfoList() {
 
             //选项
             if (option.Examples && option.Examples.length > 0) {
-                storageParam.select = option.Examples.map((item: any) => {
+                storageParam.select = option.Examples.map((item: { Value: string; Help: string }) => {
                     const select: ParamItemOptionType = {
                         label: item.Value,
                         value: item.Value,

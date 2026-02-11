@@ -9,6 +9,7 @@ import { openlistInfo } from "../../services/openlist"
 import { RequestOptions } from "@arco-design/web-react/es/Upload"
 import { delMountStorage } from "./mount/mount"
 import { nmConfig } from "../../services/config"
+import { OpenlistStorageItem } from "../../type/openlist/openlistInfo"
 
 //列举存储信息
 async function reupStorage() {
@@ -35,8 +36,7 @@ async function reupStorage() {
         //openlist
         try {
             const response = await openlist_api_get('/api/admin/storage/list')
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const list = response?.data?.content as any[] || []
+            const list = (response?.data?.content as OpenlistStorageItem[]) || []
             for (const storage of list) {
                 // 数据验证
                 if (!storage || !storage.mount_path) {
@@ -123,11 +123,13 @@ async function getStorageParams(name: string): Promise<ParametersType> {
     const storage = searchStorage(name)
 
     switch (storage?.framework) {
-        case 'rclone':
-            return await rclone_api_post(
+        case 'rclone': {
+            const result = await rclone_api_post(
                 '/config/get', {
                 name: storage?.name
             })
+            return result || {}
+        }
         case 'openlist': {
             const params = (await openlist_api_get(
                 '/api/admin/storage/get', {
@@ -153,7 +155,7 @@ async function getStorageParams(name: string): Promise<ParametersType> {
 }
 
 //转换存储路径
-const convertStoragePath = (storageName: string, path?: string, isDir?: boolean, noStorageName: boolean = false, onlyStorageName: boolean = false) => {
+const convertStoragePath = (storageName: string, path?: string, isDir?: boolean, noStorageName: boolean = false, onlyStorageName: boolean = false): string => {
     if (path === '/') { path = '' }
     const storage = searchStorage(storageName)
     console.log(storage);
@@ -163,21 +165,24 @@ const convertStoragePath = (storageName: string, path?: string, isDir?: boolean,
             return (noStorageName ? '' : storageName + ':') + (onlyStorageName ? '' : (path ? formatPathRclone(path, isDir) : ''))
         case 'openlist':
             return (noStorageName ? '' : openlistInfo.markInRclone + ':') + (onlyStorageName ? '' : (path ? formatPathRclone(storageName + '/' + path, isDir) : storageName))
+        default:
+            return ''
     }
 }
 
 
-function searchStorage(keyword: string) {
+function searchStorage(keyword: string): StorageList | undefined {
     for (const storage of rcloneInfo.storageList) {
         if (storage.name === keyword || (storage.framework === 'openlist' && storage.other?.openlist?.driverPath === keyword)) {
             return storage;
         }
     }
+    return undefined;
 }
 
 function getFileName(path: string): string {
     const pathArr = path.split('/')
-    return pathArr[pathArr.length - 1]
+    return pathArr[pathArr.length - 1] ?? ''
 }
 
 function formatPathRclone(path: string, isDir?: boolean): string {

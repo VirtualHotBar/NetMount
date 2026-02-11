@@ -100,7 +100,7 @@ async function createStorage(
                     ...exAdditional
                 });
                 await reupStorage();
-                return isEmptyObject(backData);
+                return backData ? isEmptyObject(backData as Record<string, unknown>) : false;
 
             case 'openlist': {
                 // 安全序列化 addition
