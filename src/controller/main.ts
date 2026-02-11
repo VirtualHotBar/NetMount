@@ -1,12 +1,11 @@
-import { nmConfig, osInfo, readNmConfig, roConfig, saveNmConfig, setNmConfig } from "../services/config"
+import { nmConfig, osInfo, readNmConfig, roConfig, saveNmConfig } from "../services/config"
 import { rcloneInfo } from "../services/rclone"
 import { rclone_api_post } from "../utils/rclone/request"
 import { startUpdateCont } from "./stats/continue"
 import { reupMount } from "./storage/mount/mount"
 import { reupStorage } from "./storage/storage"
 import { listenWindow, windowsHide } from "./window"
-import { NMConfig } from "../type/config"
-import { formatPath, randomString, restartSelf, sleep } from "../utils/utils"
+import { formatPath, sleep } from "../utils/utils"
 import { t } from "i18next"
 import { startRclone, stopRclone } from "../utils/rclone/process"
 import { getOsInfo } from "../utils/tauri/osInfo"
@@ -21,10 +20,11 @@ import { homeDir } from "@tauri-apps/api/path"
 import { openlist_api_get } from "../utils/openlist/request"
 import { openlistInfo } from "../services/openlist"
 import { addOpenlistInRclone } from "../utils/openlist/openlist"
-import { Test } from "./test"
 import { Notification } from "@arco-design/web-react"
 
-async function init(setStartStr: Function) {
+type SetStartStrFn = (str: string) => void;
+
+async function init(setStartStr: SetStartStrFn) {
 
     setStartStr(t('init'))
     roConfig.env.path.homeDir = await homeDir()
@@ -100,14 +100,33 @@ async function reupRcloneVersion() {
 }
 
 async function reupOpenlistVersion() {
-    let version = await openlist_api_get('/api/admin/setting/get', { key: 'version' })
-    if (version.code !== 200) {
-        await sleep(500)
-        await reupOpenlistVersion()
+    // 主路径：尝试 /api/admin/setting/get
+    const version = await openlist_api_get('/api/admin/setting/get', { key: 'version' })
+    
+    if (version.code === 200 && version.data?.value) {
+        openlistInfo.version.version = version.data.value
+        console.log('OpenList version retrieved via /api/admin/setting/get:', version.data.value)
         return
     }
-    openlistInfo.version.version = version.data.value || ''
-
+    
+    console.log('Primary version endpoint failed, trying fallback...')
+    
+    // 回退路径：尝试 /api/public/settings
+    try {
+        const publicSettings = await openlist_api_get('/api/public/settings')
+        if (publicSettings.data?.version) {
+            openlistInfo.version.version = publicSettings.data.version
+            console.log('OpenList version retrieved via /api/public/settings:', publicSettings.data.version)
+            return
+        }
+    } catch (fallbackError) {
+        console.error('Fallback version endpoint also failed:', fallbackError)
+    }
+    
+    // 如果都失败了，等待后重试
+    console.log('All version endpoints failed, retrying in 500ms...')
+    await sleep(500)
+    await reupOpenlistVersion()
 }
 
 

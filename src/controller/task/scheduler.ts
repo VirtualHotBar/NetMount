@@ -29,7 +29,7 @@ class TaskScheduler {
                 this.cancelTask(task.name);
                 delTask(task.name);
                 break;
-            case 'time':
+            case 'time': {
                 const executeTaskInterval = () => {
                     const now = new Date();
                     const scheduledTime = new Date(now);
@@ -54,11 +54,13 @@ class TaskScheduler {
                 };
                 executeTaskInterval();
                 break;
-            case 'interval':
+            }
+            case 'interval': {
                 const intervalMs = task.run.interval!*1000;
                 task.run.runId = window.setInterval(async () => await this.executeTask(task), intervalMs);
                 //task.runInfo.msg += '\r\n'+`${t('next_run_at')}: ${new Date(Date.now() + intervalMs).toLocaleString()}`;
                 break;
+            }
             default:
                 console.error('Invalid task mode:', task.run.mode);
         }

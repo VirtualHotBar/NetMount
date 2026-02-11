@@ -17,7 +17,7 @@ const Col = Grid.Col;
 function Task_page() {
   const { t } = useTranslation()
   const navigate = useNavigate();
-  const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
+  const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
   const [modal, contextHolder] = Modal.useModal();
 
   const columns: TableColumnProps[] = [

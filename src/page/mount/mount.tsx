@@ -1,4 +1,4 @@
-import { Alert, Button, Grid, Message, Modal, Space, Table, TableColumnProps, Typography } from '@arco-design/web-react'
+import { Alert, Button, Grid, Message, Space, Table, TableColumnProps, Typography } from '@arco-design/web-react'
 import React, { useEffect, useReducer, useState } from 'react'
 import { rcloneInfo } from '../../services/rclone'
 import { delMountStorage, isMounted, mountStorage, reupMount, unmountStorage } from '../../controller/storage/mount/mount'
@@ -10,7 +10,6 @@ import { NoData_module } from '../other/noData'
 import { getWinFspInstallState, installWinFsp, openUrlInBrowser, showPathInExplorer } from '../../utils/utils'
 import { IconEye, IconQuestionCircle } from '@arco-design/web-react/icon'
 import { exit } from '../../controller/main'
-import { restartRclone } from '../../utils/rclone/process'
 const Row = Grid.Row;
 const Col = Grid.Col;
 

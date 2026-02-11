@@ -1,7 +1,7 @@
 import { FilterType, ParamItemOptionType, StorageInfoType, StorageParamItemType } from "../../../../type/controller/storage/info";
 import { rclone_api_post } from "../../../../utils/rclone/request";
-import { storageInfoList } from "../../allList";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 async function updateRcloneStorageInfoList() {
     const providers = (await rclone_api_post('/config/providers')).providers as Array<any>
 
@@ -10,7 +10,7 @@ async function updateRcloneStorageInfoList() {
     //let typeList: Array<string> = []
 
     for (const provider of providers) {
-        let storageParams: StorageParamItemType[] = []
+        const storageParams: StorageParamItemType[] = []
 
         for (const option of provider.Options) {
 
@@ -21,12 +21,12 @@ async function updateRcloneStorageInfoList() {
             /*             if(option.DefaultStr !== option.ValueStr){//DefaultStr和ValueStr区别是，前者DefaultStr包含‘<nil>’字符串
                             console.log(option.DefaultStr,option.ValueStr);
                         } */
-            //all type: ['string', 'bool', 'CommaSepList', 'Encoding', 'SizeSuffix', 'int', 'Duration', 'SpaceSepList', 'Time', 'Tristate', 'Bits']
+            // all type: ['string', 'bool', 'CommaSepList', 'Encoding', 'SizeSuffix', 'int', 'Duration', 'SpaceSepList', 'Time', 'Tristate', 'Bits']
             /*if (!typeList.includes(option.Type)) {
                             typeList.push(option.Type)
                         } */
 
-            let storageParam: StorageParamItemType = {
+            const storageParam: StorageParamItemType = {
                 label: option.Name,
                 name: option.Name,
                 description: option.Help,
@@ -73,7 +73,7 @@ async function updateRcloneStorageInfoList() {
 
             //过滤器
             const generateFilter = (name: string, list: string) => {
-                let filters: FilterType[] = []
+                const filters: FilterType[] = []
                 const Providers = list.split('!').join('').split(',') as Array<string>;
                 const filterState = !list.startsWith('!')
                 for (const Provider of Providers) {
@@ -102,7 +102,7 @@ async function updateRcloneStorageInfoList() {
             //选项
             if (option.Examples && option.Examples.length > 0) {
                 storageParam.select = option.Examples.map((item: any) => {
-                    let select: ParamItemOptionType = {
+                    const select: ParamItemOptionType = {
                         label: item.Value,
                         value: item.Value,
                         help: item.Help,

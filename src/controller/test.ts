@@ -1,22 +1,8 @@
 import { rclone_api_post } from "../utils/rclone/request";
-import { createStorage } from "./storage/create";
-import { convertStoragePath, getFileList, reupStorage } from "./storage/storage";
-import { invoke } from '@tauri-apps/api/core';
-
-import { app } from "@tauri-apps/api";
-import { nmConfig, osInfo, roConfig } from "../services/config";
-import { Aria2 } from "../utils/aria2/aria2";
-import { checkUpdate } from "./update/update";
-import { getAvailablePorts, getWinFspInstallState, installWinFsp, showPathInExplorer } from "../utils/utils";
-import { t } from "i18next";
-import { FilterType, StorageInfoType, StorageParamItemType } from "../type/controller/storage/info";
-import { storageInfoList, updateStorageInfoList } from "./storage/allList";
+import { getAvailablePorts } from "../utils/utils";
+import { nmConfig, osInfo } from "../services/config";
+import { storageInfoList } from "./storage/allList";
 import { rcloneInfo } from "../services/rclone";
-import { openlist_api_get, } from "../utils/openlist/request";
-import { openlistInfo } from "../services/openlist";
-import { addOpenlistInRclone } from "../utils/openlist/openlist";
-import { restartRclone } from "../utils/rclone/process";
-import { restartOpenlist } from "../utils/openlist/process";
 import { exit } from "./main";
 
 export async function Test() {

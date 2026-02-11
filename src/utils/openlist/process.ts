@@ -1,9 +1,6 @@
-import { invoke } from "@tauri-apps/api/core";
 import { Command } from "@tauri-apps/plugin-shell";
-import { rcloneInfo } from "../../services/rclone";
-import { formatPath, getAvailablePorts, randomString, sleep } from "../utils";
+import { formatPath, getAvailablePorts, sleep } from "../utils";
 import { openlistInfo } from "../../services/openlist";
-import { homeDir } from "@tauri-apps/api/path";
 import { nmConfig, osInfo, roConfig } from "../../services/config";
 import { getOpenlistToken, modifyOpenlistConfig, setOpenlistPass } from "./openlist";
 import { openlist_api_ping } from "./request";
@@ -13,7 +10,7 @@ const openlistDataDir = () => {
 }
 
 const addParams = (): string[] => {
-    let params: string[] = []
+    const params: string[] = []
     params.push('--data', openlistDataDir())
     return params
 }
@@ -25,14 +22,14 @@ async function startOpenlist() {
     openlistInfo.openlistConfig.temp_dir = formatPath(nmConfig.settings.path.cacheDir + '/openlist/', osInfo.osType === "windows")
     
     //自动分配端口
-    openlistInfo.openlistConfig.scheme!.http_port != (await getAvailablePorts(2))[1]
+    openlistInfo.openlistConfig.scheme!.http_port = (await getAvailablePorts(2))[1]
 
     openlistInfo.endpoint.url = 'http://localhost:' + (openlistInfo.openlistConfig.scheme?.http_port || 5573)
     await setOpenlistPass(nmConfig.framework.openlist.password)
 
     openlistInfo.endpoint.auth.token = await getOpenlistToken()
     await modifyOpenlistConfig()
-    let args: string[] = [
+    const args: string[] = [
         'server',
         ...addParams()
     ];
@@ -50,10 +47,11 @@ async function startOpenlist() {
 
     openlistInfo.process.child = await openlistInfo.process.command.spawn()
 
-    while (true) {
+    let isReady = false
+    while (!isReady) {
         await sleep(500)
         if (await openlist_api_ping() && openlistInfo.process.log.includes('start HTTP server')) {
-            break;
+            isReady = true
         }
     }
 }

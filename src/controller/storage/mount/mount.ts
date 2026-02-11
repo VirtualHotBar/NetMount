@@ -3,15 +3,15 @@ import { nmConfig, saveNmConfig } from "../../../services/config";
 import { hooks } from "../../../services/hook";
 import { rcloneInfo } from "../../../services/rclone";
 import { MountListItem } from "../../../type/config";
-import { ParametersType } from "../../../type/defaults";
 import { rclone_api_post } from "../../../utils/rclone/request";
 import { fs_exist_dir, fs_make_dir } from "../../../utils/utils";
-import { convertStoragePath, formatPathRclone } from "../storage";
+import { convertStoragePath } from "../storage";
 import {
   MountOptions,
   VfsOptions,
 } from "../../../type/rclone/storage/mount/parameters";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //列举存储
 async function reupMount(noRefreshUI?: boolean) {
   const mountPoints: any[] =
@@ -19,6 +19,7 @@ async function reupMount(noRefreshUI?: boolean) {
 
   rcloneInfo.mountList = [];
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mountPoints.forEach((tiem: any) => {
     const name = tiem.Fs;
     rcloneInfo.mountList.push({

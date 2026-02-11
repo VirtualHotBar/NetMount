@@ -1,11 +1,8 @@
 
-import { t } from "i18next"
 import { RcloneInfo } from "../type/rclone/rcloneInfo"
 import { RcloneStats } from "../type/rclone/stats"
-import { nmConfig, osInfo } from "./config"
-import { formatPath } from "../utils/utils"
 
-let rcloneInfo: RcloneInfo = {
+const rcloneInfo: RcloneInfo = {
     process:{
         
     },
@@ -63,6 +60,6 @@ let rcloneInfo: RcloneInfo = {
     }
 }
 
-let rcloneStatsHistory: RcloneStats[] = []
+const rcloneStatsHistory: RcloneStats[] = []
 
 export { rcloneInfo, rcloneStatsHistory }

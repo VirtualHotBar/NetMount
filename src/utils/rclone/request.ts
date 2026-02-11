@@ -2,7 +2,7 @@ import { Message } from "@arco-design/web-react";
 import { rcloneInfo } from "../../services/rclone";
 import { nmConfig } from "../../services/config";
 
-let getRcloneApiHeaders = () => {
+const getRcloneApiHeaders = () => {
     return {
         Authorization: `Basic ${btoa(`${nmConfig.framework.rclone.user}:${nmConfig.framework.rclone.password}`)}`,
         'Content-Type': 'application/json'

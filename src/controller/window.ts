@@ -1,8 +1,5 @@
-import { listen } from "@tauri-apps/api/event";
-import { exit } from "./main";
 import { saveNmConfig } from "../services/config";
 import { webviewWindow } from "@tauri-apps/api";
-import { getCurrentWebview  } from "@tauri-apps/api/webview";
 
 export const window = webviewWindow.getCurrentWebviewWindow()
 

@@ -1,9 +1,9 @@
 import React, { CSSProperties, useEffect, useReducer, useState } from 'react'
-import { BackTop, Badge, Button, Divider, Dropdown, Grid, Input, Link, List, Menu, Message, Modal, Notification, Popconfirm, Select, Space, Spin, Table, TableColumnProps, Tabs, Tooltip, Typography, Upload } from '@arco-design/web-react';
-import { IconCopy, IconDelete, IconEdit, IconFolderAdd, IconLeft, IconMore, IconPaste, IconRefresh, IconScissor, IconUpCircle, IconUpload } from '@arco-design/web-react/icon';
+import { Badge, Button, Dropdown, Grid, Input, Link, Menu, Message, Modal, Notification, Popconfirm, Select, Space, Spin, Table, TableColumnProps, Tabs, Typography, Upload } from '@arco-design/web-react';
+import { IconCopy, IconDelete, IconEdit, IconFolderAdd, IconLeft, IconMore, IconPaste, IconRefresh, IconScissor, IconUpload } from '@arco-design/web-react/icon';
 import { rcloneInfo } from '../../services/rclone';
 import { useTranslation } from 'react-i18next';
-import { copyDir, copyFile, delDir, delFile, filterHideStorage, formatPathRclone, getFileList, mkDir, moveDir, moveFile, uploadFileRequest } from '../../controller/storage/storage';
+import { copyDir, copyFile, delDir, delFile, filterHideStorage, getFileList, mkDir, moveDir, moveFile, uploadFileRequest } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
 import { formatSize, getURLSearchParam, sleep } from '../../utils/utils';
 import { RequestOptions } from '@arco-design/web-react/es/Upload';
@@ -19,49 +19,10 @@ const tipsStyle: CSSProperties = {
     fontSize: '1rem'
 };
 
-function Explorer_page() {
-    return (
-        <>
-            {/*             <Tabs defaultActiveTab='1'>
-                <TabPane key='1' title='Tab 1'>
-                    <ExplorerItem />
-                </TabPane>
-            </Tabs> */}
-            <ExplorerItem />
-        </>
-    )
-}
-
-// 规范路径
-const sanitizePath = (newPath: string): string => {
-    if (!newPath.startsWith('/')) {
-        newPath = '/' + newPath;
-    }
-
-    // 确保路径不以 / 结尾，如果不是根路径
-    if (newPath !== '/' && newPath.endsWith('/')) {
-        newPath = newPath.slice(0, -1);
-    }
-
-    return newPath;
-};
-
-//取父目录
-const getParentPath = (currentPath: string): string => {
-    // 如果路径为空或者只有一个"/"，则无上级目录
-    if (currentPath === '/' || currentPath === '') {
-        return currentPath;
-    }
-
-    // 找到最后一个"/"出现的位置
-    const lastSlashIndex = currentPath.lastIndexOf('/');
-
-    // 返回截取到倒数第二个"/"之前的路径作为上级目录
-    return currentPath.substring(0, lastSlashIndex);
-};
-
-
 function ExplorerItem() {
+    const { t } = useTranslation()
+
+    const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
     const { t } = useTranslation()
 
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件

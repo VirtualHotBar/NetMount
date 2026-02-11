@@ -37,7 +37,7 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
                     throw new Error('The directory cannot be copied/moved to a file');
                 }
                 break;
-            };
+            }
             case 'move': {//移动
                 if (srcIsDir && targetIsDir) {//移动目录
                     moveDir(task.source.storageName, task.source.path, task.target.storageName, task.target.path)
@@ -49,7 +49,7 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
                     throw new Error('The directory cannot be copied/moved to a file');
                 }
                 break;
-            };
+            }
             case 'delete': {//删除
                 if (srcIsDir) {//删除目录
                     delDir(task.source.storageName, task.source.path)
@@ -57,11 +57,11 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
                     delFile(task.source.storageName, task.source.path)
                 }
                 break;
-            };
+            }
             case 'sync': {//同步
                 sync(task.source.storageName, task.source.path, task.target.storageName, task.target.path)
                 break;
-            };
+            }
             case 'bisync': {//双向同步
                 sync(task.source.storageName, task.source.path, task.target.storageName, task.target.path, true)
                 break;

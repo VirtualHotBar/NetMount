@@ -2,14 +2,74 @@
 use std::os::unix::fs::PermissionsExt;
 use std::process::exit;
 use std::{env, path::Path};
+
 // 获取操作系统类型
 const OS_TYPE: &str = env::consts::OS;
-// 获取架构类型
-//const ARCH: &str = env::consts::ARCH;
+
+// OpenList 版本控制
+// 默认固定版本，避免 "latest" 漂移导致的接口不兼容问题
+const DEFAULT_OPENLIST_VERSION: &str = "v4.0.5";
+
+// 版本标记文件
+const OPENLIST_VERSION_FILE: &str = "res/bin/openlist/.version";
 
 struct ResBinUrls {
     rclone: &'static str,
-    openlist: &'static str,
+    openlist: String,
+}
+
+/// 获取 OpenList 版本
+/// 优先级：环境变量 NETMOUNT_OPENLIST_VERSION > 默认版本 DEFAULT_OPENLIST_VERSION
+fn get_openlist_version() -> String {
+    env::var("NETMOUNT_OPENLIST_VERSION")
+        .unwrap_or_else(|_| DEFAULT_OPENLIST_VERSION.to_string())
+}
+
+/// 构建 OpenList 下载 URL
+fn build_openlist_url(version: &str, os_type: &str, arch: &str) -> String {
+    // 架构映射
+    let arch_suffix = match arch {
+        "aarch64" | "arm64" => "arm64",
+        "x86_64" | "amd64" | "x86" => "amd64",
+        _ => "amd64",
+    };
+
+    // OS 映射
+    let os_suffix = match os_type {
+        "windows" => "windows",
+        "linux" => "linux",
+        "macos" => "darwin",
+        _ => "linux",
+    };
+
+    // 扩展名映射
+    let ext = match os_type {
+        "windows" => "zip",
+        _ => "tar.gz",
+    };
+
+    format!(
+        "https://github.com/OpenListTeam/OpenList/releases/download/{}/openlist-{}-{}.{}",
+        version, os_suffix, arch_suffix, ext
+    )
+}
+
+/// 记录 OpenList 版本信息
+fn record_openlist_version(version: &str, commit: Option<&str>) {
+    println!("cargo:rustc-env=OPENLIST_VERSION={}", version);
+    println!("cargo:warning=OpenList version: {}", version);
+    
+    if let Some(c) = commit {
+        println!("cargo:rustc-env=OPENLIST_COMMIT={}", c);
+        println!("cargo:warning=OpenList commit: {}", c);
+    }
+    
+    // 写入版本文件
+    let version_path = Path::new(OPENLIST_VERSION_FILE);
+    if let Some(parent) = version_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let _ = std::fs::write(version_path, format!("{}\n", version));
 }
 
 fn main() -> anyhow::Result<()> {
@@ -66,46 +126,59 @@ fn check_res_bin() {
     let arch = binding.as_str();
     let bin_path = "res/bin/";
 
+    // 获取 OpenList 版本
+    let openlist_version = get_openlist_version();
+    println!("cargo:warning=Building with OpenList version: {}", openlist_version);
+    
+    // 检查环境变量覆盖
+    if env::var("NETMOUNT_OPENLIST_VERSION").is_ok() {
+        println!("cargo:warning=Using OpenList version from environment variable NETMOUNT_OPENLIST_VERSION");
+    } else {
+        println!("cargo:warning=Using default OpenList version (set NETMOUNT_OPENLIST_VERSION to override)");
+    }
+
     let res_bin_urls = match OS_TYPE {
         "windows" => match arch {
             "aarch64"|"arm" |"arm64"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-windows-386.zip",
-                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-windows-arm64.zip",
+                openlist: build_openlist_url(&openlist_version, "windows", arch),
             },
             _ => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-windows-amd64.zip",
-                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-windows-amd64.zip",
+                openlist: build_openlist_url(&openlist_version, "windows", arch),
             },
         },
         "linux" => match arch {
             "aarch64" |"arm"|"arm64"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-linux-arm64.zip",
-                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-linux-arm64.tar.gz",
+                openlist: build_openlist_url(&openlist_version, "linux", arch),
             },
             _ => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-linux-amd64.zip",
-                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-linux-amd64.tar.gz",
+                openlist: build_openlist_url(&openlist_version, "linux", arch),
             },
         },
         "macos" => match arch {
             "x86_64" | "x86"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
-                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-darwin-amd64.tar.gz",
+                openlist: build_openlist_url(&openlist_version, "macos", arch),
             },
             "arm64"|"aarch64"|"arm"=> ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-arm64.zip",
-                openlist: "https://github.com/OpenListTeam/OpenList/releases/latest/download/openlist-darwin-arm64.tar.gz",
+                openlist: build_openlist_url(&openlist_version, "macos", arch),
             },
             _ => ResBinUrls {
                 rclone: "",
-                openlist: "",
+                openlist: build_openlist_url(&openlist_version, "macos", arch),
             },
         },
         _ => ResBinUrls {
             rclone: "",
-            openlist: "",
+            openlist: build_openlist_url(&openlist_version, OS_TYPE, arch),
         },
     };
+    
+    println!("cargo:warning=OpenList download URL: {}", res_bin_urls.openlist);
 
     if !Path::new(bin_path).exists() {
         std::fs::create_dir_all(bin_path).expect("Failed to create rclone directory");
@@ -212,10 +285,10 @@ fn check_res_bin() {
         }
 
         // 下载 openlist
-        let zip_name: &str = &extract_filename_from_url(res_bin_urls.openlist).unwrap();
+        let zip_name: &str = &extract_filename_from_url(&res_bin_urls.openlist).unwrap();
 
         let _ = download_with_progress(
-            res_bin_urls.openlist,
+            &res_bin_urls.openlist,
             temp_dir.join(zip_name).to_str().unwrap(),
             |total_size, downloaded| {
                 println!(
@@ -249,6 +322,25 @@ fn check_res_bin() {
         }
         if Path::new(openlist_path).exists() {
             println!("添加成功 openlist ");
+            
+            // 记录 OpenList 版本信息
+            let openlist_version = get_openlist_version();
+            record_openlist_version(&openlist_version, None);
+            
+            // 尝试获取更详细的版本信息（通过运行二进制文件）
+            let version_cmd = std::process::Command::new(openlist_path)
+                .args(&["version"])
+                .output();
+            
+            match version_cmd {
+                Ok(output) if output.status.success() => {
+                    let version_str = String::from_utf8_lossy(&output.stdout);
+                    println!("cargo:warning=OpenList binary version info:\n{}", version_str);
+                }
+                _ => {
+                    println!("cargo:warning=Could not get OpenList binary version info");
+                }
+            }
         } else {
             println!("添加失败 openlist ");
             exit(1);

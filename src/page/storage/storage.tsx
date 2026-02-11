@@ -2,7 +2,7 @@ import { Button, Grid, Popconfirm, Space, Tag, Tooltip } from "@arco-design/web-
 import { useTranslation } from 'react-i18next';
 import { delStorage, filterHideStorage, reupStorage } from "../../controller/storage/storage"
 import { rcloneInfo } from "../../services/rclone"
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { hooks } from "../../services/hook";
 import { useNavigate } from "react-router-dom";
 

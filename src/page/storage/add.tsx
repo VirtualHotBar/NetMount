@@ -1,8 +1,8 @@
-import { Button, Card, Checkbox, Form, FormInstance, Grid, Input, InputNumber, InputTag, Link, Message, Notification, Radio, Select, Space, Switch, Typography } from "@arco-design/web-react";
+import { Button, Card, Form, FormInstance, Grid, Input, Message, Notification, Radio, Select, Space, Typography } from "@arco-design/web-react";
 import { useTranslation } from "react-i18next";
-import { CSSProperties, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createStorage } from "../../controller/storage/create";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getProperties, getURLSearchParam, openUrlInBrowser } from "../../utils/utils";
 import { getStorageParams, searchStorage } from "../../controller/storage/storage";
 import { rcloneInfo } from "../../services/rclone";
@@ -10,18 +10,18 @@ import { IconQuestionCircle } from "@arco-design/web-react/icon";
 import { nmConfig, roConfig } from "../../services/config";
 import { searchStorageInfo, storageInfoList } from "../../controller/storage/allList";
 import { ParametersType } from "../../type/defaults";
-import { StorageInfoType, StorageParamsType } from "../../type/controller/storage/info";
-import { InputForm_module, InputFormItemContent_module } from "../other/InputForm";
+import { StorageInfoType } from "../../type/controller/storage/info";
+import { InputForm_module } from "../other/InputForm";
 const FormItem = Form.Item;
-const { GridItem, Col, Row } = Grid;
+const { Col, Row } = Grid;
 const RadioGroup = Radio.Group;
 const InputSearch = Input.Search;
 
 const filterDuplicates = (storageInfo: StorageInfoType[], t: (key: string) => string): StorageInfoType[] => {
-    let newStorageList: StorageInfoType[] = [];
-    let labels: string[] = [];
+    const newStorageList: StorageInfoType[] = [];
+    const labels: string[] = [];
     for (let i = 0; i < storageInfo.length; i++) {
-        let label = t(storageInfo[i].label);
+        const label = t(storageInfo[i].label);
         if (!labels.includes(label)) {
 
             labels.push(label);

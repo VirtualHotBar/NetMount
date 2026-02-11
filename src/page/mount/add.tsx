@@ -1,9 +1,8 @@
-import { Button, Checkbox, Collapse, Form, FormInstance, Input, Notification, Radio, Select, Space, Switch } from '@arco-design/web-react'
+import { Button, Checkbox, Collapse, Form, FormInstance, Input, Notification, Radio, Select, Space } from '@arco-design/web-react'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom';
-import { ParametersType } from '../../type/defaults';
-import { formatPath, getProperties, getURLSearchParam, getWinFspInstallState, showPathInExplorer } from '../../utils/utils';
+import { formatPath, getURLSearchParam, getWinFspInstallState, showPathInExplorer } from '../../utils/utils';
 import { defaultMountConfig, defaultVfsConfig, vfsCacheModeParam } from '../../controller/storage/mount/parameters/defaults';
 import { rcloneInfo } from '../../services/rclone';
 import { addMountStorage, editMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage } from '../../controller/storage/mount/mount';
@@ -15,8 +14,6 @@ import { MountOptions, VfsOptions } from '../../type/rclone/storage/mount/parame
 import { searchStorageInfo } from '../../controller/storage/allList';
 
 const FormItem = Form.Item;
-
-const CollapseItem = Collapse.Item;
 
 
 export default function AddMount_page() {
@@ -55,7 +52,7 @@ export default function AddMount_page() {
     }
 
     const editMode = () => {
-        let mountPathTemp = getURLSearchParam('mountPath')
+        const mountPathTemp = getURLSearchParam('mountPath')
         const mount = getMountStorage(mountPathTemp)
         if (mount) {
             setStorageName(mount.storageName)

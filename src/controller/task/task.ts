@@ -34,7 +34,7 @@ function delTask(taskName: string) {
 }
 
 async function startTaskScheduler() {
-    for (let task of nmConfig.task) {
+    for (const task of nmConfig.task) {
         await taskScheduler.addTask(task)
     }
 }

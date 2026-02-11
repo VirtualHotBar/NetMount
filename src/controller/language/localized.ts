@@ -2,7 +2,7 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import i18n from "../../services/i18n";
-import { nmConfig, roConfig } from "../../services/config";
+import { roConfig } from "../../services/config";
 import { hooks } from "../../services/hook";
 
 async function setLocalized(lang: string) {

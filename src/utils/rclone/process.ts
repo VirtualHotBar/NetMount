@@ -1,8 +1,7 @@
-import { invoke } from "@tauri-apps/api/core";
 import { Command } from "@tauri-apps/plugin-shell";
 import { rcloneInfo } from "../../services/rclone";
 import { rclone_api_noop, rclone_api_post } from "./request";
-import { formatPath, getAvailablePorts, randomString, sleep } from "../utils";
+import { formatPath, getAvailablePorts, sleep } from "../utils";
 import { openlistInfo } from "../../services/openlist";
 import { delStorage } from "../../controller/storage/storage";
 import { nmConfig, osInfo, roConfig } from "../../services/config";
@@ -29,7 +28,7 @@ async function startRclone() {
 
     rcloneInfo.endpoint.url = 'http://localhost:' + rcloneInfo.endpoint.localhost.port.toString()
 
-    let args: string[] = [
+    const args: string[] = [
         'rcd',
         `--rc-addr=:${rcloneInfo.endpoint.localhost.port.toString()}`,
         /*`--rc-user=${rcloneInfo.endpoint.auth.user}`,
@@ -58,10 +57,11 @@ async function startRclone() {
 
     rcloneInfo.process.child = await rcloneInfo.process.command.spawn()
 
-    while (true) {
+    let isReady = false
+    while (!isReady) {
         await sleep(500)
         if (await rclone_api_noop()/* &&rcloneInfo.process.log.includes('Serving remote control on') */) {
-            break;
+            isReady = true
         }
     }
 
