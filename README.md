@@ -165,6 +165,7 @@ bug2  编辑挂载页面 任何修改都无法保存 这个bug在原作2024年1.
 添加UI编辑挂载时也能看到和修改挂载路径选项（桌面推荐、自动分配盘符、自定义）
 if（点‘编辑’）{载入上次保存的路径}
 -----
+bug if win10环境下，openlist  rclone都是netmount.exe 下的子进程 if win11运行环境 openlist, rclone 是独立进程。if win11下netmount卡死用任务管理器直接关闭进程，会导致openlist rclone 残留，下次启动netmount 会冲突
 <h1 align="center">
   <br>
 <img src="https://raw.githubusercontent.com/VirtualHotBar/NetMount/main/public/img/color.svg" width="150"/>

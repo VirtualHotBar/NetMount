@@ -1,0 +1,22 @@
+# Cargo 阿里云镜像配置
+[source.crates-io]
+replace-with = 'aliyun'
+
+[source.aliyun]
+registry = "sparse+https://mirrors.aliyun.com/crates.io-index/"
+
+# 备用 tuna 清华镜像
+[source.tuna]
+registry = "sparse+https://mirrors.tuna.tsinghua.edu.cn/crates.io-index/"
+
+# 二进制包镜像配置
+[registries.crates-io]
+protocol = "sparse"
+
+# 强制使用CLI进行git fetch以避免某些网络问题
+[net]
+git-fetch-with-cli = true
+
+# sccache 可以配置缓存目录
+[build]
+# rustc-wrapper = "/path/to/sccache"
