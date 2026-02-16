@@ -3,13 +3,12 @@ import runCmd from "../tauri/cmd"
 import { addParams, openlistDataDir } from "./process"
 import { openlistInfo } from "../../services/openlist"
 import { createStorage } from "../../controller/storage/create"
-import { delStorage } from "../../controller/storage/storage"
 import { nmConfig } from "../../services/config"
 
 
 
 async function getOpenlistToken() {
-    const resultStr = await runCmd('openlist', ['admin', 'token', ...addParams()])
+    const resultStr = await runCmd('binaries/openlist', ['admin', 'token', ...addParams()], true)
     const mark = 'Admin token:'
     const startIndex = resultStr.indexOf(mark)
     if (startIndex === -1) {
@@ -26,11 +25,17 @@ async function getOpenlistToken() {
 }
 
 async function setOpenlistPass(pass:string){
-    const resultStr = await runCmd('openlist', ['admin', 'set',  pass,...addParams()])
+    const resultStr = await runCmd('binaries/openlist', ['admin', 'set',  pass,...addParams()], true)
     console.log(resultStr);
 }
 
-async function modifyOpenlistConfig(rewriteData:any=openlistInfo.openlistConfig){
+async function modifyOpenlistConfig(rewriteData: {
+    force?: boolean;
+    scheme?: {
+        http_port?: number;
+    };
+    temp_dir?: string;
+} = openlistInfo.openlistConfig){
     console.log(rewriteData);
     
      const path = openlistDataDir()+'config.json'

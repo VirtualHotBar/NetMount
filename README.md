@@ -165,7 +165,19 @@ bug2  编辑挂载页面 任何修改都无法保存 这个bug在原作2024年1.
 添加UI编辑挂载时也能看到和修改挂载路径选项（桌面推荐、自动分配盘符、自定义）
 if（点‘编辑’）{载入上次保存的路径}
 -----
-bug if win10环境下，openlist  rclone都是netmount.exe 下的子进程 if win11运行环境 openlist, rclone 是独立进程。if win11下netmount卡死用任务管理器直接关闭进程，会导致openlist rclone 残留，下次启动netmount 会冲突
+<img width="1043" height="376" alt="Image" src="https://github.com/user-attachments/assets/aeeb8067-d60b-4e08-8f82-20a6b65566a4" />
+bug request.ts:45 TypeError: Failed to execute 'json' on 'Response': body stream already read
+    at request.ts:35:25
+    at async mountStorage (mount.ts:119:16)
+    at async autoMount.ts:6:27
+process.ts:52 2026/02/10 15:51:10 NOTICE: mount FAILED: failed to mount FUSE fs: mountpoint path already exists: Z:
+
+分析:这是1.1.2release版就有的bug，在 win10环境下，openlist  rclone都是netmount.exe 下的子进程 if win11运行环境 openlist, rclone 是独立进程。if win11下netmount卡死用任务管理器直接关闭进程(or tauri dev热重载or异常崩溃)，会导致openlist rclone 残留，下次启动netmount 会冲突
+
+结论: win11策略限制导致openlist rclone脱离netmount进程树. win11任务管理器基于App User Model ID 分组不是父进程ID
+
+修复: 配置tauri sidecar和改 Rust 端，使用 tauri_plugin_shell 的 Rust API 启动 sidecar，并关联到 Job Object
+---
 <h1 align="center">
   <br>
 <img src="https://raw.githubusercontent.com/VirtualHotBar/NetMount/main/public/img/color.svg" width="150"/>

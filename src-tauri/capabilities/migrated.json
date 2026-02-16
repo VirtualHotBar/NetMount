@@ -22,7 +22,7 @@
     "fs:allow-exists",
     {
       "identifier": "fs:scope",
-      "allow": ["res/*"]
+      "allow": ["$RESOURCE/**", "binaries/**"]
     },
     "core:window:allow-create",
     "core:window:allow-center",
@@ -64,15 +64,14 @@
       "allow": [
         {
           "args": true,
-          "cmd": "res/bin/aria2c",
+          "cmd": "src-tauri/binaries/aria2c",
           "name": "aria2c",
           "sidecar": false
         },
         {
           "args": true,
-          "cmd": "res/bin/rclone",
-          "name": "rclone",
-          "sidecar": false
+          "name": "binaries/rclone",
+          "sidecar": true
         },
         {
           "args": true,
@@ -94,9 +93,8 @@
         },
         {
           "args": true,
-          "cmd": "res/bin/openlist/openlist",
-          "name": "openlist",
-          "sidecar": false
+          "name": "binaries/openlist",
+          "sidecar": true
         }
       ]
     },
@@ -105,15 +103,14 @@
       "allow": [
         {
           "args": true,
-          "cmd": "res/bin/aria2c",
+          "cmd": "src-tauri/binaries/aria2c",
           "name": "ria2c",
           "sidecar": false
         },
         {
           "args": true,
-          "cmd": "res/bin/rclone",
-          "name": "rclone",
-          "sidecar": false
+          "name": "binaries/rclone",
+          "sidecar": true
         },
         {
           "args": true,
@@ -135,9 +132,8 @@
         },
         {
           "args": true,
-          "cmd": "res/bin/openlist/openlist",
-          "name": "openlist",
-          "sidecar": false
+          "name": "binaries/openlist",
+          "sidecar": true
         }
       ]
     },
@@ -146,15 +142,14 @@
       "allow": [
         {
           "args": true,
-          "cmd": "res/bin/aria2c",
+          "cmd": "src-tauri/binaries/aria2c",
           "name": "ria2c",
           "sidecar": false
         },
         {
           "args": true,
-          "cmd": "res/bin/rclone",
-          "name": "rclone",
-          "sidecar": false
+          "name": "binaries/rclone",
+          "sidecar": true
         },
         {
           "args": true,
@@ -176,9 +171,8 @@
         },
         {
           "args": true,
-          "cmd": "res/bin/openlist/openlist",
-          "name": "openlist",
-          "sidecar": false
+          "name": "binaries/openlist",
+          "sidecar": true
         }
       ]
     },

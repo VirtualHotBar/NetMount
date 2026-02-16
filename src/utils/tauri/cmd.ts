@@ -1,8 +1,10 @@
 import { Command } from '@tauri-apps/plugin-shell';
 
-async function runCmd(cmd: string, args: string[]): Promise<string> {
+async function runCmd(cmd: string, args: string[], isSidecar: boolean = false): Promise<string> {
     // Create a new Command instance with the provided command and arguments.
-    const commandInstance = Command.create(cmd,args);
+    const commandInstance = isSidecar 
+        ? Command.sidecar(cmd, args) 
+        : Command.create(cmd, args);
     let resultStr = '';
     try {
         // Execute the command and wait for its completion.
