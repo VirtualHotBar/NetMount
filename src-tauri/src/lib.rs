@@ -12,6 +12,7 @@ use tray::Tray;
 mod config;
 mod fs;
 mod locale;
+mod sidecar;
 mod tray;
 mod utils;
 
@@ -203,9 +204,17 @@ pub fn init() -> anyhow::Result<()> {
             restart_self,
             read_json_file,
             write_json_file,
-            copy_file
+            copy_file,
+            register_sidecar_pid,
+            spawn_sidecar,
+            kill_sidecar
         ])
         .setup(|app| {
+            // 初始化 Job Object（Windows 进程树管理）
+            if let Err(e) = sidecar::init_job_object() {
+                eprintln!("Failed to initialize job object: {}", e);
+            }
+            
             //判断配置目录是否存在，如不存在创建配置目录
             let config_dir = app.app_data_dir();
             if !config_dir.exists() {
@@ -335,4 +344,69 @@ fn get_temp_dir() -> Result<String, String> {
         .to_str()
         .map(|s| s.to_owned())
         .ok_or_else(|| "Invalid temp directory path".to_string())
+}
+
+#[tauri::command]
+fn register_sidecar_pid(name: String, pid: u32) -> Result<(), String> {
+    sidecar::register_sidecar_pid(&name, pid);
+    Ok(())
+}
+
+#[tauri::command]
+async fn spawn_sidecar(
+    app: tauri::AppHandle<Runtime>,
+    name: String,
+    args: Vec<String>,
+) -> Result<u32, String> {
+    use tauri_plugin_shell::ShellExt;
+    use tauri_plugin_shell::process::CommandEvent;
+    
+    // 从 "binaries/rclone" 提取 "rclone"
+    let sidecar_name = name.split('/').last().unwrap_or(&name);
+    
+    let sidecar_command = app
+        .shell()
+        .sidecar(sidecar_name)
+        .map_err(|e| format!("Failed to create sidecar command: {}", e))?
+        .args(args);
+    
+    let (mut rx, child) = sidecar_command
+        .spawn()
+        .map_err(|e| format!("Failed to spawn sidecar: {}", e))?;
+    
+    let pid = child.pid();
+    let name_clone = sidecar_name.to_string();
+    
+    // 注册到 Job Object（使用简短名称）
+    sidecar::register_sidecar_pid(sidecar_name, pid);
+    println!("Sidecar {} spawned with PID: {}", sidecar_name, pid);
+    
+    // 在后台处理输出
+    tauri::async_runtime::spawn(async move {
+        while let Some(event) = rx.recv().await {
+            match event {
+                CommandEvent::Stdout(line) => {
+                    println!("[{}] stdout: {}", name_clone, String::from_utf8_lossy(&line));
+                }
+                CommandEvent::Stderr(line) => {
+                    eprintln!("[{}] stderr: {}", name_clone, String::from_utf8_lossy(&line));
+                }
+                CommandEvent::Error(err) => {
+                    eprintln!("[{}] error: {}", name_clone, err);
+                }
+                CommandEvent::Terminated(payload) => {
+                    println!("[{}] terminated with code: {:?}", name_clone, payload.code);
+                    break;
+                }
+                _ => {}
+            }
+        }
+    });
+    
+    Ok(pid)
+}
+
+#[tauri::command]
+fn kill_sidecar(name: String) -> Result<bool, String> {
+    Ok(sidecar::kill_sidecar(&name))
 }

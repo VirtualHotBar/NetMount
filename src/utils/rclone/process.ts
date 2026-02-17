@@ -1,4 +1,5 @@
-import { Command } from "@tauri-apps/plugin-shell";
+import { invoke } from "@tauri-apps/api/core";
+import { Child } from "@tauri-apps/plugin-shell";
 import { rcloneInfo } from "../../services/rclone";
 import { rclone_api_noop, rclone_api_post } from "./request";
 import { formatPath, getAvailablePorts, sleep } from "../utils";
@@ -18,21 +19,14 @@ async function startRclone() {
     //设置缓存目录
     rcloneInfo.localArgs.path.tempDir = formatPath(nmConfig.settings.path.cacheDir + '/rclone/', osInfo.osType === "windows")
 
-    /*if (process.env.NODE_ENV != 'development') {
-            rcloneInfo.endpoint.auth.user = randomString(32)
-            rcloneInfo.endpoint.auth.pass = randomString(128)
-        } */
-
     //自动分配端口
     rcloneInfo.endpoint.localhost.port = (await getAvailablePorts(2))[1]
 
-    rcloneInfo.endpoint.url = 'http://localhost:' + rcloneInfo.endpoint.localhost.port.toString()
+    rcloneInfo.endpoint.url = 'http://127.0.0.1:' + rcloneInfo.endpoint.localhost.port.toString()
 
     const args: string[] = [
         'rcd',
         `--rc-addr=:${rcloneInfo.endpoint.localhost.port.toString()}`,
-        /*`--rc-user=${rcloneInfo.endpoint.auth.user}`,
-                `--rc-pass=${rcloneInfo.endpoint.auth.pass}`, */
         `--rc-user=${nmConfig.framework.rclone.user}`,
         `--rc-pass=${nmConfig.framework.rclone.password}`,
         '--rc-allow-origin=' + window.location.origin || '*',
@@ -44,35 +38,26 @@ async function startRclone() {
         args.push('--rc-no-auth')
     }
 
-    rcloneInfo.process.command = Command.create('rclone', args)
+    // 使用 Rust 端启动 sidecar，确保由主进程创建
+    const pid = await invoke<number>('spawn_sidecar', { name: 'binaries/rclone', args })
+    rcloneInfo.process.child = { pid } as Child
+    console.log('rclone spawned from Rust, PID:', pid)
 
-    rcloneInfo.process.log = ''
-    const addLog = (data: string) => {
-        console.log(data);
-        rcloneInfo.process.log += data;
+    await sleep(1000) // 等待rclone服务完全启动
+
+for (;;) {
+    await sleep(500)
+    if (await rclone_api_noop()) {
+        break;
     }
-
-    rcloneInfo.process.command.stdout.on('data', (data: string) => addLog(data))
-    rcloneInfo.process.command.stderr.on('data', (data: string) => addLog(data))
-
-    rcloneInfo.process.child = await rcloneInfo.process.command.spawn()
-
-    let isReady = false
-    while (!isReady) {
-        await sleep(500)
-        if (await rclone_api_noop()/* &&rcloneInfo.process.log.includes('Serving remote control on') */) {
-            isReady = true
-        }
-    }
-
+}
 }
 
 async function stopRclone() {
     await delStorage(openlistInfo.markInRclone)
     await rclone_api_post('/core/quit')
-    if (rcloneInfo.process.child) {
-        await rcloneInfo.process.child.kill()
-    }
+    await invoke('kill_sidecar', { name: 'rclone' })
+    rcloneInfo.process.child = undefined
 }
 
 async function restartRclone() {

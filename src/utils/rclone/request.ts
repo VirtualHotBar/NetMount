@@ -42,10 +42,14 @@ async function handleApiResponse(
     // 解析 JSON
     let data: RcloneApiResponse;
     try {
-        data = await res.json();
-    } catch (parseError) {
-        console.error(`Rclone API JSON parse error [${method}] for ${fullPath}:`, parseError);
-        throw new Error('JSON parse error');
+        return await fetch(rcloneInfo.endpoint.url + '/rc/noop', { 
+            method: 'POST', 
+            headers: getRcloneApiHeaders(),
+            body: '{}'
+        }).then(data => data.ok)
+    } catch (e) {
+        console.log(e)
+        return false;
     }
 
     return data;

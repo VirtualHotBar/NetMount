@@ -71,9 +71,12 @@ function AddStorage_page() {
         setStorageName(storageInfo.defaultParams.name)
     }, [storageTypeName])
 
-    if (storageInfo.framework === 'openlist') {
-        formHook?.setFieldValue('mount_path', '/' + storageName)
-    }
+    // 安全地设置 mount_path，避免在渲染阶段更新状态
+    useEffect(() => {
+        if (storageInfo.framework === 'openlist' && formHook) {
+            formHook.setFieldValue('mount_path', '/' + storageName);
+        }
+    }, [storageInfo.framework, formHook, storageName]);
 
     let content: JSX.Element
 
@@ -81,7 +84,8 @@ function AddStorage_page() {
         case 'selectType':
             content = (<div style={{ width: '100%' }}>
 
-                <Form autoComplete='off'>
+                {/* 移除外层 Form 以避免与 InputForm_module 嵌套 */}
+                <div>
                     <FormItem style={{ width: '100%', }} label={t('storage_type')} >
                         <InputSearch value={searchStr} onChange={(value) => setSearchStr(value)} allowClear placeholder={t('enter_keyword_to_search')} style={{}} />
 
@@ -160,7 +164,7 @@ function AddStorage_page() {
                             <Button onClick={() => { setStep('setParams'); setShowAdvanced(false) }} disabled={!storageTypeName} type='primary'>{t('step_next')}</Button>
                         </Space>
                     </div>
-                </Form>
+                </div>
             </div >)
             break;
         case 'setParams':

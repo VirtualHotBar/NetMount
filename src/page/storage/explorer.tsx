@@ -11,7 +11,7 @@ import { NoData_module } from '../other/noData';
 import { clipListItem } from '../../type/page/storage/explorer';
 import { searchStorageInfo } from '../../controller/storage/allList';
 const Row = Grid.Row;
-const Col = Grid.Col;
+const Col = Grid.Col;//
 const TabPane = Tabs.TabPane;
 const tipsStyle: CSSProperties = {
     textAlign: 'center',
@@ -280,13 +280,13 @@ function ExplorerItem() {
                             <Table columns={columns}
                                 loading={loading}
                                 pagination={false}
-                                rowKey='Path'
+                                rowKey='path'
                                 size='small'
                                 noDataElement={<NoData_module />}
                                 data={
                                     fileList.map((item) => {
                                         return {
-                                            ...item, fileName: <Link style={{ width: '100%' }} onClick={() => { item.isDir ? updatePath(item.path) : openFile(item.path) }}><Typography.Ellipsis showTooltip>{item.name}</Typography.Ellipsis></Link>,
+                                            ...item, fileName: <div style={{ width: '100%' }}><Link style={{ width: '100%' }} onClick={() => { item.isDir ? updatePath(item.path) : openFile(item.path) }}><Typography.Ellipsis showTooltip>{item.name}</Typography.Ellipsis></Link></div>,
                                             fileSize: (item.size != -1 ? formatSize(item.size) : t('dir')),
                                             fileModTime: (new Date(item.modTime)).toLocaleString(),
                                             actions: <Space size={'mini'}>
@@ -313,13 +313,13 @@ function ExplorerItem() {
                                         }
                                     })} />
                             : <div style={{ textAlign: 'center', marginTop: '10rem', width: '100%' }}>
-                                <p>{loading ? <Spin tip={t('filelist_loading')} /> : t('filelist_load_fail')}</p>
+                                <div>{loading ? <Spin tip={t('filelist_loading')} /> : t('filelist_load_fail')}</div>
                             </div>
                     }
                     </> :
-                    !storageName && <Typography.Paragraph style={tipsStyle}>
+                    !storageName && <div style={tipsStyle}>
                         {t('please_select_storage')}
-                    </Typography.Paragraph>
+                    </div>
                 }
             </div>
         </div>

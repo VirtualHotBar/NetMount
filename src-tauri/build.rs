@@ -124,7 +124,18 @@ fn compile_locale(locales: &[(&str, &Path)], default: &str) -> anyhow::Result<()
 fn check_res_bin() {
     let binding = get_arch();
     let arch = binding.as_str();
-    let bin_path = "res/bin/";
+    let bin_path = "binaries/";
+
+    // 获取 OpenList 版本
+    let openlist_version = get_openlist_version();
+    println!("cargo:warning=Building with OpenList version: {}", openlist_version);
+    
+    // 检查环境变量覆盖
+    if env::var("NETMOUNT_OPENLIST_VERSION").is_ok() {
+        println!("cargo:warning=Using OpenList version from environment variable NETMOUNT_OPENLIST_VERSION");
+    } else {
+        println!("cargo:warning=Using default OpenList version (set NETMOUNT_OPENLIST_VERSION to override)");
+    }
 
     // 获取 OpenList 版本
     let openlist_version = get_openlist_version();
@@ -184,7 +195,7 @@ fn check_res_bin() {
         std::fs::create_dir_all(bin_path).expect("Failed to create rclone directory");
     };
 
-    let temp_dir = Path::new("res/temp/");
+    let temp_dir = Path::new("binaries/temp/");
     if !temp_dir.exists() {
         std::fs::create_dir_all(temp_dir).expect("Failed to create temp directory");
     }
@@ -210,8 +221,8 @@ fn check_res_bin() {
         "windows" => "rclone.exe",
         _ => "rclone",
     };
-    let reclone_path = &format!("{}{}", bin_path, rclone_name);
-    if !Path::new(reclone_path).exists() {
+    let rclone_path = &format!("{}{}", bin_path, rclone_name);
+    if !Path::new(rclone_path).exists() {
         if res_bin_urls.rclone.is_empty() {
             panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
         }
@@ -238,21 +249,35 @@ fn check_res_bin() {
             temp_dir.to_str().unwrap(),
         );
         let _ = std::fs::remove_file(temp_dir.join(zip_name));
-        let temp_file_path = temp_dir
-            .join(get_first_entry(temp_dir).unwrap())
-            .join(rclone_name);
+        
+        // 从解压目录中找到 rclone 并复制到目标位置
+        let entry_name = get_first_entry(temp_dir).unwrap();
+        let temp_entry_path = temp_dir.join(&entry_name);
+        
+        // 检查解压出来的第一个条目是文件还是目录
+        let rclone_source_path = if temp_entry_path.is_file() {
+            temp_entry_path.clone()
+        } else {
+            temp_entry_path.join(rclone_name)
+        };
 
         // 复制 rclone
-
-        let _ = std::fs::copy(temp_file_path, reclone_path);
+        println!("解压后条目: {:?}, 是文件: {}", temp_entry_path, temp_entry_path.is_file());
+        println!("源文件路径: {:?}", rclone_source_path);
+        println!("目标路径: {}", rclone_path);
+        
+        match std::fs::copy(&rclone_source_path, rclone_path) {
+            Ok(_) => println!("复制成功"),
+            Err(e) => eprintln!("复制失败: {}", e),
+        }
         // 尝试设置权限
         #[cfg(not(target_os = "windows"))]
-        match std::fs::metadata(&reclone_path) {
+        match std::fs::metadata(rclone_path) {
             Ok(metadata) => {
                 let mut permissions = metadata.permissions();
                 // 直接设置权限位
-                permissions.set_mode(0o755); // 设置为所有者可读写执行，同组用户可读执行，其他用户可读执行
-                if let Err(e) = std::fs::set_permissions(&reclone_path, permissions) {
+                permissions.set_mode(0o755);
+                if let Err(e) = std::fs::set_permissions(rclone_path, permissions) {
                     eprintln!("设置文件权限时出错: {}", e);
                 }
             }
@@ -272,12 +297,17 @@ fn check_res_bin() {
         "windows" => "openlist.exe",
         _ => "openlist",
     };
-    let openlist_dir = &format!("{}openlist/", bin_path);
-    let openlist_path = &format!("{}{}", openlist_dir, openlist_name);
+    let openlist_path = &format!("{}{}", bin_path, openlist_name);
 
     if !Path::new(openlist_path).exists() {
         if res_bin_urls.openlist.is_empty() {
             panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
+        }
+
+        // 清理临时目录，确保下载 openlist 时不会有残留文件
+        let _ = std::fs::remove_dir_all(temp_dir);
+        if !temp_dir.exists() {
+            std::fs::create_dir_all(temp_dir).expect("Failed to create temp directory");
         }
 
         if !Path::new(openlist_path).parent().unwrap().exists() {
@@ -300,10 +330,31 @@ fn check_res_bin() {
             },
         );
 
-        // 解压 openlist
-        let _ = decompress_file(temp_dir.join(zip_name).to_str().unwrap(), openlist_dir);
-
+        // 解压 openlist 到临时目录
+        let _ = decompress_file(temp_dir.join(zip_name).to_str().unwrap(), temp_dir.to_str().unwrap());
         let _ = std::fs::remove_file(temp_dir.join(zip_name));
+        
+        // 从解压目录中找到 openlist 并复制到目标位置
+        let entry_name = get_first_entry(temp_dir).unwrap();
+        let temp_entry_path = temp_dir.join(&entry_name);
+        
+        // 检查解压出来的第一个条目是文件还是目录
+        let source_path = if temp_entry_path.is_file() {
+            // 如果直接是可执行文件，直接使用
+            temp_entry_path.clone()
+        } else {
+            // 如果是目录，在目录中找可执行文件
+            temp_entry_path.join(openlist_name)
+        };
+        
+        println!("解压后条目: {:?}, 是文件: {}", temp_entry_path, temp_entry_path.is_file());
+        println!("源文件路径: {:?}", source_path);
+        println!("目标路径: {}", openlist_path);
+        
+        match std::fs::copy(&source_path, openlist_path) {
+            Ok(_) => println!("复制成功"),
+            Err(e) => eprintln!("复制失败: {}", e),
+        }
 
         // 尝试设置权限
         #[cfg(not(target_os = "windows"))]
@@ -349,6 +400,78 @@ fn check_res_bin() {
 
     //清理
     let _ = std::fs::remove_dir_all(temp_dir);
+
+    // 重命名二进制文件以符合 Tauri sidecar 规范
+    // 格式: name-$TARGET_TRIPLE (例如: rclone-x86_64-pc-windows-msvc.exe)
+    rename_sidecar_binary(bin_path, "rclone", rclone_name);
+    rename_sidecar_binary(bin_path, "openlist", openlist_name);
+}
+
+fn rename_sidecar_binary(bin_path: &str, name: &str, original_name: &str) {
+    let target_triple = get_target_triple();
+    
+    // 获取原始文件的扩展名（如果有）
+    let ext = Path::new(original_name)
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("");
+    
+    // 原始文件路径: binaries/rclone.exe 或 binaries/openlist.exe
+    let original_path = Path::new(bin_path).join(original_name);
+    // 也检查子目录情况: binaries/openlist/openlist.exe
+    let original_subdir_path = Path::new(bin_path).join(name).join(original_name);
+    // 重命名后: binaries/rclone-x86_64-pc-windows-msvc.exe 或 binaries/openlist-x86_64-pc-windows-msvc.exe
+    let renamed_filename = if ext.is_empty() {
+        format!("{}-{}", name, target_triple)
+    } else {
+        format!("{}-{}.{}", name, target_triple, ext)
+    };
+    let renamed_path = Path::new(bin_path).join(renamed_filename);
+
+    // 如果原始文件存在，进行重命名
+    let source_path = if original_path.exists() {
+        Some(original_path)
+    } else if original_subdir_path.exists() {
+        Some(original_subdir_path)
+    } else {
+        None
+    };
+
+    if let Some(source) = source_path {
+        // 删除可能已存在的重命名文件
+        if renamed_path.exists() {
+            let _ = std::fs::remove_file(&renamed_path);
+        }
+        
+        if let Err(e) = std::fs::rename(&source, &renamed_path) {
+            eprintln!("重命名 {} 到 {} 失败: {}", source.display(), renamed_path.display(), e);
+        } else {
+            println!("重命名成功: {} -> {}", source.file_name().unwrap().to_string_lossy(), renamed_path.file_name().unwrap().to_string_lossy());
+        }
+    } else if renamed_path.exists() {
+        // 如果源文件不存在但重命名后的文件存在，说明已经重命名过了
+        println!("{} 已存在，无需重命名", renamed_path.file_name().unwrap().to_string_lossy());
+    }
+}
+
+fn get_target_triple() -> String {
+    let os = match env::consts::OS {
+        "windows" => "pc-windows-msvc",
+        "linux" => "unknown-linux-gnu",
+        "macos" => "apple-darwin",
+        "freebsd" => "unknown-freebsd",
+        _ => env::consts::OS,
+    };
+    
+    let arch = match env::consts::ARCH {
+        "x86_64" => "x86_64",
+        "x86" => "i686",
+        "aarch64" | "arm64" => "aarch64",
+        "arm" => "armv7",
+        _ => env::consts::ARCH,
+    };
+    
+    format!("{}-{}", arch, os)
 }
 
 fn get_arch() -> String {
@@ -402,11 +525,11 @@ pub async fn download_with_progress<F>(
     mut callback: F,
 ) -> io::Result<()>
 where
-    F: FnMut(usize, usize),
+    F: FnMut(usize, usize) + Clone,
 {
     let mut url = url.to_owned();
     if url.to_owned().contains("//github.com") {
-        url = format!("https://gh-proxy.com/{}", url) //github镜像
+        url = format!("https://gh-proxy.com/{}", url)
     }
 
     let response = Client::new()
@@ -424,6 +547,7 @@ where
     if response.status().is_success() {
         let mut file = File::create(output_path)?;
         let mut downloaded: usize = 0;
+        let mut last_percent: i32 = -1;
 
         let mut stream = response.bytes_stream();
 
@@ -431,7 +555,12 @@ where
             let chunk = item.map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
             file.write_all(&chunk)?;
             downloaded += chunk.len();
-            callback(total_size, downloaded);
+            
+            let current_percent = (100 * downloaded / total_size) as i32;
+            if current_percent > last_percent && (current_percent % 5 == 0 || current_percent == 100) {
+                last_percent = current_percent;
+                callback(total_size, downloaded);
+            }
         }
     } else {
         return Err(io::Error::new(io::ErrorKind::Other, "请求失败"));

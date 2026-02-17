@@ -30,8 +30,18 @@ async function reupMount(noRefreshUI?: boolean) {
   !noRefreshUI && hooks.upMount();
 }
 
+function normalizeMountPath(path: string): string {
+    if (!path) return path;
+    let normalized = path.replace(/\\/g, '/');
+    if (normalized.length > 2 && normalized.endsWith('/') && !normalized.endsWith(':/')) {
+        normalized = normalized.slice(0, -1);
+    }
+    return normalized;
+}
+
 function getMountStorage(mountPath: string): MountListItem | undefined {
-  return nmConfig.mount.lists.find((item) => item.mountPath === mountPath);
+    const normalizedSearch = normalizeMountPath(mountPath);
+    return nmConfig.mount.lists.find((item) => normalizeMountPath(item.mountPath) === normalizedSearch);
 }
 
 function isMounted(mountPath: string): boolean {
@@ -78,22 +88,23 @@ async function delMountStorage(mountPath: string) {
   await reupMount();
 }
 
-async function editMountStorage(mountInfo: MountListItem) {
-  //await reupMount()
-  //觉得这里是不必要的，就注释了
-  /*rcloneInfo.mountList.forEach((item) => {
-            if (item.mountPath === mountInfo.mountPath) {
-                return false
-            }
-        }) */
-
+async function editMountStorage(mountInfo: MountListItem, oldMountPath?: string) {
+  const searchPath = oldMountPath || mountInfo.mountPath;
+  
+  let found = false;
+  const normalizedSearch = normalizeMountPath(searchPath);
   for (let i = 0; i < nmConfig.mount.lists.length; i++) {
-    if (nmConfig.mount.lists[i].mountPath === mountInfo.mountPath) {
+    if (normalizeMountPath(nmConfig.mount.lists[i].mountPath) === normalizedSearch) {
       nmConfig.mount.lists[i] = mountInfo;
+      found = true;
       break;
     }
   }
-
+  
+  if (!found) {
+    nmConfig.mount.lists.push(mountInfo);
+  }
+  
   await saveNmConfig();
 }
 

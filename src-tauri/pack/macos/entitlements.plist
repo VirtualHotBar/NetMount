@@ -30,7 +30,7 @@
         <!-- 添加临时例外，允许运行特定的可执行文件 -->
     <key>com.apple.security.temporary-exception.executable-path</key>
     <array>
-        <string>res/bin/rclone</string>
+        <string>src-tauri/binaries/rclone</string>
     </array>
   </dict>
 </plist>

@@ -12,8 +12,11 @@
     "copyright": "(C) 2024-Present  VirtualHotBar",
     "shortDescription": "Cloud storage management tools",
     "longDescription": "Unified management and mounting of cloud storage facilities",
-    "resources": ["res/bin/**/*"],
-    "externalBin": [],
+    "resources": ["binaries/**/*"],
+    "externalBin": [
+      "binaries/rclone",
+      "binaries/openlist"
+    ],
     "icon": ["img/icons/icon.png", "img/icons/icon.icns", "img/icons/icon.ico"],
     "windows": {
       "certificateThumbprint": null,

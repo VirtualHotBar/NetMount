@@ -237,6 +237,7 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
 
                         formItems.push(
                             <FormItem
+                                key={dataItem.name}
                                 requiredSymbol={false}
                                 label={<div className="singe-line" title={t(dataItem.label)}>{dataItem.required && '*'}{t(dataItem.label)}</div>}
                                 title={dataItem.description}

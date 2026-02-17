@@ -1,4 +1,5 @@
-import { Command } from "@tauri-apps/plugin-shell";
+import { invoke } from "@tauri-apps/api/core";
+import { Child } from "@tauri-apps/plugin-shell";
 import { formatPath, getAvailablePorts, sleep } from "../utils";
 import { openlistInfo } from "../../services/openlist";
 import { nmConfig, osInfo, roConfig } from "../../services/config";
@@ -10,7 +11,7 @@ const openlistDataDir = () => {
 }
 
 const addParams = (): string[] => {
-    const params: string[] = []
+const params: string[] = []
     params.push('--data', openlistDataDir())
     return params
 }
@@ -29,35 +30,28 @@ async function startOpenlist() {
 
     openlistInfo.endpoint.auth.token = await getOpenlistToken()
     await modifyOpenlistConfig()
-    const args: string[] = [
+const args: string[] = [
         'server',
         ...addParams()
     ];
 
-    openlistInfo.process.command = Command.create('openlist', args)
+    // 使用 Rust 端启动 sidecar，确保由主进程创建
+    const pid = await invoke<number>('spawn_sidecar', { name: 'binaries/openlist', args })
+openlistInfo.process.child = { pid } as Child
+    openlistInfo.process.log = '' // 初始化日志
+    console.log('openlist spawned from Rust, PID:', pid)
 
-    openlistInfo.process.log = ''
-    const addLog = (data: string) => {
-        openlistInfo.process.log += data;
-        console.log(data);
+for (;;) {
+    await sleep(500)
+    if (await openlist_api_ping()) {
+        break;
     }
-
-    openlistInfo.process.command.stdout.on('data', (data: string) => addLog(data))
-    openlistInfo.process.command.stderr.on('data', (data: string) => addLog(data))
-
-    openlistInfo.process.child = await openlistInfo.process.command.spawn()
-
-    let isReady = false
-    while (!isReady) {
-        await sleep(500)
-        if (await openlist_api_ping() && openlistInfo.process.log.includes('start HTTP server')) {
-            isReady = true
-        }
-    }
+}
 }
 
 async function stopOpenlist() {
-    openlistInfo.process.child && await openlistInfo.process.child.kill()
+    await invoke('kill_sidecar', { name: 'openlist' })
+    openlistInfo.process.child = undefined
 }
 
 async function restartOpenlist() {

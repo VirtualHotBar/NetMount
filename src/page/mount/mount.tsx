@@ -123,6 +123,7 @@ function Mount_page() {
           nmConfig.mount.lists.map((item) => {
             const mounted = isMounted(item.mountPath)
             return {
+              key: item.mountPath, // 添加唯一 key 避免 React 警告
               ...item,
               mountPath_: <div style={{ display: 'flex', alignItems: 'center' }}><Typography.Ellipsis className='singe-line' showTooltip>{item.mountPath}</Typography.Ellipsis>{rcloneInfo.endpoint.isLocal && osInfo.osType === 'windows' && mounted &&
                 <Button title={t('show_path_in_explorer')} onClick={async () => {
@@ -137,7 +138,9 @@ function Mount_page() {
                     <>
                       <Button onClick={() => { delMountStorage(item.mountPath) }} status='danger' >{t('delete')}</Button>
                       <Button onClick={() => { navigate('./add?edit=true&mountPath=' + item.mountPath) }} >{t('edit')}</Button>
-                      <Button onClick={() => { mountStorage(item) }} type='primary' >{t('mount')}</Button>
+                      <Button onClick={async () => { // 添加 async 并使用 loading 状态优化体验
+                        await mountStorage(item)
+                      }} type='primary' >{t('mount')}</Button>
                     </>
                 }
               </Space>

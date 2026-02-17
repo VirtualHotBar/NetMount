@@ -19,10 +19,11 @@ function StartPage() {
   }, [])
 
   return <div style={{ textAlign: 'center', width: '100%', height: '100%', margin: '0px', padding: '0px', backgroundColor: 'var(--color-bg-1)' }} data-tauri-drag-region>
-    <p style={{ paddingTop: '30%' }} data-tauri-drag-region>
+    <div style={{ paddingTop: '30%' }} data-tauri-drag-region>
       <Spin size={30} />
       <br />
-      {t('starting') + ':' + startStr}</p>
+      {t('starting') + ':' + startStr}
+    </div>
   </div>
 }
 
