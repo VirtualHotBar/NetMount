@@ -1,15 +1,12 @@
-import { nmConfig, saveNmConfig } from "../services/config";
+import { saveNmConfig } from "../services/config";
 import { webviewWindow } from "@tauri-apps/api";
 
 export const window = webviewWindow.getCurrentWebviewWindow()
 
 function listenWindow() {
-    // Close behavior is handled in Rust to ensure it works even if the frontend is busy.
-    // Keep this listener only for "hide on close" legacy behavior when enabled.
     window.listen('tauri://close-requested', () => {
-        if (nmConfig.settings.closeToTray) {
-            windowsHide();
-        }
+        windowsHide();
+        return false
     })
 
 

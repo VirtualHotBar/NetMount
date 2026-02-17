@@ -43,6 +43,7 @@ rand = "0.9"
 reqwest = { version = "0.13", features = ["json", "stream"] }
 tokio = { version = "1", features = ["full"] }
 futures-util = "0.3"
+zip = "2.4.2"
 tauri-plugin-shell = "2.3.5"
 tauri-plugin-os = "2.3.2"
 tauri-plugin-fs = "2.4.5"

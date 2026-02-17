@@ -1,6 +1,10 @@
 import { StorageInfoType, StorageParamItemType } from "../../../../type/controller/storage/info";
 import { openlist_api_get } from "../../../../utils/openlist/request";
 
+function normalizeStorageId(raw: string): string {
+    return String(raw ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 // 结构A：对象映射 { driverName: {config, common, additional} }
 // 结构B：数组 [ {name, config, common, additional} ]
 
@@ -207,9 +211,9 @@ async function updateOpenlistStorageInfoList() {
                 };
 
                 openlistStorageInfoList.push({
-                    label: 'storage.' + config.name,
+                    label: 'storage.' + normalizeStorageId(config.name ?? key),
                     type: key,
-                    description: 'description.' + key.toLocaleLowerCase(),
+                    description: 'description.' + normalizeStorageId(key),
                     framework: 'openlist',
                     defaultParams: {
                         name: config.name + '_new',
@@ -287,9 +291,9 @@ async function updateOpenlistStorageInfoListFallback(): Promise<StorageInfoType[
                 };
                 
                 openlistStorageInfoList.push({
-                    label: 'storage.' + config.name,
+                    label: 'storage.' + normalizeStorageId(config.name ?? driverName),
                     type: driverName,
-                    description: 'description.' + driverName.toLocaleLowerCase(),
+                    description: 'description.' + normalizeStorageId(driverName),
                     framework: 'openlist',
                     defaultParams: {
                         name: config.name + '_new',

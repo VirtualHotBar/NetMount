@@ -1,6 +1,10 @@
 import { FilterType, ParamItemOptionType, StorageInfoType, StorageParamItemType, RcloneProvider } from "../../../../type/controller/storage/info";
 import { rclone_api_post } from "../../../../utils/rclone/request";
 
+function normalizeStorageId(raw: string): string {
+    return String(raw ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 async function updateRcloneStorageInfoList() {
     const response = await rclone_api_post('/config/providers');
     const providers = (response?.providers as RcloneProvider[]) || []
@@ -125,9 +129,9 @@ async function updateRcloneStorageInfoList() {
 
 
         rcloneStorageInfoList.push({
-            label: 'storage.'+ provider.Prefix,//provider.Name
+            label: 'storage.' + normalizeStorageId(provider.Prefix),//provider.Name
             type: provider.Prefix,
-            description: 'description.'+provider.Prefix,//provider.Description
+            description: 'description.' + normalizeStorageId(provider.Prefix),//provider.Description
             framework:'rclone',
             defaultParams: {
                 name: provider.Name + '_new',

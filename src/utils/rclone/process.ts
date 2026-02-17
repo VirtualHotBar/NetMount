@@ -5,13 +5,9 @@ import { rclone_api_noop, rclone_api_post } from "./request";
 import { formatPath, getAvailablePorts } from "../utils";
 import { openlistInfo } from "../../services/openlist";
 import { delStorage } from "../../controller/storage/storage";
-import { nmConfig, osInfo, roConfig } from "../../services/config";
-import { netmountLogDir, rcloneLogFile } from "../netmountPaths";
+import { nmConfig, osInfo } from "../../services/config";
+import { netmountLogDir, rcloneConfigFile, rcloneLogFile } from "../netmountPaths";
 import { restartSidecar, startSidecarAndWait, stopSidecarGracefully } from "../sidecarService";
-
-const rcloneDataDir = () => {
-    return formatPath(roConfig.env.path.homeDir + '/.netmount/', osInfo.osType === "windows")
-}
 
 async function startRclone() {
     if (rcloneInfo.process.child) {
@@ -42,7 +38,7 @@ async function startRclone() {
         `--rc-user=${nmConfig.framework.rclone.user}`,
         `--rc-pass=${nmConfig.framework.rclone.password}`,
         '--rc-allow-origin=' + window.location.origin || '*',
-        '--config=' + formatPath(rcloneDataDir() + '/rclone.conf', osInfo.osType === "windows"),
+        `--config=${rcloneConfigFile()}`,
         '--cache-dir=' + rcloneInfo.localArgs.path.tempDir,
         `--log-file=${logFile}`,
         '--log-level=INFO'

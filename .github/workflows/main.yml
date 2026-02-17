@@ -98,17 +98,17 @@ jobs:
         with:
           ref: ${{ github.sha }}
 
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: setup node
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable

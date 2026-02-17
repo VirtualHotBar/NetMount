@@ -4,11 +4,13 @@ import { invoke } from "@tauri-apps/api/core";
 import i18n from "../../services/i18n";
 import { roConfig } from "../../services/config";
 import { hooks } from "../../services/hook";
+import { normalizeI18nPack } from "../../services/i18nPack";
 
 async function setLocalized(lang: string) {
   lang = lang.toLowerCase();
   
-  const pack: Record<string, string> = await invoke("get_language_pack"); 
+  const rawPack: Record<string, string> = await invoke("get_language_pack");
+  const pack = normalizeI18nPack(rawPack);
   i18n.addResourceBundle(lang, "translation", pack)
   i18n.changeLanguage(lang);
   hooks.setLocaleStr(getLangCode(lang));

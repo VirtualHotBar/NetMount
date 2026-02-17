@@ -12,6 +12,7 @@ use locale::Locale;
 use tray::Tray;
 
 mod config;
+mod diagnostics;
 mod fs;
 mod locale;
 mod sidecar;
@@ -181,29 +182,6 @@ pub fn init() -> anyhow::Result<()> {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .on_window_event(|window, event| match event {
-            tauri::WindowEvent::CloseRequested { api, .. } => {
-                let close_to_tray = window
-                    .app_handle()
-                    .with_app_state::<Config, _>(|config| {
-                        config
-                            .0
-                            .get("settings")
-                            .and_then(|s| s.get("closeToTray"))
-                            .and_then(|v| v.as_bool())
-                            .unwrap_or(true)
-                    });
-
-                if close_to_tray {
-                    api.prevent_close();
-                    let _ = window.hide();
-                } else {
-                    // Ensure sidecars don't get orphaned on Unix when quitting via window close.
-                    sidecar::cleanup();
-                }
-            }
-            _ => {}
-        })
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             if let Some(window) = app.app_main_window() {
                 let _ = window.toggle_visibility(Some(true));
@@ -219,6 +197,7 @@ pub fn init() -> anyhow::Result<()> {
             update_config,
             get_language_pack,
             download_file,
+            diagnostics::export_diagnostics,
             get_autostart_state,
             set_autostart_state,
             get_winfsp_install_state,

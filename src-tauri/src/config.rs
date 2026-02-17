@@ -17,7 +17,7 @@ impl Default for Config {
             "mount": { "lists": [] },
             "task": [],
             "api": { "url": "https://api.hotpe.top/API/NetMount" },
-            "settings": { "themeMode": "auto", "startHide": false, "closeToTray": true },
+            "settings": { "themeMode": "auto", "startHide": false, "autoRecoverComponents": true },
             "framework": {
                 "rclone": { "user": random_str(32), "password":  random_str(128) },
                 "openlist": { "user": "admin", "password":  random_str(16) }

@@ -7,12 +7,14 @@ import { getVersion } from '@tauri-apps/api/app';
 import * as shell from '@tauri-apps/plugin-shell';
 import { rcloneInfo } from '../../services/rclone';
 import { setLocalized } from '../../controller/language/localized';
-import { formatPath, openUrlInBrowser, set_devtools_state } from '../../utils/utils';
+import { formatPath, openUrlInBrowser, set_devtools_state, showPathInExplorer } from '../../utils/utils';
 import { showLog } from '../other/modal';
 import { openlistInfo } from '../../services/openlist';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { exit } from '../../controller/main';
 import { readTextFileTail } from '../../utils/logs';
+import { invoke } from '@tauri-apps/api/core';
+import { netmountLogDir, openlistLogFile, rcloneLogFile } from '../../utils/netmountPaths';
 
 // const CollapseItem = Collapse.Item;
 const FormItem = Form.Item;
@@ -111,9 +113,9 @@ export default function Setting_page() {
                 forceUpdate()
               }} />
             </FormItem>
-            <FormItem label={t('close_to_tray')}>
-              <Switch checked={nmConfig.settings.closeToTray} onChange={(value) => {
-                nmConfig.settings.closeToTray = value
+            <FormItem label={t('auto_recover_components')}>
+              <Switch checked={nmConfig.settings.autoRecoverComponents} onChange={(value) => {
+                nmConfig.settings.autoRecoverComponents = value
                 forceUpdate()
               }} />
             </FormItem>
@@ -159,7 +161,7 @@ export default function Setting_page() {
               showLog(modal, rcloneInfo.process.log!)
               return
             }
-            showLogFromFileTail(rcloneInfo.process.logFile || '~/.netmount/log/rclone.log')
+            showLogFromFileTail(rcloneInfo.process.logFile || rcloneLogFile())
           }}>{t('log')}</Link>): {rcloneInfo.version.version}
           <br />
           <Link onClick={() => { shell.open(roConfig.url.openlist) }}>Openlist</Link>(<Link onClick={() => {
@@ -167,9 +169,48 @@ export default function Setting_page() {
               showLog(modal, openlistInfo.process.log!)
               return
             }
-            showLogFromFileTail(openlistInfo.process.logFile || '~/.netmount/openlist/log/log.log')
+            showLogFromFileTail(openlistInfo.process.logFile || openlistLogFile())
           }}>{t('log')}</Link>): {openlistInfo.version.version}
           <br />
+          <Space style={{ marginTop: '0.5rem' }}>
+            <Button onClick={async () => {
+              const dir = netmountLogDir()
+              if (osInfo.platform === 'windows') {
+                const ok = await showPathInExplorer(dir, true)
+                if (!ok) {
+                  Message.error(dir)
+                }
+              } else {
+                Message.info(dir)
+              }
+            }}>{t('open_log_dir')}</Button>
+            <Button onClick={async () => {
+              try {
+                const ts = new Date().toISOString().replace(/[:.]/g, '-')
+                const path = await dialog.save({
+                  title: t('export_diagnostics'),
+                  defaultPath: `netmount-diagnostics-${ts}.zip`,
+                  filters: [{ name: 'Zip', extensions: ['zip'] }],
+                })
+                if (!path) return
+                const out = await invoke<string>('export_diagnostics', { outPath: path })
+                Message.success(`${t('diagnostics_exported')}: ${out}`)
+              } catch (e) {
+                const msg = (() => {
+                  if (typeof e === 'string') return e
+                  if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
+                    return (e as { message: string }).message
+                  }
+                  try {
+                    return JSON.stringify(e)
+                  } catch {
+                    return String(e)
+                  }
+                })()
+                Message.error(msg)
+              }
+            }}>{t('export_diagnostics')}</Button>
+          </Space>
         </Card>
         <Card title={t('about')} style={{}} size='small'>
           <Row >
@@ -188,7 +229,7 @@ export default function Setting_page() {
               <br />
               <Link onClick={() => { openUrlInBrowser(roConfig.url.docs) }}> {t('docs')} </Link>
               <br />
-              <Link onClick={() => { open(roConfig.url.docs + '/license') }}> {t('licence')} </Link>
+              <Link onClick={() => { openUrlInBrowser(roConfig.url.docs + '/license') }}> {t('licence')} </Link>
               <br />
             </Col>
           </Row>

@@ -65,7 +65,7 @@ let nmConfig: NMConfig = {
     settings: {
         themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex]!,
         startHide: false,
-        closeToTray: true,
+        autoRecoverComponents: true,
         language: undefined,
         path: {
             cacheDir: undefined as string | undefined

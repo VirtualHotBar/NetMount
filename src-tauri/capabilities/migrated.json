@@ -190,6 +190,8 @@
     "shell:default",
     "process:default",
     "os:default",
-    "dialog:allow-open"
+    "dialog:default",
+    "dialog:allow-open",
+    "dialog:allow-save"
   ]
 }

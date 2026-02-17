@@ -13,7 +13,7 @@ interface NMConfig {
     settings: {
         themeMode: 'dark' | 'light' | 'auto' | string,
         startHide: boolean,
-        closeToTray: boolean,
+        autoRecoverComponents: boolean,
         language?: string,
         path: {
             cacheDir?:string

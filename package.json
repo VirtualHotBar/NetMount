@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "check:i18n": "node scripts/check-i18n.mjs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "tauri": "tauri",

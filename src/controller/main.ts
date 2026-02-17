@@ -6,9 +6,9 @@ import { startUpdateCont } from "./stats/continue"
 import { reupMount } from "./storage/mount/mount"
 import { reupStorage } from "./storage/storage"
 import { listenWindow, windowsHide } from "./window"
-import { formatPath, sleep } from "../utils/utils"
+import { sleep } from "../utils/utils"
 import { t } from "i18next"
-import { startRclone, stopRclone } from "../utils/rclone/process"
+import { restartRclone, startRclone, stopRclone } from "../utils/rclone/process"
 import { getOsInfo } from "../utils/tauri/osInfo"
 import { startTaskScheduler } from "./task/task"
 import { autoMount } from "./task/autoMount"
@@ -16,14 +16,19 @@ import { setThemeMode } from "./setting/setting"
 import { setLocalized } from "./language/localized"
 import { checkNotice } from "./update/notice"
 import { updateStorageInfoList } from "./storage/allList"
-import { startOpenlist, stopOpenlist } from "../utils/openlist/process"
+import { restartOpenlist, startOpenlist, stopOpenlist } from "../utils/openlist/process"
 import { homeDir } from "@tauri-apps/api/path"
-import { openlist_api_get } from "../utils/openlist/request"
+import { openlist_api_get, openlist_api_ping } from "../utils/openlist/request"
 import { openlistInfo } from "../services/openlist"
 import { addOpenlistInRclone } from "../utils/openlist/openlist"
 import { Notification } from "@arco-design/web-react"
+import { rclone_api_noop } from "../utils/rclone/request"
+import { defaultCacheDir } from "../utils/netmountPaths"
 
 type SetStartStrFn = (str: string) => void;
+
+let componentWatchdogTimer: number | undefined
+let componentWatchdogStopping = false
 
 async function init(setStartStr: SetStartStrFn) {
 
@@ -54,7 +59,7 @@ async function init(setStartStr: SetStartStrFn) {
 
     //设置缓存路径
     if (!nmConfig.settings.path.cacheDir) {
-        nmConfig.settings.path.cacheDir=formatPath(roConfig.env.path.homeDir+'/.cache/netmount', osInfo.platform === "windows")
+        nmConfig.settings.path.cacheDir = defaultCacheDir()
     } 
 
     setThemeMode(nmConfig.settings.themeMode)
@@ -83,6 +88,8 @@ async function init(setStartStr: SetStartStrFn) {
     //await Test()
     //开始任务队列
     await startTaskScheduler()
+
+    startComponentWatchdog()
 
     await main()
 }
@@ -157,6 +164,11 @@ async function reupOpenlistVersion() {
 
 
 async function exit(isRestartSelf: boolean = false) {
+    componentWatchdogStopping = true
+    if (componentWatchdogTimer) {
+        clearInterval(componentWatchdogTimer)
+        componentWatchdogTimer = undefined
+    }
     try {
         await saveNmConfig()
         await stopRclone()
@@ -170,6 +182,89 @@ async function exit(isRestartSelf: boolean = false) {
             await process.exit();
         }
     }
+}
+
+function startComponentWatchdog() {
+    componentWatchdogStopping = false
+    if (componentWatchdogTimer) {
+        clearInterval(componentWatchdogTimer)
+        componentWatchdogTimer = undefined
+    }
+
+    let running = false
+    let rcloneFailCount = 0
+    let openlistFailCount = 0
+    let rcloneCooldownUntil = 0
+    let openlistCooldownUntil = 0
+
+    const COOLDOWN_MS = 60_000
+    const INTERVAL_MS = 10_000
+    const FAIL_THRESHOLD = 3
+
+    componentWatchdogTimer = window.setInterval(async () => {
+        if (componentWatchdogStopping) return
+        if (!nmConfig.settings.autoRecoverComponents) return
+        if (running) return
+        running = true
+
+        try {
+            const now = Date.now()
+
+            if (rcloneInfo.process.child) {
+                const ok = await rclone_api_noop()
+                rcloneFailCount = ok ? 0 : rcloneFailCount + 1
+                if (!ok && rcloneFailCount >= FAIL_THRESHOLD && now >= rcloneCooldownUntil) {
+                    rcloneCooldownUntil = now + COOLDOWN_MS
+                    rcloneFailCount = 0
+                    Notification.warning({
+                        id: 'rclone_auto_recover',
+                        title: t('transmit'),
+                        content: t('rclone_restarting'),
+                    })
+                    try {
+                        await restartRclone()
+                        Notification.success({
+                            id: 'rclone_auto_recover_ok',
+                            title: t('success'),
+                            content: t('rclone_restarted'),
+                        })
+                    } catch (e) {
+                        console.error('restartRclone failed:', e)
+                    }
+                }
+            } else {
+                rcloneFailCount = 0
+            }
+
+            if (openlistInfo.process.child) {
+                const ok = await openlist_api_ping()
+                openlistFailCount = ok ? 0 : openlistFailCount + 1
+                if (!ok && openlistFailCount >= FAIL_THRESHOLD && now >= openlistCooldownUntil) {
+                    openlistCooldownUntil = now + COOLDOWN_MS
+                    openlistFailCount = 0
+                    Notification.warning({
+                        id: 'openlist_auto_recover',
+                        title: t('storage'),
+                        content: t('openlist_restarting'),
+                    })
+                    try {
+                        await restartOpenlist()
+                        Notification.success({
+                            id: 'openlist_auto_recover_ok',
+                            title: t('success'),
+                            content: t('openlist_restarted'),
+                        })
+                    } catch (e) {
+                        console.error('restartOpenlist failed:', e)
+                    }
+                }
+            } else {
+                openlistFailCount = 0
+            }
+        } finally {
+            running = false
+        }
+    }, INTERVAL_MS)
 }
 
 export { init, main, exit }
