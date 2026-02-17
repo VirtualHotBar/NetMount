@@ -4,6 +4,7 @@ import { nmConfig, osInfo, roConfig, saveNmConfig } from '../../services/config'
 import { getAutostartState, setAutostartState, setThemeMode } from '../../controller/setting/setting';
 import { useTranslation } from 'react-i18next';
 import { getVersion } from '@tauri-apps/api/app';
+import { invoke } from '@tauri-apps/api/core';
 import * as shell from '@tauri-apps/plugin-shell';
 import { rcloneInfo } from '../../services/rclone';
 import { setLocalized } from '../../controller/language/localized';
@@ -24,6 +25,26 @@ export default function Setting_page() {
   const [modal, contextHolder] = Modal.useModal();
   const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
   const [version, setVersion] = useState<string>()
+
+  const showLogFromFileTail = async (path: string) => {
+    try {
+      const content = await invoke<string>('read_text_file_tail', { path, max_bytes: 256 * 1024 })
+      showLog(modal, (content || '').trim() ? content : '暂无日志')
+    } catch (e) {
+      const msg = (() => {
+        if (typeof e === 'string') return e
+        if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
+          return (e as { message: string }).message
+        }
+        try {
+          return JSON.stringify(e)
+        } catch {
+          return String(e)
+        }
+      })()
+      Message.error(msg)
+    }
+  }
 
   const getInfo = async () => {
     setAutostart(await getAutostartState());
@@ -128,11 +149,19 @@ export default function Setting_page() {
         </Card>
         <Card title={t('components')} style={{}} size='small'>
           <Link onClick={() => { shell.open(roConfig.url.rclone) }}>Rclone</Link>(<Link onClick={() => {
-            rcloneInfo.process.log && showLog(modal, rcloneInfo.process.log)
+            if ((rcloneInfo.process.log || '').trim()) {
+              showLog(modal, rcloneInfo.process.log!)
+              return
+            }
+            showLogFromFileTail('~/.netmount/log/rclone.log')
           }}>{t('log')}</Link>): {rcloneInfo.version.version}
           <br />
           <Link onClick={() => { shell.open(roConfig.url.openlist) }}>Openlist</Link>(<Link onClick={() => {
-            openlistInfo.process.log && showLog(modal, openlistInfo.process.log)
+            if ((openlistInfo.process.log || '').trim()) {
+              showLog(modal, openlistInfo.process.log!)
+              return
+            }
+            showLogFromFileTail('~/.netmount/openlist/log/log.log')
           }}>{t('log')}</Link>): {openlistInfo.version.version}
           <br />
         </Card>

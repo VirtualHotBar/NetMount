@@ -7,7 +7,7 @@ use std::{env, fs::File, ops::Deref, path::Path, sync::RwLock};
 use tauri::Manager;
 
 use config::Config;
-use fs::{fs_exist_dir, fs_make_dir, read_json_file, write_json_file, copy_file};
+use fs::{fs_exist_dir, fs_make_dir, read_json_file, write_json_file, copy_file, read_text_file_tail};
 use locale::Locale;
 use tray::Tray;
 
@@ -204,6 +204,7 @@ pub fn init() -> anyhow::Result<()> {
             fs_exist_dir,
             fs_make_dir,
             restart_self,
+            read_text_file_tail,
             read_json_file,
             write_json_file,
             copy_file,
@@ -423,15 +424,21 @@ async fn spawn_sidecar(
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
     
+    // 创建通道接收启动错误
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<String>(10);
+    
     // 在后台处理 stdout
     if let Some(stdout) = stdout {
         let name_clone_stdout = name_clone.clone();
+        let tx_stdout = tx.clone();
         tauri::async_runtime::spawn(async move {
             use tokio::io::{AsyncBufReadExt, BufReader};
             let reader = BufReader::new(tokio::process::ChildStdout::from(stdout));
             let mut lines = reader.lines();
             while let Ok(Some(line)) = lines.next_line().await {
                 println!("[{}] stdout: {}", name_clone_stdout, line);
+                // 发送前10行输出用于诊断
+                let _ = tx_stdout.send(format!("[stdout] {}", line)).await;
             }
         });
     }
@@ -439,21 +446,77 @@ async fn spawn_sidecar(
     // 在后台处理 stderr
     if let Some(stderr) = stderr {
         let name_clone_stderr = name_clone.clone();
+        let tx_stderr = tx.clone();
         tauri::async_runtime::spawn(async move {
             use tokio::io::{AsyncBufReadExt, BufReader};
             let reader = BufReader::new(tokio::process::ChildStderr::from(stderr));
             let mut lines = reader.lines();
             while let Ok(Some(line)) = lines.next_line().await {
                 eprintln!("[{}] stderr: {}", name_clone_stderr, line);
+                // 发送错误输出用于诊断
+                let _ = tx_stderr.send(format!("[stderr] {}", line)).await;
             }
         });
     }
     
     // 在后台等待进程结束
+    let name_clone_wait = name_clone.clone();
+    let tx_wait = tx.clone();
     tauri::async_runtime::spawn(async move {
         let status = child.wait().await;
-        println!("[{}] terminated with status: {:?}", name_clone, status);
+        println!("[{}] terminated with status: {:?}", name_clone_wait, status);
+        let _ = tx_wait.send(format!("[exit] {:?}", status)).await;
     });
+    
+    // 等待一小段时间，检查进程是否仍在运行
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    
+    // 检查进程是否快速退出（收集错误信息）
+    let mut error_logs = Vec::new();
+    while let Ok(Some(log)) = tokio::time::timeout(
+        tokio::time::Duration::from_millis(100),
+        rx.recv()
+    ).await {
+        error_logs.push(log);
+        if error_logs.len() >= 20 {
+            break;
+        }
+    }
+    
+    // 检查进程是否还在运行
+    #[cfg(windows)]
+    let is_running = {
+        use winapi::um::processthreadsapi::OpenProcess;
+        use winapi::um::handleapi::CloseHandle;
+        use winapi::um::winnt::PROCESS_QUERY_INFORMATION;
+        unsafe {
+            let handle = OpenProcess(PROCESS_QUERY_INFORMATION, 0, pid);
+            if handle.is_null() {
+                false
+            } else {
+                CloseHandle(handle);
+                true
+            }
+        }
+    };
+    
+    #[cfg(not(windows))]
+    let is_running = {
+        // Cross-platform "is process running" checks vary by platform and may require extra deps/privileges.
+        // For non-Windows targets, skip the immediate-exit probe here to avoid relying on platform-specific syscalls.
+        true
+    };
+    
+    if !is_running {
+        let error_msg = if error_logs.is_empty() {
+            format!("Sidecar {} (PID: {}) exited immediately without output", sidecar_name, pid)
+        } else {
+            format!("Sidecar {} (PID: {}) exited immediately. Logs:\n{}", 
+                sidecar_name, pid, error_logs.join("\n"))
+        };
+        eprintln!("{}", error_msg);
+        return Err(error_msg);
+    }
     
     Ok(pid)
 }

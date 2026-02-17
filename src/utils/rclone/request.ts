@@ -35,8 +35,37 @@ async function handleApiResponse(
 ): Promise<RcloneApiResponse> {
     // 检查 HTTP 状态
     if (!res.ok) {
+        // 尽可能把返回体里的 error 信息带上，便于定位问题
+        let bodyText = '';
+        try {
+            bodyText = await res.text();
+        } catch {
+            bodyText = '';
+        }
+
+        let extraMessage = '';
+        if (bodyText) {
+            try {
+                // 尝试解析为 JSON（rclone 常见错误结构：{ error, input, path, status }
+                const json = JSON.parse(bodyText) as { error?: unknown };
+                if (typeof json?.error === 'string' && json.error.trim()) {
+                    extraMessage = json.error;
+                } else {
+                    extraMessage = JSON.stringify(json);
+                }
+            } catch {
+                // 非 JSON：直接附加原文本
+                extraMessage = bodyText;
+            }
+        }
+
+        const message = [
+            `HTTP ${res.status}: `,
+            extraMessage ? `Rclone: ${extraMessage}` : '',
+        ].filter(Boolean).join('\n');
+
         console.error(`Rclone API HTTP error [${method}]: ${res.status} ${res.statusText} for ${fullPath}`);
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        throw new Error(message);
     }
 
     // 解析 JSON 响应
@@ -62,9 +91,18 @@ async function printError(error: Error | Response): Promise<void> {
             errorMessage += `HTTP ${error.status} - ${error.statusText}\n`;
         }
         try {
-            const errorData = await error.json();
-            if (errorData.error) {
-                errorMessage += `\n${errorData.error}`;
+            const text = await error.text();
+            if (text) {
+                try {
+                    const errorData = JSON.parse(text) as { error?: unknown };
+                    if (typeof errorData?.error === 'string' && errorData.error.trim()) {
+                        errorMessage += `\n${errorData.error}`;
+                    } else {
+                        errorMessage += `\n${JSON.stringify(errorData)}`;
+                    }
+                } catch {
+                    errorMessage += `\n${text}`;
+                }
             }
         } catch {
             // 忽略 JSON 解析错误
@@ -76,7 +114,7 @@ async function printError(error: Error | Response): Promise<void> {
     }
 
     if (errorMessage) {
-        Message.error(`Error: ${errorMessage}`);
+        Message.error(errorMessage);
     }
 }
 

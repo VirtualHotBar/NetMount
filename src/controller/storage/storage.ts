@@ -15,18 +15,39 @@ import { OpenlistStorageItem } from "../../type/openlist/openlistInfo"
 async function reupStorage() {
     try {
         const storageListTemp: StorageList[] = []
+        const storagesToDelete: string[] = []
         
         //rclone
         try {
             const dump = await rclone_api_post('/config/dump')
             for (const storageName in dump) {
+                const space = await getStorageSpace(storageName)
+                
+                // 检查是否是失效的内部存储（标记为 -2）
+                if (space.total === -2 && storageName.includes('.netmount-')) {
+                    console.warn(`Detected invalid internal storage: ${storageName}, will cleanup`)
+                    storagesToDelete.push(storageName)
+                    continue  // 不添加到列表
+                }
+                
                 storageListTemp.push({
                     framework: 'rclone',
                     name: storageName,
                     type: dump[storageName].type,
-                    space: await getStorageSpace(storageName),
+                    space: space,
                     hide: storageName.includes(openlistInfo.markInRclone)
                 })
+            }
+            
+            // 清理失效的内部存储
+            for (const name of storagesToDelete) {
+                try {
+                    console.log(`Cleaning up invalid internal storage: ${name}`)
+                    await rclone_api_post('/config/delete', { name }, true)
+                    console.log(`Successfully deleted: ${name}`)
+                } catch (deleteError) {
+                    console.error(`Failed to delete ${name}:`, deleteError)
+                }
             }
         } catch (rcloneError) {
             console.error('Failed to fetch rclone storage list:', rcloneError)
@@ -81,16 +102,41 @@ function filterHideStorage(storageList: StorageList[]) {//过滤隐藏的存储
 
 //仅rclone
 async function getStorageSpace(name: string): Promise<StorageSpace> {
-
-    const back = await rclone_api_post(
-        '/operations/about', {
-        fs: name + ':'
-    }, true)
-    if (back && back.total > 0) {
-        return { total: Number(back.total), free: Number(back.free), used: Number(back.used) }
-    } else {
-        return { total: -1, free: -1, used: -1 }
+    // 添加重试逻辑，因为存储刚创建时可能还未就绪
+    let retries = 3;
+    let lastError: unknown;
+    
+    while (retries > 0) {
+        try {
+            const back = await rclone_api_post(
+                '/operations/about', {
+                fs: name + ':'
+            }, true);
+            
+            if (back && back.total > 0) {
+                return { total: Number(back.total), free: Number(back.free), used: Number(back.used) }
+            } else {
+                return { total: -1, free: -1, used: -1 }
+            }
+        } catch (error) {
+            lastError = error;
+            retries--;
+            if (retries > 0) {
+                console.log(`getStorageSpace failed for ${name}, retrying... (${retries} attempts left)`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
     }
+    
+    // 对于内部存储（如 .netmount-*），如果获取失败，考虑删除无效配置
+    if (name.includes('.netmount-')) {
+        console.warn(`Internal storage ${name} is not accessible, marking for cleanup`);
+        // 返回无效标记，让调用方决定是否删除
+        return { total: -2, free: -2, used: -2 }
+    }
+    
+    console.warn(`getStorageSpace failed for ${name} after all retries:`, lastError);
+    return { total: -1, free: -1, used: -1 }
 }
 
 //删除存储

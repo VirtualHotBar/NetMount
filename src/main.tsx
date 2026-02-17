@@ -19,7 +19,7 @@ function StartPage() {
   }, [])
 
   return <div style={{ textAlign: 'center', width: '100%', height: '100%', margin: '0px', padding: '0px', backgroundColor: 'var(--color-bg-1)' }} data-tauri-drag-region>
-    <div style={{ paddingTop: '30%' }} data-tauri-drag-region>
+    <div style={{ paddingTop: '30%', color: 'var(--color-text-1)' }} data-tauri-drag-region>
       <Spin size={30} />
       <br />
       {t('starting') + ':' + startStr}
@@ -27,7 +27,13 @@ function StartPage() {
   </div>
 }
 
-const reactRoot = ReactDOM.createRoot(document.getElementById('root')!)
+const container = document.getElementById('root') as (HTMLElement & {
+  __netmount_react_root__?: ReturnType<typeof ReactDOM.createRoot>
+}) | null
+if (!container) {
+  throw new Error('Root container #root not found')
+}
+const reactRoot = container.__netmount_react_root__ ?? (container.__netmount_react_root__ = ReactDOM.createRoot(container))
 reactRoot.render(
   <StartPage></StartPage>
 )
@@ -41,7 +47,7 @@ async function appStart(setStartStr: SetStartStrFn) {
   await init(setStartStr)//初始化功能
   
   reactRoot.render(<React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_relativeSplatPath: true }}>
     <App></App>
     </BrowserRouter>
   </React.StrictMode>)//React.StrictMode:严格模式检查组件副作用

@@ -24,6 +24,15 @@ async function startRclone() {
 
     rcloneInfo.endpoint.url = 'http://127.0.0.1:' + rcloneInfo.endpoint.localhost.port.toString()
 
+    // 确保日志目录存在（用于“设置-组件-日志”查看）
+    const logDir = formatPath(rcloneDataDir() + '/log/', osInfo.osType === "windows")
+    const logFile = formatPath(logDir + '/rclone.log', osInfo.osType === "windows")
+    try {
+        await invoke('fs_make_dir', { path: logDir })
+    } catch {
+        // ignore
+    }
+
     const args: string[] = [
         'rcd',
         `--rc-addr=:${rcloneInfo.endpoint.localhost.port.toString()}`,
@@ -31,7 +40,9 @@ async function startRclone() {
         `--rc-pass=${nmConfig.framework.rclone.password}`,
         '--rc-allow-origin=' + window.location.origin || '*',
         '--config=' + formatPath(rcloneDataDir() + '/rclone.conf', osInfo.osType === "windows"),
-        '--cache-dir=' + rcloneInfo.localArgs.path.tempDir
+        '--cache-dir=' + rcloneInfo.localArgs.path.tempDir,
+        `--log-file=${logFile}`,
+        '--log-level=INFO'
     ];
 
     if (nmConfig.framework.rclone.user === '') {

@@ -107,6 +107,17 @@ function shouldRetry(error: unknown, retryOnTimeout: boolean, attempt: number, m
   return true;
 }
 
+function normalizeHeaders(headers: HeadersInit | undefined): Record<string, string> {
+  if (!headers) return {};
+  if (headers instanceof Headers) {
+    return Object.fromEntries(headers.entries());
+  }
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers);
+  }
+  return headers;
+}
+
 // ============================================
 // 主请求函数
 // ============================================
@@ -137,32 +148,47 @@ export async function robustFetch<T = unknown>(
   let lastError: AppError | undefined;
   let attempts = 0;
 
-  // 创建超时控制器
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  // 合并 headers
-  const mergedHeaders = {
-    ...headers,
-    'Content-Type': 'application/json',
-  };
-
-  // 如果传入了 abortSignal，监听它
-  if (abortSignal) {
-    abortSignal.addEventListener('abort', () => controller.abort());
-  }
-
   try {
     // 重试循环
     while (attempts < retries) {
       attempts++;
 
       try {
-        const response = await fetch(url, {
-          ...options,
-          headers: mergedHeaders,
-          signal: controller.signal,
-        });
+        // 如果外部已取消，直接终止
+        if (abortSignal?.aborted) {
+          lastError = AppError.network('请求被中止');
+          break;
+        }
+
+        const controller = new AbortController();
+
+        // 超时控制（每次尝试独立计时）
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+        // 监听外部 abort
+        const onAbort = () => {
+          controller.abort();
+        };
+        abortSignal?.addEventListener('abort', onAbort);
+
+        // 合并 headers：默认值 < options.headers < config.headers
+        const mergedHeaders: Record<string, string> = {
+          'Content-Type': 'application/json',
+          ...normalizeHeaders(options.headers),
+          ...headers,
+        };
+
+        let response: Response;
+        try {
+          response = await fetch(url, {
+            ...options,
+            headers: mergedHeaders,
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeoutId);
+          abortSignal?.removeEventListener('abort', onAbort);
+        }
 
         // 检查 HTTP 状态
         if (!response.ok) {
@@ -176,9 +202,6 @@ export async function robustFetch<T = unknown>(
         // 解析 JSON
         const data = await response.json() as T;
 
-        // 清理超时
-        clearTimeout(timeoutId);
-
         return {
           success: true,
           data,
@@ -188,11 +211,11 @@ export async function robustFetch<T = unknown>(
       } catch (error) {
         // 如果是AbortError，检查是否超时
         if (error instanceof DOMException && error.name === 'AbortError') {
-          const isTimeout = !controller.signal.aborted;
-          if (isTimeout) {
-            lastError = AppError.timeout(url, timeout);
-          } else {
+          // 外部 abort 或超时都会触发 AbortError；优先认为外部取消不可重试
+          if (abortSignal?.aborted) {
             lastError = AppError.network('请求被中止');
+          } else {
+            lastError = AppError.timeout(url, timeout);
           }
         } else if (error instanceof AppError) {
           lastError = error;
@@ -200,6 +223,11 @@ export async function robustFetch<T = unknown>(
           lastError = AppError.network(error.message, error);
         } else {
           lastError = AppError.api(String(error), 'UNKNOWN_ERROR');
+        }
+
+        // 外部取消：不再重试
+        if (abortSignal?.aborted) {
+          break;
         }
 
         // 判断是否应该重试
@@ -226,8 +254,6 @@ export async function robustFetch<T = unknown>(
     }
 
     // 所有重试都失败了
-    clearTimeout(timeoutId);
-
     return {
       success: false,
       error: lastError ?? AppError.api('请求失败', 'REQUEST_FAILED'),
@@ -235,8 +261,6 @@ export async function robustFetch<T = unknown>(
       duration: Date.now() - startTime,
     };
   } catch (error) {
-    clearTimeout(timeoutId);
-
     return {
       success: false,
       error: error instanceof AppError
@@ -272,7 +296,7 @@ export async function robustPost<T = unknown>(
 ): Promise<RequestResult<T>> {
   return robustFetch<T>(url, {
     method: 'POST',
-    body: body ? JSON.stringify(body) : null,
+    body: body === undefined ? undefined : JSON.stringify(body),
   }, config);
 }
 
@@ -371,25 +395,23 @@ export async function concurrentFetch<T>(
   requests: Array<() => Promise<T>>,
   concurrency: number = 5
 ): Promise<T[]> {
-  const results: T[] = [];
-  const executing = new Set<Promise<unknown>>();
+  const results: T[] = new Array(requests.length);
+  const executing = new Set<Promise<void>>();
 
-  for (const request of requests) {
-    const promise = Promise.resolve().then(request);
-    results.push(promise as T);
+  for (let i = 0; i < requests.length; i++) {
+    const request = requests[i]!;
+    const promise = (async () => {
+      results[i] = await request();
+    })();
+
     executing.add(promise);
-
-    // 清理完成的 promise
     promise.finally(() => executing.delete(promise));
 
-    // 达到并发限制时等待
     if (executing.size >= concurrency) {
       await Promise.race(executing);
     }
   }
 
-  // 等待所有请求完成
   await Promise.all(executing);
-
   return results;
 }

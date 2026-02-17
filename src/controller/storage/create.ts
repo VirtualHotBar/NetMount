@@ -70,7 +70,8 @@ async function createStorage(
     name: string, 
     type: string, 
     parameters: ParametersType, 
-    exAdditional: ParametersType = {}
+    exAdditional: ParametersType = {},
+    opt?: { obscure?: boolean; noObscure?: boolean }
 ): Promise<boolean> {
     // 输入验证
     const validation = validateStorageInput(name, type, parameters);
@@ -92,15 +93,21 @@ async function createStorage(
 
     try {
         switch (storageInfo.framework) {
-            case 'rclone':
-                backData = await rclone_api_post("/config/create", {
+            case 'rclone': {
+                const requestBody: ParametersType = {
                     "name": name,
                     "type": storageInfo.type,
                     "parameters": parameters,
                     ...exAdditional
-                });
+                };
+                // 如果提供了 opt 参数，添加到请求中
+                if (opt) {
+                    requestBody["opt"] = opt;
+                }
+                backData = await rclone_api_post("/config/create", requestBody);
                 await reupStorage();
                 return backData ? isEmptyObject(backData as Record<string, unknown>) : false;
+            }
 
             case 'openlist': {
                 // 安全序列化 addition

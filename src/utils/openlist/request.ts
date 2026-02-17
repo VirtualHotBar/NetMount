@@ -81,10 +81,25 @@ async function wrapApiCall<T>(
 async function openlist_api_ping(): Promise<boolean> {
     try {
         const url = openlistInfo.endpoint.url + '/ping';
-        const res = await fetch(url, { method: 'GET' });
-        return res.ok;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2秒超时
+        
+        const res = await fetch(url, { 
+            method: 'GET',
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (res.ok) {
+            return true;
+        }
+        console.log(`OpenList ping returned status: ${res.status}`);
+        return false;
     } catch (e) {
-        console.log('OpenList ping failed:', e);
+        // 只在特定情况下记录错误，避免日志刷屏
+        if (e instanceof Error && e.name !== 'AbortError') {
+            console.log('OpenList ping failed:', e.message);
+        }
         return false;
     }
 }
@@ -96,12 +111,14 @@ async function openlist_api_get(path: string, queryData?: object): Promise<ApiRe
     const fullPath = buildFullPath(path, queryData);
 
     return wrapApiCall(async () => {
+        const headers: Record<string, string> = {}
+        if (openlistInfo.endpoint.auth.token) {
+            headers['Authorization'] = openlistInfo.endpoint.auth.token
+        }
         const res = await fetch(fullPath, {
             method: 'GET',
             redirect: 'follow',
-            headers: {
-                'Authorization': openlistInfo.endpoint.auth.token,
-            },
+            headers,
         });
         return handleApiResponse(res, fullPath, 'GET');
     }, fullPath, 'GET');
@@ -118,13 +135,16 @@ async function openlist_api_post(
     const fullPath = buildFullPath(path, queryData);
 
     return wrapApiCall(async () => {
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json'
+        }
+        if (openlistInfo.endpoint.auth.token) {
+            headers['Authorization'] = openlistInfo.endpoint.auth.token
+        }
         const res = await fetch(fullPath, {
             method: 'POST',
             redirect: 'follow',
-            headers: {
-                'Authorization': openlistInfo.endpoint.auth.token,
-                'Content-Type': 'application/json'
-            },
+            headers,
             body: bodyData ? JSON.stringify(bodyData) : null,
         });
         return handleApiResponse(res, fullPath, 'POST');

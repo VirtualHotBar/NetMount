@@ -10,6 +10,13 @@ const OS_TYPE: &str = env::consts::OS;
 // 默认固定版本，避免 "latest" 漂移导致的接口不兼容问题
 const DEFAULT_OPENLIST_VERSION: &str = "v4.1.10";
 
+// Build-time env flags:
+// - NETMOUNT_OPENLIST_VERSION: override OpenList version tag (e.g. v4.1.10)
+// - NETMOUNT_SKIP_BIN_DOWNLOADS / NETMOUNT_SKIP_DOWNLOADS: disable downloading rclone/openlist/winfsp
+// - NETMOUNT_SKIP_WINFSP_DOWNLOAD: disable WinFsp download only
+// - NETMOUNT_GITHUB_PROXY: GitHub proxy prefix ("" or "0" to disable; default https://gh-proxy.com/)
+// - NETMOUNT_SKIP_TAURI_BUILD: skip tauri_build::try_build to avoid transient Windows file lock issues
+
 // 版本标记文件
 const OPENLIST_VERSION_FILE: &str = "binaries/openlist/.version";
 
@@ -30,8 +37,9 @@ fn build_openlist_url(version: &str, os_type: &str, arch: &str) -> String {
     // 架构映射
     let arch_suffix = match arch {
         "aarch64" | "arm64" => "arm64",
-        "x86_64" | "amd64" | "x86" => "amd64",
-        _ => "amd64",
+        "x86_64" | "amd64" => "amd64",
+        "x86" | "i686" => "386",
+        _ => return String::new(),
     };
 
     // OS 映射
@@ -52,6 +60,50 @@ fn build_openlist_url(version: &str, os_type: &str, arch: &str) -> String {
         "https://github.com/OpenListTeam/OpenList/releases/download/{}/openlist-{}-{}.{}",
         version, os_suffix, arch_suffix, ext
     )
+}
+
+fn env_truthy(name: &str) -> bool {
+    match env::var(name) {
+        Ok(v) => {
+            let v = v.trim().to_lowercase();
+            matches!(v.as_str(), "1" | "true" | "yes" | "y" | "on")
+        }
+        Err(_) => false,
+    }
+}
+
+fn get_build_temp_dir() -> std::path::PathBuf {
+    // Prefer OUT_DIR to avoid sharing temp state across workspaces and reduce file-lock contention on Windows.
+    if let Ok(out_dir) = env::var("OUT_DIR") {
+        return Path::new(&out_dir).join("netmount-bin-temp");
+    }
+    Path::new("binaries").join("temp")
+}
+
+fn clean_dir(path: &Path) -> std::io::Result<()> {
+    let _ = std::fs::remove_dir_all(path);
+    std::fs::create_dir_all(path)?;
+    Ok(())
+}
+
+fn find_file_recursive(dir: &Path, filename: &str) -> std::io::Result<Option<std::path::PathBuf>> {
+    if !dir.exists() {
+        return Ok(None);
+    }
+    for entry in std::fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_file() {
+            if path.file_name().and_then(|s| s.to_str()) == Some(filename) {
+                return Ok(Some(path));
+            }
+        } else if path.is_dir() {
+            if let Some(found) = find_file_recursive(&path, filename)? {
+                return Ok(Some(found));
+            }
+        }
+    }
+    Ok(None)
 }
 
 /// 记录 OpenList 版本信息
@@ -82,6 +134,17 @@ fn record_openlist_version(version: &str, commit: Option<&str>) {
 }
 
 fn main() -> anyhow::Result<()> {
+    // Ensure Cargo rebuilds build.rs when these env vars change
+    println!("cargo:rerun-if-env-changed=NETMOUNT_OPENLIST_VERSION");
+    println!("cargo:rerun-if-env-changed=NETMOUNT_SKIP_BIN_DOWNLOADS");
+    println!("cargo:rerun-if-env-changed=NETMOUNT_SKIP_DOWNLOADS");
+    println!("cargo:rerun-if-env-changed=NETMOUNT_SKIP_WINFSP_DOWNLOAD");
+    println!("cargo:rerun-if-env-changed=NETMOUNT_GITHUB_PROXY");
+    println!("cargo:rerun-if-env-changed=NETMOUNT_SKIP_TAURI_BUILD");
+    // Locales are compiled into OUT_DIR/language.rs at build-time, so we must
+    // tell Cargo to rerun build.rs when any locale json changes.
+    println!("cargo:rerun-if-changed=locales/");
+
     check_res_bin();
     compile_locale(
         &[
@@ -91,8 +154,84 @@ fn main() -> anyhow::Result<()> {
         ],
         "cn",
     )?;
-    tauri_build::try_build(Attributes::default())?;
+    if env_truthy("NETMOUNT_SKIP_TAURI_BUILD") {
+        println!("cargo:warning=Skipping tauri_build::try_build (NETMOUNT_SKIP_TAURI_BUILD=1)");
+        return Ok(());
+    }
+
+    try_tauri_build_with_retry()?;
     Ok(())
+}
+
+fn is_windows_file_lock_error(err: &anyhow::Error) -> bool {
+    err.chain()
+        .filter_map(|e| e.downcast_ref::<std::io::Error>())
+        .any(|io| io.raw_os_error() == Some(32))
+}
+
+fn try_tauri_build_with_retry() -> anyhow::Result<()> {
+    use std::time::Duration;
+
+    let mut attempt = 0;
+    let max_attempts = 6;
+
+    fn panic_to_string(panic_payload: Box<dyn std::any::Any + Send>) -> String {
+        if let Some(s) = panic_payload.downcast_ref::<&str>() {
+            (*s).to_string()
+        } else if let Some(s) = panic_payload.downcast_ref::<String>() {
+            s.clone()
+        } else {
+            "unknown panic payload".to_string()
+        }
+    }
+
+    fn is_transient_windows_access_msg(msg: &str) -> bool {
+        let msg = msg.to_lowercase();
+        msg.contains("os error 32")
+            || msg.contains("code: 32")
+            || msg.contains("permissiondenied")
+            || msg.contains("拒绝访问")
+            || msg.contains("code: 5")
+    }
+
+    loop {
+        let result = std::panic::catch_unwind(|| tauri_build::try_build(Attributes::default()));
+        match result {
+            Ok(Ok(())) => return Ok(()),
+            Ok(Err(e)) => {
+                attempt += 1;
+                if attempt >= max_attempts || !is_windows_file_lock_error(&e) {
+                    return Err(e);
+                }
+
+                let delay = Duration::from_millis(200 * attempt as u64);
+                eprintln!(
+                    "tauri_build failed due to a transient Windows file lock (os error 32). Retrying in {:?}... ({}/{})",
+                    delay,
+                    attempt,
+                    max_attempts
+                );
+                std::thread::sleep(delay);
+            }
+            Err(panic_payload) => {
+                attempt += 1;
+                let msg = panic_to_string(panic_payload);
+                if attempt >= max_attempts || !is_transient_windows_access_msg(&msg) {
+                    panic!("tauri_build panicked: {}", msg);
+                }
+
+                let delay = Duration::from_millis(200 * attempt as u64);
+                eprintln!(
+                    "tauri_build panicked due to a transient Windows access/lock error. Retrying in {:?}... ({}/{})\n{}",
+                    delay,
+                    attempt,
+                    max_attempts,
+                    msg
+                );
+                std::thread::sleep(delay);
+            }
+        }
+    }
 }
 
 fn escape(str: &str) -> String {
@@ -132,6 +271,7 @@ fn compile_locale(locales: &[(&str, &Path)], default: &str) -> anyhow::Result<()
 
 fn check_res_bin() {
     let binding = get_arch();
+    let binding = normalize_arch(&binding);
     let arch = binding.as_str();
     let bin_path = "binaries/";
 
@@ -146,20 +286,13 @@ fn check_res_bin() {
         println!("cargo:warning=Using default OpenList version (set NETMOUNT_OPENLIST_VERSION to override)");
     }
 
-    // 获取 OpenList 版本
-    let openlist_version = get_openlist_version();
-    println!("cargo:warning=Building with OpenList version: {}", openlist_version);
-    
-    // 检查环境变量覆盖
-    if env::var("NETMOUNT_OPENLIST_VERSION").is_ok() {
-        println!("cargo:warning=Using OpenList version from environment variable NETMOUNT_OPENLIST_VERSION");
-    } else {
-        println!("cargo:warning=Using default OpenList version (set NETMOUNT_OPENLIST_VERSION to override)");
-    }
-
     let res_bin_urls = match OS_TYPE {
         "windows" => match arch {
-            "aarch64"|"arm" |"arm64"=> ResBinUrls {
+            "aarch64" | "arm64" => ResBinUrls {
+                rclone: "https://downloads.rclone.org/rclone-current-windows-arm64.zip",
+                openlist: build_openlist_url(&openlist_version, "windows", arch),
+            },
+            "x86" | "i686" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-windows-386.zip",
                 openlist: build_openlist_url(&openlist_version, "windows", arch),
             },
@@ -169,8 +302,16 @@ fn check_res_bin() {
             },
         },
         "linux" => match arch {
-            "aarch64" |"arm"|"arm64"=> ResBinUrls {
+            "aarch64" | "arm64" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-linux-arm64.zip",
+                openlist: build_openlist_url(&openlist_version, "linux", arch),
+            },
+            "arm" => ResBinUrls {
+                rclone: "https://downloads.rclone.org/rclone-current-linux-arm.zip",
+                openlist: build_openlist_url(&openlist_version, "linux", arch),
+            },
+            "x86" | "i686" => ResBinUrls {
+                rclone: "https://downloads.rclone.org/rclone-current-linux-386.zip",
                 openlist: build_openlist_url(&openlist_version, "linux", arch),
             },
             _ => ResBinUrls {
@@ -179,11 +320,11 @@ fn check_res_bin() {
             },
         },
         "macos" => match arch {
-            "x86_64" | "x86"=> ResBinUrls {
+            "x86_64" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-amd64.zip",
                 openlist: build_openlist_url(&openlist_version, "macos", arch),
             },
-            "arm64"|"aarch64"|"arm"=> ResBinUrls {
+            "arm64" | "aarch64" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-osx-arm64.zip",
                 openlist: build_openlist_url(&openlist_version, "macos", arch),
             },
@@ -204,25 +345,28 @@ fn check_res_bin() {
         std::fs::create_dir_all(bin_path).expect("Failed to create rclone directory");
     };
 
-    let temp_dir = Path::new("binaries/temp/");
-    if !temp_dir.exists() {
-        std::fs::create_dir_all(temp_dir).expect("Failed to create temp directory");
+    let temp_dir = get_build_temp_dir();
+    if let Err(e) = std::fs::create_dir_all(&temp_dir) {
+        panic!("Failed to create temp directory {}: {}", temp_dir.display(), e);
     }
+
+    let skip_downloads = env_truthy("NETMOUNT_SKIP_BIN_DOWNLOADS") || env_truthy("NETMOUNT_SKIP_DOWNLOADS");
 
     if OS_TYPE == "windows" {
         //下载winfsp
         let winfsp_url =
             "https://github.com/winfsp/winfsp/releases/download/v2.0/winfsp-2.0.23075.msi";
         let winfsp_path = &format!("{}winfsp.msi", bin_path);
-        if !Path::new(winfsp_path).exists() {
-            let _ = download_with_progress(winfsp_url, winfsp_path, |total_size, downloaded| {
+        if !Path::new(winfsp_path).exists() && !skip_downloads && !env_truthy("NETMOUNT_SKIP_WINFSP_DOWNLOAD") {
+            download_with_progress(winfsp_url, winfsp_path, |total_size, downloaded| {
                 println!(
                     "下载进度: {}/{}  {}%",
                     total_size,
                     downloaded,
                     (100 * downloaded / total_size)
                 );
-            });
+            })
+            .unwrap_or_else(|e| panic!("Failed to download WinFsp: {}", e));
         };
     }
 
@@ -236,11 +380,21 @@ fn check_res_bin() {
         if res_bin_urls.rclone.is_empty() {
             panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
         }
+        if skip_downloads {
+            panic!(
+                "Missing rclone binary and downloads are disabled (NETMOUNT_SKIP_BIN_DOWNLOADS/NETMOUNT_SKIP_DOWNLOADS). \
+Expected {} or renamed sidecar (rclone-{}).",
+                rclone_path,
+                get_target_triple()
+            );
+        }
+
+        clean_dir(&temp_dir).expect("Failed to prepare temp directory");
 
         // 下载 rclone
         let zip_name: &str = &extract_filename_from_url(res_bin_urls.rclone).unwrap();
 
-        let _ = download_with_progress(
+        download_with_progress(
             res_bin_urls.rclone,
             temp_dir.join(zip_name).to_str().unwrap(),
             |total_size, downloaded| {
@@ -251,35 +405,29 @@ fn check_res_bin() {
                     (100 * downloaded / total_size)
                 );
             },
-        );
+        )
+        .unwrap_or_else(|e| panic!("Failed to download rclone: {}", e));
 
         // 解压 rclone
-        let _ = decompress_file(
+        decompress_file(
             temp_dir.join(zip_name).to_str().unwrap(),
             temp_dir.to_str().unwrap(),
-        );
+        )
+        .unwrap_or_else(|e| panic!("Failed to decompress rclone archive: {}", e));
         let _ = std::fs::remove_file(temp_dir.join(zip_name));
-        
-        // 从解压目录中找到 rclone 并复制到目标位置
-        let entry_name = get_first_entry(temp_dir).unwrap();
-        let temp_entry_path = temp_dir.join(&entry_name);
-        
-        // 检查解压出来的第一个条目是文件还是目录
-        let rclone_source_path = if temp_entry_path.is_file() {
-            temp_entry_path.clone()
-        } else {
-            temp_entry_path.join(rclone_name)
-        };
 
-        // 复制 rclone
-        println!("解压后条目: {:?}, 是文件: {}", temp_entry_path, temp_entry_path.is_file());
-        println!("源文件路径: {:?}", rclone_source_path);
-        println!("目标路径: {}", rclone_path);
-        
-        match std::fs::copy(&rclone_source_path, rclone_path) {
-            Ok(_) => println!("复制成功"),
-            Err(e) => eprintln!("复制失败: {}", e),
-        }
+        let rclone_source_path = find_file_recursive(&temp_dir, rclone_name)
+            .unwrap_or(None)
+            .unwrap_or_else(|| panic!("Could not find {} after extraction", rclone_name));
+
+        std::fs::copy(&rclone_source_path, rclone_path).unwrap_or_else(|e| {
+            panic!(
+                "Failed to copy rclone from {} to {}: {}",
+                rclone_source_path.display(),
+                rclone_path,
+                e
+            )
+        });
         // 尝试设置权限
         #[cfg(not(target_os = "windows"))]
         match std::fs::metadata(rclone_path) {
@@ -314,12 +462,16 @@ fn check_res_bin() {
         if res_bin_urls.openlist.is_empty() {
             panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
         }
-
-        // 清理临时目录，确保下载 openlist 时不会有残留文件
-        let _ = std::fs::remove_dir_all(temp_dir);
-        if !temp_dir.exists() {
-            std::fs::create_dir_all(temp_dir).expect("Failed to create temp directory");
+        if skip_downloads {
+            panic!(
+                "Missing openlist binary and downloads are disabled (NETMOUNT_SKIP_BIN_DOWNLOADS/NETMOUNT_SKIP_DOWNLOADS). \
+Expected {} or renamed sidecar (openlist-{}).",
+                openlist_path,
+                get_target_triple()
+            );
         }
+
+        clean_dir(&temp_dir).expect("Failed to prepare temp directory");
 
         if !Path::new(openlist_path).parent().unwrap().exists() {
             std::fs::create_dir_all(Path::new(openlist_path).parent().unwrap()).unwrap();
@@ -328,7 +480,7 @@ fn check_res_bin() {
         // 下载 openlist
         let zip_name: &str = &extract_filename_from_url(&res_bin_urls.openlist).unwrap();
 
-        let _ = download_with_progress(
+        download_with_progress(
             &res_bin_urls.openlist,
             temp_dir.join(zip_name).to_str().unwrap(),
             |total_size, downloaded| {
@@ -339,33 +491,26 @@ fn check_res_bin() {
                     (100 * downloaded / total_size)
                 );
             },
-        );
+        )
+        .unwrap_or_else(|e| panic!("Failed to download OpenList: {}", e));
 
         // 解压 openlist 到临时目录
-        let _ = decompress_file(temp_dir.join(zip_name).to_str().unwrap(), temp_dir.to_str().unwrap());
+        decompress_file(temp_dir.join(zip_name).to_str().unwrap(), temp_dir.to_str().unwrap())
+            .unwrap_or_else(|e| panic!("Failed to decompress OpenList archive: {}", e));
         let _ = std::fs::remove_file(temp_dir.join(zip_name));
         
-        // 从解压目录中找到 openlist 并复制到目标位置
-        let entry_name = get_first_entry(temp_dir).unwrap();
-        let temp_entry_path = temp_dir.join(&entry_name);
-        
-        // 检查解压出来的第一个条目是文件还是目录
-        let source_path = if temp_entry_path.is_file() {
-            // 如果直接是可执行文件，直接使用
-            temp_entry_path.clone()
-        } else {
-            // 如果是目录，在目录中找可执行文件
-            temp_entry_path.join(openlist_name)
-        };
-        
-        println!("解压后条目: {:?}, 是文件: {}", temp_entry_path, temp_entry_path.is_file());
-        println!("源文件路径: {:?}", source_path);
-        println!("目标路径: {}", openlist_path);
-        
-        match std::fs::copy(&source_path, openlist_path) {
-            Ok(_) => println!("复制成功"),
-            Err(e) => eprintln!("复制失败: {}", e),
-        }
+        let source_path = find_file_recursive(&temp_dir, openlist_name)
+            .unwrap_or(None)
+            .unwrap_or_else(|| panic!("Could not find {} after extraction", openlist_name));
+
+        std::fs::copy(&source_path, openlist_path).unwrap_or_else(|e| {
+            panic!(
+                "Failed to copy OpenList from {} to {}: {}",
+                source_path.display(),
+                openlist_path,
+                e
+            )
+        });
 
         // 尝试设置权限
         #[cfg(not(target_os = "windows"))]
@@ -386,7 +531,6 @@ fn check_res_bin() {
             println!("添加成功 openlist ");
             
             // 记录 OpenList 版本信息
-            let openlist_version = get_openlist_version();
             record_openlist_version(&openlist_version, None);
             
             // 尝试获取更详细的版本信息（通过运行二进制文件）
@@ -410,7 +554,7 @@ fn check_res_bin() {
     };
 
     //清理
-    let _ = std::fs::remove_dir_all(temp_dir);
+    let _ = std::fs::remove_dir_all(&temp_dir);
 
     // 重命名二进制文件以符合 Tauri sidecar 规范
     // 格式: name-$TARGET_TRIPLE (例如: rclone-x86_64-pc-windows-msvc.exe)
@@ -437,6 +581,18 @@ fn check_sidecar_binary_exists(bin_path: &str, name: &str, original_name: &str) 
 
     let renamed_path = Path::new(bin_path).join(&renamed_filename);
     renamed_path.exists()
+}
+
+fn normalize_arch(arch: &str) -> String {
+    let a = arch.trim().to_lowercase();
+    match a.as_str() {
+        "x86_64" | "amd64" => "x86_64".to_string(),
+        "x86" | "i686" | "i386" => "x86".to_string(),
+        "aarch64" | "arm64" => "aarch64".to_string(),
+        "arm" => "arm".to_string(),
+        _ if a.starts_with("armv7") || a.starts_with("armv6") => "arm".to_string(),
+        _ => arch.trim().to_string(),
+    }
 }
 
 fn rename_sidecar_binary(bin_path: &str, name: &str, original_name: &str) {
@@ -525,23 +681,6 @@ fn get_arch() -> String {
     return env::consts::ARCH.to_owned();
 }
 
-fn get_first_entry<P: AsRef<Path>>(path: P) -> Result<String, String> {
-    let path = path.as_ref();
-    let mut entries = std::fs::read_dir(path).unwrap();
-
-    if let Some(entry) = entries.next() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if path.is_file() {
-            return Ok(path.file_name().unwrap().to_string_lossy().into_owned());
-        } else if path.is_dir() {
-            return Ok(path.file_name().unwrap().to_string_lossy().into_owned());
-        }
-    }
-
-    Err("Folder is empty or does not exist".to_string())
-}
-
 use futures_util::stream::StreamExt;
 use itertools::Itertools as _;
 use reqwest::Client;
@@ -560,8 +699,17 @@ where
     F: FnMut(usize, usize) + Clone,
 {
     let mut url = url.to_owned();
-    if url.to_owned().contains("//github.com") {
-        url = format!("https://gh-proxy.com/{}", url)
+
+    // Optional GitHub proxy (default keeps existing behavior)
+    // - set NETMOUNT_GITHUB_PROXY="" or "0" to disable proxying
+    // - set NETMOUNT_GITHUB_PROXY="https://your-proxy/" to customize
+    if url.contains("//github.com") {
+        let proxy = env::var("NETMOUNT_GITHUB_PROXY").unwrap_or_else(|_| "https://gh-proxy.com/".to_string());
+        let proxy = proxy.trim().to_string();
+        if !proxy.is_empty() && proxy != "0" {
+            let proxy = if proxy.ends_with('/') { proxy } else { format!("{}/", proxy) };
+            url = format!("{}{}", proxy, url);
+        }
     }
 
     let response = Client::new()

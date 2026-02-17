@@ -1,4 +1,8 @@
-use std::{fs, path::{Path, PathBuf}};
+use std::{
+    fs,
+    io::{Read, Seek, SeekFrom},
+    path::{Path, PathBuf},
+};
 
 use tauri::Manager as _;
 
@@ -8,10 +12,26 @@ fn resolve_path(app: &tauri::AppHandle<Runtime>, path: &str) -> anyhow::Result<P
     if path.starts_with("~") {
         let home = app.path().home_dir()
             .map_err(|e| anyhow::anyhow!("Failed to get home dir: {}", e))?;
-        Ok(home.join(&path[1..])) // 跳过波浪线
+        // 支持 "~"、"~/"、"~\\"
+        let rest = path
+            .trim_start_matches('~')
+            .trim_start_matches(['/', '\\']);
+        if rest.is_empty() {
+            Ok(home)
+        } else {
+            Ok(home.join(rest))
+        }
     } else {
         Ok(Path::new(path).to_owned())
     }
+}
+
+fn app_data_dir(app: &tauri::AppHandle<Runtime>) -> anyhow::Result<PathBuf> {
+    Ok(app
+        .path()
+        .home_dir()
+        .map_err(|e| anyhow::anyhow!("Failed to get home dir: {}", e))?
+        .join(".netmount"))
 }
 
 #[tauri::command]
@@ -28,6 +48,42 @@ pub fn fs_make_dir(app: tauri::AppHandle<Runtime>, path: &str) -> anyhow_tauri::
     let path = resolve_path(&app, path)?;
     std::fs::create_dir_all(path).map_err(anyhow::Error::from)?;
     Ok(())
+}
+
+#[tauri::command]
+pub fn read_text_file_tail(
+    app: tauri::AppHandle<Runtime>,
+    path: &str,
+    max_bytes: Option<u64>,
+) -> anyhow_tauri::TAResult<String> {
+    let path = resolve_path(&app, path)?;
+
+    // 安全：仅允许读取 ~/.netmount 下的文件
+    let base = app_data_dir(&app)?;
+    let base = base
+        .canonicalize()
+        .unwrap_or(base);
+    let candidate = path
+        .canonicalize()
+        .unwrap_or(path.clone());
+    if !candidate.starts_with(&base) {
+        return Err(anyhow::anyhow!(
+            "Access denied: only files under {} are allowed",
+            base.display()
+        )
+        .into());
+    }
+
+    let max_bytes = max_bytes.unwrap_or(256 * 1024).max(1024); // 默认 256KB，至少 1KB
+
+    let mut file = std::fs::File::open(&candidate).map_err(anyhow::Error::from)?;
+    let len = file.metadata().map(|m| m.len()).unwrap_or(0);
+    let start = len.saturating_sub(max_bytes);
+    file.seek(SeekFrom::Start(start)).map_err(anyhow::Error::from)?;
+
+    let mut buf = Vec::new();
+    file.read_to_end(&mut buf).map_err(anyhow::Error::from)?;
+    Ok(String::from_utf8_lossy(&buf).to_string())
 }
 
 
