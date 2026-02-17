@@ -47,7 +47,7 @@ interface StorageParamItemType {
     description: string,//参数描述
     type: 'string' | 'number' | 'boolean',//参数类型，基础类型
     exType?: 'SpaceSepList' | 'CommaSepList' | 'Encoding' | 'SizeSuffix' | 'Duration' | 'Time' | 'Tristate' | 'Bits',//扩展类型,commaSepList:逗号分隔列表,spaceSepList:空格分隔列表
-    default: any,//默认值
+    default: unknown,//默认值
     required: boolean,//是否必填
     advanced: boolean,//是否高级参数
     select?: ParamItemOptionType[],//可选值
@@ -82,12 +82,8 @@ interface StorageInfoType {
     defaultParams: StorageParamsType;//默认参数
     displayType?: string;
     otherConfig?:{
-        rclone?:{
-            
-        }
-        openlist?:{
-
-        }
+        rclone?: Record<string, never>
+        openlist?: Record<string, never>
     }
 }
 

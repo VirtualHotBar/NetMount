@@ -43,6 +43,14 @@ interface OpenlistInfo {
             max_backups?: number;
             max_age?: number;
             compress?: boolean;
+            filter?: {
+                enable?: boolean;
+                filters?: Array<{
+                    cidr?: string;
+                    path?: string;
+                    method?: string;
+                }>;
+            };
         };
         tasks?: {
             download?: {

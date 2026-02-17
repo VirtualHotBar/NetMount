@@ -6,7 +6,12 @@ type ReadTailOptions = {
 }
 
 function looksLikeMissingFileError(e: unknown): boolean {
-  const msg = typeof e === 'string' ? e : (e && typeof e === 'object' && 'message' in e ? String((e as any).message) : '')
+  const msg =
+    typeof e === 'string'
+      ? e
+      : e && typeof e === 'object' && 'message' in e
+        ? String((e as { message?: unknown }).message)
+        : ''
   if (!msg) return false
   const m = msg.toLowerCase()
   return (

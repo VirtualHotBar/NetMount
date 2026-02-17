@@ -40,7 +40,7 @@ async function startSidecarAndWait(opts: StartAndWaitOptions): Promise<number> {
       typeof e === 'string'
         ? e
         : e && typeof e === 'object' && 'message' in e
-          ? String((e as any).message)
+          ? String((e as { message?: unknown }).message)
           : (() => {
               try {
                 return JSON.stringify(e)

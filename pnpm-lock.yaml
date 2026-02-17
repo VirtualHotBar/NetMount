@@ -18,25 +18,25 @@ importers:
         specifier: ^0.0.1
         version: 0.0.1(@arco-design/web-react@2.66.10(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       '@tauri-apps/api':
-        specifier: ^2.2.0
+        specifier: ^2.10.1
         version: 2.10.1
       '@tauri-apps/cli':
-        specifier: ^2.2.0
+        specifier: ^2.10.0
         version: 2.10.0
       '@tauri-apps/plugin-dialog':
-        specifier: ^2.2.0
+        specifier: ^2.6.0
         version: 2.6.0
       '@tauri-apps/plugin-fs':
-        specifier: ^2.2.0
+        specifier: ^2.4.5
         version: 2.4.5
       '@tauri-apps/plugin-os':
-        specifier: ^2.2.0
+        specifier: ^2.3.2
         version: 2.3.2
       '@tauri-apps/plugin-process':
-        specifier: ^2.2.0
+        specifier: ^2.3.1
         version: 2.3.1
       '@tauri-apps/plugin-shell':
-        specifier: ^2.2.0
+        specifier: ^2.3.5
         version: 2.3.5
       '@types/node':
         specifier: ^20.16.1

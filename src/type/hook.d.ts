@@ -1,9 +1,9 @@
 interface Hooks{
-    upStats:Function;
-    upStorage:Function;
-    upMount:Function;
+    upStats:()=>void;
+    upStorage:()=>void;
+    upMount:()=>void;
     navigate:(path:string)=>void;
-    setLocaleStr:(localeStr:string)=>void|string;
+    setLocaleStr:(localeStr:string)=>void;
 }
 
 export {Hooks}

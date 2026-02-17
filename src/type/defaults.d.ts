@@ -1,6 +1,6 @@
 
 interface ParametersType {
-    [key: string]: any
+    [key: string]: unknown
 }
 
 export {  ParametersType}

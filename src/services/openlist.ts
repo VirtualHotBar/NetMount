@@ -40,7 +40,14 @@ const openlistInfo: OpenlistInfo = {
             max_size: 50,
             max_backups: 30,
             max_age: 28,
-            compress: false
+            compress: false,
+            filter: {
+                enable: true,
+                filters: [
+                    { cidr: '', path: '/ping', method: '' },  // 过滤健康检查请求
+                    { cidr: '', path: '', method: 'HEAD' },   // 过滤 HEAD 请求
+                ]
+            }
         },
         tasks: {
             download: { workers: 5, max_retry: 1, expire_seconds: 0 },

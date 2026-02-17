@@ -313,6 +313,8 @@ export function safeParse<T>(schema: z.ZodType<T>, data: unknown, defaultValue: 
  * 部分解析函数 - 允许部分数据通过
  */
 export function partialParse<T>(_schema: z.ZodType<T>, _data: unknown): Partial<T> | undefined {
+  void _schema;
+  void _data;
   // 由于 ZodType.partial() 不可用，我们直接返回原始数据的部分属性
   // 实际使用时可以通过 schema.shape 来获取可选字段
   // 这里提供一个安全的回退实现

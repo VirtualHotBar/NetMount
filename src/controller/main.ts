@@ -1,4 +1,4 @@
-import { nmConfig, osInfo, readNmConfig, roConfig, saveNmConfig } from "../services/config"
+import { nmConfig, readNmConfig, roConfig, saveNmConfig } from "../services/config"
 import { rcloneInfo } from "../services/rclone"
 import { rclone_api_post } from "../utils/rclone/request"
 import { RcloneVersion } from "../type/rclone/rcloneInfo"
