@@ -8,7 +8,7 @@ const OS_TYPE: &str = env::consts::OS;
 
 // OpenList 版本控制
 // 默认固定版本，避免 "latest" 漂移导致的接口不兼容问题
-const DEFAULT_OPENLIST_VERSION: &str = "v4.0.5";
+const DEFAULT_OPENLIST_VERSION: &str = "v4.1.10";
 
 // 版本标记文件
 const OPENLIST_VERSION_FILE: &str = "res/bin/openlist/.version";
@@ -58,18 +58,27 @@ fn build_openlist_url(version: &str, os_type: &str, arch: &str) -> String {
 fn record_openlist_version(version: &str, commit: Option<&str>) {
     println!("cargo:rustc-env=OPENLIST_VERSION={}", version);
     println!("cargo:warning=OpenList version: {}", version);
-    
+
     if let Some(c) = commit {
         println!("cargo:rustc-env=OPENLIST_COMMIT={}", c);
         println!("cargo:warning=OpenList commit: {}", c);
     }
-    
-    // 写入版本文件
+
+    // 写入版本文件（仅当内容变化时，避免触发重建循环）
     let version_path = Path::new(OPENLIST_VERSION_FILE);
     if let Some(parent) = version_path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
-    let _ = std::fs::write(version_path, format!("{}\n", version));
+
+    let new_content = format!("{}\n", version);
+    let should_write = match std::fs::read_to_string(version_path) {
+        Ok(existing) => existing != new_content,
+        Err(_) => true, // 文件不存在时写入
+    };
+
+    if should_write {
+        let _ = std::fs::write(version_path, new_content);
+    }
 }
 
 fn main() -> anyhow::Result<()> {
@@ -222,7 +231,8 @@ fn check_res_bin() {
         _ => "rclone",
     };
     let rclone_path = &format!("{}{}", bin_path, rclone_name);
-    if !Path::new(rclone_path).exists() {
+    // 检查原始文件名或重命名后的文件名是否存在
+    if !Path::new(rclone_path).exists() && !check_sidecar_binary_exists(bin_path, "rclone", rclone_name) {
         if res_bin_urls.rclone.is_empty() {
             panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
         }
@@ -299,7 +309,8 @@ fn check_res_bin() {
     };
     let openlist_path = &format!("{}{}", bin_path, openlist_name);
 
-    if !Path::new(openlist_path).exists() {
+    // 检查原始文件名或重命名后的文件名是否存在
+    if !Path::new(openlist_path).exists() && !check_sidecar_binary_exists(bin_path, "openlist", openlist_name) {
         if res_bin_urls.openlist.is_empty() {
             panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
         }
@@ -405,6 +416,27 @@ fn check_res_bin() {
     // 格式: name-$TARGET_TRIPLE (例如: rclone-x86_64-pc-windows-msvc.exe)
     rename_sidecar_binary(bin_path, "rclone", rclone_name);
     rename_sidecar_binary(bin_path, "openlist", openlist_name);
+}
+
+/// 检查 sidecar 二进制文件是否存在（包括重命名后的文件）
+fn check_sidecar_binary_exists(bin_path: &str, name: &str, original_name: &str) -> bool {
+    let target_triple = get_target_triple();
+
+    // 获取原始文件的扩展名（如果有）
+    let ext = Path::new(original_name)
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("");
+
+    // 重命名后的文件名
+    let renamed_filename = if ext.is_empty() {
+        format!("{}-{}", name, target_triple)
+    } else {
+        format!("{}-{}.{}", name, target_triple, ext)
+    };
+
+    let renamed_path = Path::new(bin_path).join(&renamed_filename);
+    renamed_path.exists()
 }
 
 fn rename_sidecar_binary(bin_path: &str, name: &str, original_name: &str) {

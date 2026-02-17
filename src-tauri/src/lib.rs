@@ -4,6 +4,8 @@
 use std::path::PathBuf;
 use std::{env, fs::File, ops::Deref, path::Path, sync::RwLock};
 
+use tauri::Manager;
+
 use config::Config;
 use fs::{fs_exist_dir, fs_make_dir, read_json_file, write_json_file, copy_file};
 use locale::Locale;
@@ -358,49 +360,99 @@ async fn spawn_sidecar(
     name: String,
     args: Vec<String>,
 ) -> Result<u32, String> {
-    use tauri_plugin_shell::ShellExt;
-    use tauri_plugin_shell::process::CommandEvent;
+    use std::process::Stdio;
     
     // 从 "binaries/rclone" 提取 "rclone"
     let sidecar_name = name.split('/').last().unwrap_or(&name);
     
-    let sidecar_command = app
-        .shell()
-        .sidecar(sidecar_name)
-        .map_err(|e| format!("Failed to create sidecar command: {}", e))?
-        .args(args);
+    // 构建 target triple（与 build.rs 保持一致）
+    let target_triple = format!("{}-{}", 
+        match env::consts::ARCH {
+            "x86_64" => "x86_64",
+            "x86" => "i686",
+            "aarch64" => "aarch64",
+            _ => env::consts::ARCH,
+        },
+        match env::consts::OS {
+            "windows" => "pc-windows-msvc",
+            "linux" => "unknown-linux-gnu",
+            "macos" => "apple-darwin",
+            _ => env::consts::OS,
+        }
+    );
     
-    let (mut rx, child) = sidecar_command
+    // 获取 sidecar 二进制文件路径
+    let sidecar_path = app
+        .path()
+        .resolve(format!("binaries/{}-{}{}", 
+            sidecar_name,
+            target_triple,
+            if env::consts::OS == "windows" { ".exe" } else { "" }
+        ), tauri::path::BaseDirectory::Resource)
+        .map_err(|e| format!("Failed to resolve sidecar path: {}", e))?;
+    
+    // 获取工作目录（用户主目录下的 .netmount）
+    let work_dir = app.path().home_dir()
+        .map_err(|e| format!("Failed to get home dir: {}", e))?
+        .join(".netmount");
+    
+    // 确保工作目录存在
+    if !work_dir.exists() {
+        let _ = std::fs::create_dir_all(&work_dir);
+    }
+    
+    // 使用 std::process::Command 来设置工作目录
+    let mut cmd = std::process::Command::new(&sidecar_path);
+    cmd.args(&args)
+        .current_dir(&work_dir)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    
+    let mut child = tokio::process::Command::from(cmd)
         .spawn()
         .map_err(|e| format!("Failed to spawn sidecar: {}", e))?;
     
-    let pid = child.pid();
+    let pid = child.id().unwrap_or(0);
     let name_clone = sidecar_name.to_string();
     
     // 注册到 Job Object（使用简短名称）
     sidecar::register_sidecar_pid(sidecar_name, pid);
     println!("Sidecar {} spawned with PID: {}", sidecar_name, pid);
     
-    // 在后台处理输出
-    tauri::async_runtime::spawn(async move {
-        while let Some(event) = rx.recv().await {
-            match event {
-                CommandEvent::Stdout(line) => {
-                    println!("[{}] stdout: {}", name_clone, String::from_utf8_lossy(&line));
-                }
-                CommandEvent::Stderr(line) => {
-                    eprintln!("[{}] stderr: {}", name_clone, String::from_utf8_lossy(&line));
-                }
-                CommandEvent::Error(err) => {
-                    eprintln!("[{}] error: {}", name_clone, err);
-                }
-                CommandEvent::Terminated(payload) => {
-                    println!("[{}] terminated with code: {:?}", name_clone, payload.code);
-                    break;
-                }
-                _ => {}
+    // 获取 stdout 和 stderr 处理输出
+    let stdout = child.stdout.take();
+    let stderr = child.stderr.take();
+    
+    // 在后台处理 stdout
+    if let Some(stdout) = stdout {
+        let name_clone_stdout = name_clone.clone();
+        tauri::async_runtime::spawn(async move {
+            use tokio::io::{AsyncBufReadExt, BufReader};
+            let reader = BufReader::new(tokio::process::ChildStdout::from(stdout));
+            let mut lines = reader.lines();
+            while let Ok(Some(line)) = lines.next_line().await {
+                println!("[{}] stdout: {}", name_clone_stdout, line);
             }
-        }
+        });
+    }
+    
+    // 在后台处理 stderr
+    if let Some(stderr) = stderr {
+        let name_clone_stderr = name_clone.clone();
+        tauri::async_runtime::spawn(async move {
+            use tokio::io::{AsyncBufReadExt, BufReader};
+            let reader = BufReader::new(tokio::process::ChildStderr::from(stderr));
+            let mut lines = reader.lines();
+            while let Ok(Some(line)) = lines.next_line().await {
+                eprintln!("[{}] stderr: {}", name_clone_stderr, line);
+            }
+        });
+    }
+    
+    // 在后台等待进程结束
+    tauri::async_runtime::spawn(async move {
+        let status = child.wait().await;
+        println!("[{}] terminated with status: {:?}", name_clone, status);
     });
     
     Ok(pid)
