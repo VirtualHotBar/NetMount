@@ -63,6 +63,7 @@ function AddStorage_page() {
         setStep('setParams')
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (isEditMode) editMode();
     }, [])

@@ -1,8 +1,7 @@
 name: "Publish Release"
 
-
-on: 
-   workflow_dispatch:
+on:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -11,12 +10,62 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# `tauri-action` can also upload app bundles to an existing GitHub release.
-# This workflow uses different actions to create and publish the release.
-# `tauri-action` will only build and upload the app bundles to the specified release.
-
 jobs:
+  # 前置构建检查 - 必须先通过才能继续
+  check-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install dependencies (ubuntu only)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: check i18n
+        run: pnpm run check:i18n
+
+      - name: lint check
+        run: pnpm run lint
+
+      - name: frontend type check & build
+        run: pnpm run build
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> src-tauri/target
+          shared-key: check-build
+
+      - name: check Tauri build
+        run: pnpm run tauri build -- --bundles none
+        env:
+          RUST_BACKTRACE: 1
+
+  # 检查通过后创建 Release
   create-release:
+    needs: [check-build]
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -38,11 +87,9 @@ jobs:
         id: get-version
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          #sed -i "s/^version = \".*\"/version = \"$PACKAGE_VERSION\"/" src-tauri/Cargo.toml
           echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
           echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
 
-          
       - name: create release
         id: create-release
         uses: actions/github-script@v7
@@ -75,6 +122,7 @@ jobs:
             })
             return data.id
 
+  # 多平台构建 Tauri 应用
   build-tauri:
     needs: [create-release]
     permissions:
@@ -83,11 +131,11 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - platform: "macos-latest" # for Arm based macs (M1 and above).
+          - platform: "macos-latest"
             args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel based macs.
+          - platform: "macos-latest"
             args: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
+          - platform: "ubuntu-22.04"
             args: ""
           - platform: "windows-latest"
             args: ""
@@ -113,28 +161,13 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.settings.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: install dependencies (windows only)
-        if: matrix.settings.platform == 'windows-latest' 
-        run: |
-        #winget  install 7z -h --accept-package-agreements --accept-source-agreements
-
-            
-      - name: install dependencies (macos only)
-        if: matrix.settings.platform == 'macos-latest'
-        run: |
-        #/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        #brew install p7zip
-
       - name: install dependencies (ubuntu only)
-        if: matrix.settings.platform == 'ubuntu-22.04' 
+        if: matrix.settings.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-        # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
-        # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
 
       - name: install frontend dependencies
         run: pnpm install --frozen-lockfile
@@ -153,7 +186,7 @@ jobs:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.settings.args }}
 
-
+  # 生成 Changelog
   generate-changelog:
     runs-on: ubuntu-latest
     outputs:
@@ -185,8 +218,7 @@ jobs:
           cat changelog.md >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
-
-
+  # 发布 Release（所有构建完成后）
   publish-release:
     runs-on: ubuntu-latest
     needs: [create-release, build-tauri, generate-changelog]
@@ -202,8 +234,7 @@ jobs:
           script: |
             const changelog = ${{ toJson(needs.generate-changelog.outputs.changelog) }}
             const { pull_request } = context.payload;
-            
-            // Check if the event payload contains a pull request
+
             let prBody = '';
             if (pull_request) {
               prBody = pull_request.body || '';
