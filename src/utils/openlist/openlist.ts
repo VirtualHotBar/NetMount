@@ -35,18 +35,61 @@ async function modifyOpenlistConfig(rewriteData: {
         http_port?: number;
     };
     temp_dir?: string;
-} = openlistInfo.openlistConfig){
+} = openlistInfo.openlistConfig) {
     console.log(rewriteData);
-    
-     const path = openlistDataDir()+'config.json'
-     let oldOpenlistConfig = {}
-     try {
-         oldOpenlistConfig = await invoke('read_json_file',{path}) as object
-     } catch (e) {
-         console.log('配置文件不存在或损坏，使用空配置:', e)
-     }
-     const newOpenlistConfig = {...oldOpenlistConfig, ...rewriteData}
-     await invoke('write_json_file',{configData:newOpenlistConfig,path:path})
+
+    const dataDir = openlistDataDir();
+    const path = dataDir + 'config.json';
+
+    // 确保数据目录存在
+    try {
+        await invoke('fs_make_dir', { path: dataDir });
+    } catch (e) {
+        // 目录可能已存在
+    }
+
+    let oldOpenlistConfig = {};
+    try {
+        oldOpenlistConfig = await invoke('read_json_file', { path }) as object;
+    } catch (e) {
+        console.log('配置文件不存在或损坏，使用空配置:', e);
+    }
+
+    // 合并配置
+    const newOpenlistConfig = { ...oldOpenlistConfig, ...rewriteData };
+
+    // 将相对路径转换为绝对路径（基于数据目录）
+    const toAbsolutePath = (relativePath: string) => {
+        if (!relativePath) return relativePath;
+        // 如果已经是绝对路径，直接返回
+        if (relativePath.startsWith('/') || (relativePath.length > 1 && relativePath[1] === ':')) {
+            return relativePath;
+        }
+        return dataDir + relativePath.replace(/\\/g, '/');
+    };
+
+    // 转换数据库路径
+    if (newOpenlistConfig.database?.db_file) {
+        newOpenlistConfig.database.db_file = toAbsolutePath(newOpenlistConfig.database.db_file);
+    }
+
+    // 转换日志路径
+    if (newOpenlistConfig.log?.name) {
+        newOpenlistConfig.log.name = toAbsolutePath(newOpenlistConfig.log.name);
+    }
+
+    // 转换 bleve 目录路径
+    if (newOpenlistConfig.bleve_dir) {
+        newOpenlistConfig.bleve_dir = toAbsolutePath(newOpenlistConfig.bleve_dir);
+    }
+
+    // 转换 temp_dir
+    if (newOpenlistConfig.temp_dir) {
+        newOpenlistConfig.temp_dir = toAbsolutePath(newOpenlistConfig.temp_dir);
+    }
+
+    console.log('转换后的配置:', newOpenlistConfig);
+    await invoke('write_json_file', { configData: newOpenlistConfig, path: path });
 }
 
 async function addOpenlistInRclone() {
