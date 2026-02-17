@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { CSSProperties, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Form, FormInstance, Grid, Input, InputNumber, Select, Switch, Tooltip } from "@arco-design/web-react";
@@ -211,13 +210,11 @@ function InputForm_module({ data, style, showAdvanced, footer, onChange, overwri
     const [formValuesResult, setFormValuesResult] = useState<ParametersType>({});
 
     if (showAdvanced === undefined) showAdvanced = false;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         setFormHook && setFormHook(form);
         if (overwriteValues) form.setFieldsValue(overwriteValues);
     }, [])
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         onChange && onChange(formValuesResult)
     }, [formValuesResult])

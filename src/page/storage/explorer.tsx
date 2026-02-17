@@ -111,7 +111,6 @@ function ExplorerItem() {
         setClipList([...clipList, { isMove: clip.isMove, storageName: clip.storageName, path: clip.path, isDir: clip.isDir }])
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         //页面加载时，从URL中获取存储名称和路径
         if (getURLSearchParam('name')) {
@@ -131,14 +130,12 @@ function ExplorerItem() {
         }
     }, []);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (storageName && path) {
             fileInfo();
         }
     }, [path]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (storageName && !path) {
             updatePath('/')

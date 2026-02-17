@@ -24,7 +24,6 @@ function Home_page() {
   const [notification, noticeContextHolder] = Notification.useNotification();
   const storageList=filterHideStorage(rcloneInfo.storageList)
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     hooks.upStats = forceUpdate;
     console.log(nmConfig.notice);

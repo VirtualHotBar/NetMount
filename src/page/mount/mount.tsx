@@ -62,7 +62,6 @@ function Mount_page() {
     setWinFspInstallState(await getWinFspInstallState())
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     hooks.upMount = forceUpdate
     if (osInfo.osType === "windows" && rcloneInfo.endpoint.isLocal && winFspInstallState === undefined) {
