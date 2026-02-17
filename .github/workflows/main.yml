@@ -1,115 +1,157 @@
-name: "Publish Release"
+name: "CI/CD"
 
 on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master]
   workflow_dispatch:
-
-permissions:
-  contents: read
+    inputs:
+      release:
+        description: 'Create release'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: '20'
+  RUST_TOOLCHAIN: stable
+
 jobs:
-  # 前置构建检查 - 必须先通过才能继续
-  check-build:
+  # ========== PR / Push 检查 ==========
+  check-i18n:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 9
-
-      - name: setup node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check:i18n
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
 
-      - name: install dependencies (ubuntu only)
+  type-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: npx tsc --noEmit
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+  # Tauri 构建检查（仅在 PR/push 时运行，不生成产物）
+  tauri-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@${{ env.RUST_TOOLCHAIN }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          shared-key: tauri-check
+      - name: install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-
-      - name: install frontend dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: check i18n
-        run: pnpm run check:i18n
-
-      - name: lint check
-        run: pnpm run lint
-
-      - name: frontend type check & build
-        run: pnpm run build
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            src-tauri -> src-tauri/target
-          shared-key: check-build
-
-      - name: check Tauri build
-        run: pnpm run tauri build -- --bundles none
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run tauri build -- --bundles none
         env:
           RUST_BACKTRACE: 1
 
-  # 检查通过后创建 Release
+  # ========== Release 创建（Tag Push 自动触发，手动触发可选）==========
   create-release:
-    needs: [check-build]
+    needs: [check-i18n, lint, type-check, frontend-build, tauri-check]
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true')
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       release_id: ${{ steps.create-release.outputs.result }}
       package_version: ${{ steps.get-version.outputs.package_version }}
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          ref: ${{ github.sha }}
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-
-      - name: get version
-        id: get-version
+      - id: get-version
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
           echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
 
-      - name: create release
-        id: create-release
+      - id: create-release
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const tag = `v${process.env.PACKAGE_VERSION}`
-
             try {
               const { data } = await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 tag
               })
-              core.info(`Release already exists for ${tag}, reusing id=${data.id}`)
+              core.info(`Release exists for ${tag}, reusing id=${data.id}`)
               return data.id
-            } catch (e) {
-              core.info(`No existing release for ${tag}, creating a new draft release`)
+            } catch {
+              core.info(`Creating new draft release for ${tag}`)
             }
-
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -122,129 +164,120 @@ jobs:
             })
             return data.id
 
-  # 多平台构建 Tauri 应用
+  # ========== 多平台构建 Tauri 应用 ==========
   build-tauri:
     needs: [create-release]
+    if: needs.create-release.result == 'success'
     permissions:
       contents: write
     strategy:
       fail-fast: false
       matrix:
-        settings:
-          - platform: "macos-latest"
-            args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest"
-            args: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-22.04"
-            args: ""
-          - platform: "windows-latest"
-            args: ""
-
-    runs-on: ${{ matrix.settings.platform }}
+        include:
+          - platform: 'macos-latest'
+            target: 'aarch64-apple-darwin'
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest'
+            target: 'x86_64-apple-darwin'
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04'
+            target: 'x86_64-unknown-linux-gnu'
+            args: ''
+          - platform: 'windows-latest'
+            target: 'x86_64-pc-windows-msvc'
+            args: ''
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 9
-
-      - name: setup node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@${{ env.RUST_TOOLCHAIN }}
         with:
-          targets: ${{ matrix.settings.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: install dependencies (ubuntu only)
-        if: matrix.settings.platform == 'ubuntu-22.04'
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.target }}
+          cache-on-failure: true
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - name: install frontend dependencies
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            src-tauri -> src-tauri/target
-          shared-key: ${{ matrix.settings.platform }}-${{ matrix.settings.args }}
-
-      - uses: tauri-apps/tauri-action@v0
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
-          args: ${{ matrix.settings.args }}
+          args: ${{ matrix.args }}
 
-  # 生成 Changelog
+  # ========== 生成 Changelog ==========
   generate-changelog:
-    runs-on: ubuntu-latest
-    outputs:
-      changelog: ${{ steps.generate-changelog.outputs.changelog }}
     needs: [create-release]
+    if: needs.create-release.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      changelog: ${{ steps.gen.outputs.changelog }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
           fetch-depth: 0
-
-      - name: setup node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
-
-      - name: Fetch tags
-        run: git fetch --tags --force
-
-      - name: Generate Changelog
-        id: generate-changelog
+          node-version: ${{ env.NODE_VERSION }}
+      - run: git fetch --tags --force
+      - id: gen
         env:
           CURRENT_TAG: v${{ needs.create-release.outputs.package_version }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           node scripts/generate-changelog.mjs > changelog.md
           cat changelog.md
-          echo "changelog<<'EOF'" >> "$GITHUB_OUTPUT"
-          cat changelog.md >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          {
+            echo 'changelog<<CHANGELOG_EOF'
+            cat changelog.md
+            echo ''
+            echo 'CHANGELOG_EOF'
+          } >> "$GITHUB_OUTPUT"
 
-  # 发布 Release（所有构建完成后）
+  # ========== 发布 Release ==========
   publish-release:
-    runs-on: ubuntu-latest
     needs: [create-release, build-tauri, generate-changelog]
+    if: always() && needs.create-release.result == 'success' && needs.build-tauri.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write
     steps:
-      - name: publish release
-        uses: actions/github-script@v7
+      - uses: actions/github-script@v7
         env:
-          release_id: ${{ needs.create-release.outputs.release_id }}
+          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
+          CHANGELOG: ${{ needs.generate-changelog.outputs.changelog }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const changelog = ${{ toJson(needs.generate-changelog.outputs.changelog) }}
-            const { pull_request } = context.payload;
-
-            let prBody = '';
-            if (pull_request) {
-              prBody = pull_request.body || '';
-            }
-
-            github.rest.repos.updateRelease({
+            const changelog = process.env.CHANGELOG || '';
+            const prBody = context.payload.pull_request?.body || '';
+            await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              release_id: process.env.release_id,
+              release_id: process.env.RELEASE_ID,
               draft: false,
               prerelease: false,
-              body: `${changelog}\n\n${prBody}`
-            })
+              body: `${changelog}\n\n${prBody}`.trim()
+            });

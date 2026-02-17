@@ -12,6 +12,7 @@ import { InputForm_module, paramsType2FormItems } from '../other/InputForm';
 import { filterHideStorage } from '../../controller/storage/storage';
 import { MountOptions, VfsOptions } from '../../type/rclone/storage/mount/parameters';
 import { searchStorageInfo } from '../../controller/storage/allList';
+import { ParametersType } from '../../type/defaults';
 
 const FormItem = Form.Item;
 
@@ -108,7 +109,6 @@ export default function AddMount_page() {
         if (isEditMode) {
             editMode();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     useEffect(() => {
@@ -118,7 +118,6 @@ export default function AddMount_page() {
             setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, VolumeName: storageName ? storageName : '' } })
             mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mountPath])
 
     useEffect(() => {
@@ -142,13 +141,11 @@ export default function AddMount_page() {
                 mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [storageName])
 
     useEffect(() => {
         vfsOptFormHook && vfsOptFormHook.setFieldsValue(parameters.vfsOpt);
         mountOptFormHook && mountOptFormHook.setFieldsValue(parameters.mountOpt)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vfsOptFormHook, mountOptFormHook])
 
 
@@ -227,13 +224,13 @@ export default function AddMount_page() {
                 <div style={{ display: showAllOptions ? 'block' : 'none' }}>
                     <InputForm_module data={paramsType2FormItems(defaultMountConfig)} onChange={(data) => {
                         setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, ...data } })
-                    }} overwriteValues={parameters.mountOpt} setFormHook={(form) => {
+                    }} overwriteValues={parameters.mountOpt as unknown as ParametersType} setFormHook={(form) => {
                         //form.setFieldsValue(parameters.mountOpt)
                         setMountOptFormHook(form)
                     }} />
                     <InputForm_module data={[vfsCacheModeParam, ...paramsType2FormItems(defaultVfsConfig, undefined, ['CacheMode'])]} onChange={(data) => {
                         setParameters({ ...parameters, vfsOpt: { ...parameters.vfsOpt, ...data } })
-                    }} overwriteValues={{ ...parameters.vfsOpt, CacheMode: 'full' }} setFormHook={(form) => {
+                    }} overwriteValues={{ ...parameters.vfsOpt, CacheMode: 'full' } as unknown as ParametersType} setFormHook={(form) => {
                         //form.setFieldsValue(parameters.vfsOpt);
                         setVfsOptFormHook(form)
                     }} />

@@ -69,7 +69,11 @@ function paramsType2FormItems(params: ParametersType, isAdvanced: boolean = fals
 function filter(filters: FilterType[], formValuesResult: ParametersType) {
     if (filters.length == 0) return undefined
     for (const filter of filters) {
-        if (formValuesResult[filter.name] && formValuesResult[filter.name].includes(filter.value)) {
+        const value = formValuesResult[filter.name]
+        if (typeof value === 'string' && value.includes(String(filter.value))) {
+            return filter.state
+        }
+        if (Array.isArray(value) && value.includes(filter.value)) {
             //console.log('匹配到:', formValuesResult[filter.name], filter.value, filter.state);
 
             return filter.state
