@@ -23,7 +23,7 @@ async function startOpenlist() {
     openlistInfo.openlistConfig.temp_dir = formatPath(nmConfig.settings.path.cacheDir + '/openlist/', osInfo.osType === "windows")
     
     //自动分配端口
-    openlistInfo.openlistConfig.scheme!.http_port != (await getAvailablePorts(2))[1]
+    openlistInfo.openlistConfig.scheme!.http_port = (await getAvailablePorts(2))[1]
 
     openlistInfo.endpoint.url = 'http://localhost:' + (openlistInfo.openlistConfig.scheme?.http_port || 5573)
     await setOpenlistPass(nmConfig.framework.openlist.password)

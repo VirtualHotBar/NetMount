@@ -1,10 +1,6 @@
-import { Child, Command } from "@tauri-apps/plugin-shell";
-import { formatPath, randomString } from "../utils/utils";
 import { OpenlistInfo } from "../type/openlist/openlistInfo";
-import { nmConfig, osInfo } from "./config";
 
-
-let openlistInfo: OpenlistInfo = {
+const openlistInfo: OpenlistInfo = {
     markInRclone: '.netmount-openlist.',
     endpoint: {
         url: '',
@@ -20,7 +16,43 @@ let openlistInfo: OpenlistInfo = {
         scheme: {
             http_port: 9751//随机
         },
-        temp_dir: 'data\\temp'
+        temp_dir: 'data\\temp',
+        // v4 常用字段默认值
+        site_url: '',
+        cdn: '',
+        jwt_secret: '',
+        token_expires_in: 48,
+        database: {
+            type: 'sqlite3',
+            host: '',
+            port: 0,
+            user: '',
+            password: '',
+            name: '',
+            db_file: 'data/data.db',  // 相对路径，会在 modifyOpenlistConfig 中转为绝对路径
+            table_prefix: 'x_',
+            ssl_mode: ''
+        },
+        bleve_dir: 'bleve',
+        log: {
+            enable: true,
+            name: 'log/log.log',  // 相对路径，会在 modifyOpenlistConfig 中转为绝对路径
+            max_size: 50,
+            max_backups: 30,
+            max_age: 28,
+            compress: false
+        },
+        tasks: {
+            download: { workers: 5, max_retry: 1, expire_seconds: 0 },
+            transfer: { workers: 5, max_retry: 2, expire_seconds: 0 },
+            upload: { workers: 5, max_retry: 0, expire_seconds: 0 },
+            copy: { workers: 5, max_retry: 2, expire_seconds: 0 }
+        },
+        cors: {
+            allow_origins: ['*'],
+            allow_methods: ['*'],
+            allow_headers: ['*']
+        }
     },
     version: {
         version: ''

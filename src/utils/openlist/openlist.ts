@@ -49,14 +49,42 @@ async function modifyOpenlistConfig(rewriteData: {
      await invoke('write_json_file',{configData:newOpenlistConfig,path:path})
 }
 
-async function addOpenlistInRclone(){
-    //await delStorage(openlistInfo.markInRclone)
-    await createStorage(openlistInfo.markInRclone,'webdav',{
-        'url':openlistInfo.endpoint.url+'/dav',
-        'vendor':'other',
-        'user':nmConfig.framework.openlist.user,
-        'pass':nmConfig.framework.openlist.password,
-    })
+async function addOpenlistInRclone() {
+    const webdavUrl = openlistInfo.endpoint.url + '/dav';
+    const username = nmConfig.framework.openlist.user;
+    
+    console.log('=== OpenList WebDAV Configuration ===');
+    console.log('WebDAV URL:', webdavUrl);
+    console.log('WebDAV Username:', username);
+    console.log('Note: WebDAV password is the same as Web UI login password');
+    
+    // 可选：探测 WebDAV 端点以提供诊断信息
+    try {
+        const probeRes = await fetch(webdavUrl, {
+            method: 'OPTIONS',
+            headers: {
+                'Authorization': 'Basic ' + btoa(username + ':' + nmConfig.framework.openlist.password)
+            }
+        });
+        console.log('WebDAV probe HTTP status:', probeRes.status);
+        if (probeRes.status === 401) {
+            console.warn('WebDAV returned 401 - Please check if user has WebDAV Read/Management permissions enabled');
+        } else if (probeRes.status === 403) {
+            console.warn('WebDAV returned 403 - Please check if user has necessary file permissions');
+        } else if (probeRes.ok || probeRes.status === 207) {
+            console.log('WebDAV endpoint appears to be accessible');
+        }
+    } catch (probeError) {
+        console.warn('WebDAV probe failed (this is normal if server is still starting):', probeError);
+    }
+    console.log('=====================================');
+    
+    await createStorage(openlistInfo.markInRclone, 'webdav', {
+        'url': webdavUrl,
+        'vendor': 'other',
+        'user': username,
+        'pass': nmConfig.framework.openlist.password,
+    });
 }
 
 

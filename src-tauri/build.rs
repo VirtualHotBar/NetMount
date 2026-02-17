@@ -137,6 +137,17 @@ fn check_res_bin() {
         println!("cargo:warning=Using default OpenList version (set NETMOUNT_OPENLIST_VERSION to override)");
     }
 
+    // 获取 OpenList 版本
+    let openlist_version = get_openlist_version();
+    println!("cargo:warning=Building with OpenList version: {}", openlist_version);
+    
+    // 检查环境变量覆盖
+    if env::var("NETMOUNT_OPENLIST_VERSION").is_ok() {
+        println!("cargo:warning=Using OpenList version from environment variable NETMOUNT_OPENLIST_VERSION");
+    } else {
+        println!("cargo:warning=Using default OpenList version (set NETMOUNT_OPENLIST_VERSION to override)");
+    }
+
     let res_bin_urls = match OS_TYPE {
         "windows" => match arch {
             "aarch64"|"arm" |"arm64"=> ResBinUrls {

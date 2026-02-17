@@ -44,7 +44,7 @@ class Aria2 {
 
     // 解析aria2的命令行输出
     private parseOutput(output: string): Aria2Attrib {
-        let tempAria2Attrib: Aria2Attrib = {
+        const tempAria2Attrib: Aria2Attrib = {
             state: 'request',
             speed: '',
             percentage: 0,

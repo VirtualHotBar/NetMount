@@ -1,5 +1,4 @@
 import * as os from "@tauri-apps/plugin-os";
-import { OSInfo } from "../../type/config";
 import { setOsInfo } from "../../services/config";
 import { invoke } from "@tauri-apps/api/core";
 

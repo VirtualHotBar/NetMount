@@ -81,4 +81,4 @@ interface FileInfo {
     isDir: boolean;
 }
 
-export { RcloneInfo, FileInfo, StorageSpace,StorageList }
+export { RcloneInfo, FileInfo, StorageSpace,StorageList,RcloneVersion,MountList }
