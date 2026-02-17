@@ -98,6 +98,7 @@ impl<M: tauri::Manager<Runtime>> AppExt for M {
     }
 
     fn app_quit(&self) {
+        sidecar::cleanup();
         self.app_handle().exit(0)
     }
 
@@ -180,6 +181,29 @@ pub fn init() -> anyhow::Result<()> {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
+        .on_window_event(|window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                let close_to_tray = window
+                    .app_handle()
+                    .with_app_state::<Config, _>(|config| {
+                        config
+                            .0
+                            .get("settings")
+                            .and_then(|s| s.get("closeToTray"))
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(true)
+                    });
+
+                if close_to_tray {
+                    api.prevent_close();
+                    let _ = window.hide();
+                } else {
+                    // Ensure sidecars don't get orphaned on Unix when quitting via window close.
+                    sidecar::cleanup();
+                }
+            }
+            _ => {}
+        })
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             if let Some(window) = app.app_main_window() {
                 let _ = window.toggle_visibility(Some(true));
@@ -362,6 +386,7 @@ async fn spawn_sidecar(
     args: Vec<String>,
 ) -> Result<u32, String> {
     use std::process::Stdio;
+    use std::io::Write as _;
     
     // 从 "binaries/rclone" 提取 "rclone"
     let sidecar_name = name.split('/').last().unwrap_or(&name);
@@ -401,6 +426,24 @@ async fn spawn_sidecar(
     if !work_dir.exists() {
         let _ = std::fs::create_dir_all(&work_dir);
     }
+
+    // sidecar 统一诊断日志：~/.netmount/log/sidecar-<name>.log
+    let log_dir = work_dir.join("log");
+    let _ = std::fs::create_dir_all(&log_dir);
+    let sidecar_log_path = log_dir.join(format!("sidecar-{}.log", sidecar_name));
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&sidecar_log_path)
+    {
+        let _ = writeln!(
+            f,
+            "\n=== spawn {} ===\npath: {}\nargs: {}\n",
+            sidecar_name,
+            sidecar_path.display(),
+            args.join(" ")
+        );
+    }
     
     // 使用 std::process::Command 来设置工作目录
     let mut cmd = std::process::Command::new(&sidecar_path);
@@ -431,12 +474,25 @@ async fn spawn_sidecar(
     if let Some(stdout) = stdout {
         let name_clone_stdout = name_clone.clone();
         let tx_stdout = tx.clone();
+        let log_path = sidecar_log_path.clone();
         tauri::async_runtime::spawn(async move {
             use tokio::io::{AsyncBufReadExt, BufReader};
+            use tokio::io::AsyncWriteExt;
             let reader = BufReader::new(tokio::process::ChildStdout::from(stdout));
             let mut lines = reader.lines();
+            let mut log_file = tokio::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&log_path)
+                .await
+                .ok();
             while let Ok(Some(line)) = lines.next_line().await {
                 println!("[{}] stdout: {}", name_clone_stdout, line);
+                if let Some(f) = log_file.as_mut() {
+                    let _ = f
+                        .write_all(format!("[stdout] {}\n", line).as_bytes())
+                        .await;
+                }
                 // 发送前10行输出用于诊断
                 let _ = tx_stdout.send(format!("[stdout] {}", line)).await;
             }
@@ -447,12 +503,25 @@ async fn spawn_sidecar(
     if let Some(stderr) = stderr {
         let name_clone_stderr = name_clone.clone();
         let tx_stderr = tx.clone();
+        let log_path = sidecar_log_path.clone();
         tauri::async_runtime::spawn(async move {
             use tokio::io::{AsyncBufReadExt, BufReader};
+            use tokio::io::AsyncWriteExt;
             let reader = BufReader::new(tokio::process::ChildStderr::from(stderr));
             let mut lines = reader.lines();
+            let mut log_file = tokio::fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&log_path)
+                .await
+                .ok();
             while let Ok(Some(line)) = lines.next_line().await {
                 eprintln!("[{}] stderr: {}", name_clone_stderr, line);
+                if let Some(f) = log_file.as_mut() {
+                    let _ = f
+                        .write_all(format!("[stderr] {}\n", line).as_bytes())
+                        .await;
+                }
                 // 发送错误输出用于诊断
                 let _ = tx_stderr.send(format!("[stderr] {}", line)).await;
             }
@@ -462,9 +531,21 @@ async fn spawn_sidecar(
     // 在后台等待进程结束
     let name_clone_wait = name_clone.clone();
     let tx_wait = tx.clone();
+    let log_path = sidecar_log_path.clone();
     tauri::async_runtime::spawn(async move {
+        use tokio::io::AsyncWriteExt;
         let status = child.wait().await;
         println!("[{}] terminated with status: {:?}", name_clone_wait, status);
+        if let Ok(mut f) = tokio::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&log_path)
+            .await
+        {
+            let _ = f
+                .write_all(format!("[exit] {:?}\n", status).as_bytes())
+                .await;
+        }
         let _ = tx_wait.send(format!("[exit] {:?}", status)).await;
     });
     

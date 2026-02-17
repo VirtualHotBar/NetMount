@@ -189,6 +189,7 @@
     "components": "Components",
     "log": "Log",
     "start_hide": "Hide Window on Startup",
+    "close_to_tray": "Minimize to Tray on Close",
     "quit": "Quit",
     "tray_show": "Show Main Window",
     "tray_hide": "Hide Main Window",

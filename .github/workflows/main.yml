@@ -4,6 +4,12 @@ name: "Publish Release"
 on: 
    workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 # `tauri-action` can also upload app bundles to an existing GitHub release.
 # This workflow uses different actions to create and publish the release.
@@ -16,9 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release_id: ${{ steps.create-release.outputs.result }}
+      package_version: ${{ steps.get-version.outputs.package_version }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
 
       - name: setup node
         uses: actions/setup-node@v4
@@ -26,22 +35,40 @@ jobs:
           node-version: lts/*
 
       - name: get version
+        id: get-version
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           #sed -i "s/^version = \".*\"/version = \"$PACKAGE_VERSION\"/" src-tauri/Cargo.toml
           echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
+          echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
 
           
       - name: create release
         id: create-release
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const tag = `v${process.env.PACKAGE_VERSION}`
+
+            try {
+              const { data } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag
+              })
+              core.info(`Release already exists for ${tag}, reusing id=${data.id}`)
+              return data.id
+            } catch (e) {
+              core.info(`No existing release for ${tag}, creating a new draft release`)
+            }
+
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: `v${process.env.PACKAGE_VERSION}`,
-              name: `NetMonut v${process.env.PACKAGE_VERSION}`,
+              tag_name: tag,
+              target_commitish: context.sha,
+              name: `NetMount ${tag}`,
               body: 'Take a look at the assets to download and install this app.',
               draft: true,
               prerelease: false
@@ -49,7 +76,7 @@ jobs:
             return data.id
 
   build-tauri:
-    needs: [create-release, generate-changelog]
+    needs: [create-release]
     permissions:
       contents: write
     strategy:
@@ -68,11 +95,20 @@ jobs:
     runs-on: ${{ matrix.settings.platform }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
 
       - name: setup node
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -100,31 +136,15 @@ jobs:
         # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
         # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      - name: Cache pnpm modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: pnpm-${{ matrix.settings.platform}}-${{ matrix.settings.args }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-${{ matrix.settings.platform}}-${{ matrix.settings.args }}-
-
       - name: install frontend dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
-      - name: Cache Cargo registry and target
-        uses: actions/cache@v3
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            src-tauri/target
-          key: cargo-${{ matrix.settings.platform }}-${{ matrix.settings.args }}-${{ hashFiles('**/src-tauri/Cargo.lock') }}
-          restore-keys: |
-            cargo-${{ matrix.settings.platform }}-${{ matrix.settings.args }}-
+          workspaces: |
+            src-tauri -> src-tauri/target
+          shared-key: ${{ matrix.settings.platform }}-${{ matrix.settings.args }}
 
       - uses: tauri-apps/tauri-action@v0
         env:
@@ -138,15 +158,32 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       changelog: ${{ steps.generate-changelog.outputs.changelog }}
+    needs: [create-release]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
       - name: Generate Changelog
         id: generate-changelog
-        uses: TriPSs/conventional-changelog-action@v5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          output-file: false
-          skip-git-pull: true
+        env:
+          CURRENT_TAG: v${{ needs.create-release.outputs.package_version }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          node scripts/generate-changelog.mjs > changelog.md
+          cat changelog.md
+          echo "changelog<<'EOF'" >> "$GITHUB_OUTPUT"
+          cat changelog.md >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
 
 
@@ -160,10 +197,10 @@ jobs:
         uses: actions/github-script@v7
         env:
           release_id: ${{ needs.create-release.outputs.release_id }}
-          changelog: ${{ needs.generate-changelog.outputs.changelog }}
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const changelog = process.env.changelog
+            const changelog = ${{ toJson(needs.generate-changelog.outputs.changelog) }}
             const { pull_request } = context.payload;
             
             // Check if the event payload contains a pull request

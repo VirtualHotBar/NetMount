@@ -5,7 +5,8 @@ interface RcloneInfo {
     process: {
         command?: Command,
         child?: Child,
-        log?: string
+        log?: string,
+        logFile?: string
     },
     endpoint: {
         url: string,

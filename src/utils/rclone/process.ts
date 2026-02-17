@@ -2,10 +2,12 @@ import { invoke } from "@tauri-apps/api/core";
 import { Child } from "@tauri-apps/plugin-shell";
 import { rcloneInfo } from "../../services/rclone";
 import { rclone_api_noop, rclone_api_post } from "./request";
-import { formatPath, getAvailablePorts, sleep } from "../utils";
+import { formatPath, getAvailablePorts } from "../utils";
 import { openlistInfo } from "../../services/openlist";
 import { delStorage } from "../../controller/storage/storage";
 import { nmConfig, osInfo, roConfig } from "../../services/config";
+import { netmountLogDir, rcloneLogFile } from "../netmountPaths";
+import { restartSidecar, startSidecarAndWait, stopSidecarGracefully } from "../sidecarService";
 
 const rcloneDataDir = () => {
     return formatPath(roConfig.env.path.homeDir + '/.netmount/', osInfo.osType === "windows")
@@ -25,13 +27,14 @@ async function startRclone() {
     rcloneInfo.endpoint.url = 'http://127.0.0.1:' + rcloneInfo.endpoint.localhost.port.toString()
 
     // 确保日志目录存在（用于“设置-组件-日志”查看）
-    const logDir = formatPath(rcloneDataDir() + '/log/', osInfo.osType === "windows")
-    const logFile = formatPath(logDir + '/rclone.log', osInfo.osType === "windows")
+    const logDir = netmountLogDir()
+    const logFile = rcloneLogFile()
     try {
         await invoke('fs_make_dir', { path: logDir })
     } catch {
         // ignore
     }
+    rcloneInfo.process.logFile = logFile
 
     const args: string[] = [
         'rcd',
@@ -50,30 +53,31 @@ async function startRclone() {
     }
 
     // 使用 Rust 端启动 sidecar，确保由主进程创建
-    const pid = await invoke<number>('spawn_sidecar', { name: 'binaries/rclone', args })
+    const pid = await startSidecarAndWait({
+        binary: 'binaries/rclone',
+        name: 'rclone',
+        args,
+        readyCheck: rclone_api_noop,
+        initialDelayMs: 1000,
+    })
     rcloneInfo.process.child = { pid } as Child
     console.log('rclone spawned from Rust, PID:', pid)
-
-    await sleep(1000) // 等待rclone服务完全启动
-
-for (;;) {
-    await sleep(500)
-    if (await rclone_api_noop()) {
-        break;
-    }
-}
 }
 
 async function stopRclone() {
     await delStorage(openlistInfo.markInRclone)
-    await rclone_api_post('/core/quit')
-    await invoke('kill_sidecar', { name: 'rclone' })
+    await stopSidecarGracefully({
+        binary: 'binaries/rclone',
+        name: 'rclone',
+        graceful: async () => {
+            await rclone_api_post('/core/quit')
+        },
+    })
     rcloneInfo.process.child = undefined as unknown as Child
 }
 
 async function restartRclone() {
-    await stopRclone();
-    await startRclone();
+    await restartSidecar(stopRclone, startRclone)
 }
 
 export { startRclone, stopRclone, restartRclone }

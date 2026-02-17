@@ -78,7 +78,8 @@ interface OpenlistInfo {
     process: {
         command?: Command,
         child?: Child,
-        log?: string
+        log?: string,
+        logFile?: string
     },
 }
 

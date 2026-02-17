@@ -197,6 +197,7 @@
     "components": "組件",
     "log": "日誌",
     "start_hide": "啟動時隱藏視窗",
+    "close_to_tray": "關閉視窗最小化到托盤",
     "quit": "退出",
     "tray_show": "顯示主視窗",
     "tray_hide": "隱藏主視窗",

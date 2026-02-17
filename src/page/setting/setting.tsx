@@ -4,7 +4,6 @@ import { nmConfig, osInfo, roConfig, saveNmConfig } from '../../services/config'
 import { getAutostartState, setAutostartState, setThemeMode } from '../../controller/setting/setting';
 import { useTranslation } from 'react-i18next';
 import { getVersion } from '@tauri-apps/api/app';
-import { invoke } from '@tauri-apps/api/core';
 import * as shell from '@tauri-apps/plugin-shell';
 import { rcloneInfo } from '../../services/rclone';
 import { setLocalized } from '../../controller/language/localized';
@@ -13,6 +12,7 @@ import { showLog } from '../other/modal';
 import { openlistInfo } from '../../services/openlist';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { exit } from '../../controller/main';
+import { readTextFileTail } from '../../utils/logs';
 
 // const CollapseItem = Collapse.Item;
 const FormItem = Form.Item;
@@ -28,7 +28,7 @@ export default function Setting_page() {
 
   const showLogFromFileTail = async (path: string) => {
     try {
-      const content = await invoke<string>('read_text_file_tail', { path, max_bytes: 256 * 1024 })
+      const content = await readTextFileTail(path, { maxBytes: 256 * 1024, allowMissing: true })
       showLog(modal, (content || '').trim() ? content : '暂无日志')
     } catch (e) {
       const msg = (() => {
@@ -111,6 +111,12 @@ export default function Setting_page() {
                 forceUpdate()
               }} />
             </FormItem>
+            <FormItem label={t('close_to_tray')}>
+              <Switch checked={nmConfig.settings.closeToTray} onChange={(value) => {
+                nmConfig.settings.closeToTray = value
+                forceUpdate()
+              }} />
+            </FormItem>
             <FormItem label={t('cache_path')}>
               <Input.Group compact>
                 <Input style={{ width: 'calc(100% - 4rem)' }} value={nmConfig.settings.path.cacheDir || ''} />
@@ -153,7 +159,7 @@ export default function Setting_page() {
               showLog(modal, rcloneInfo.process.log!)
               return
             }
-            showLogFromFileTail('~/.netmount/log/rclone.log')
+            showLogFromFileTail(rcloneInfo.process.logFile || '~/.netmount/log/rclone.log')
           }}>{t('log')}</Link>): {rcloneInfo.version.version}
           <br />
           <Link onClick={() => { shell.open(roConfig.url.openlist) }}>Openlist</Link>(<Link onClick={() => {
@@ -161,7 +167,7 @@ export default function Setting_page() {
               showLog(modal, openlistInfo.process.log!)
               return
             }
-            showLogFromFileTail('~/.netmount/openlist/log/log.log')
+            showLogFromFileTail(openlistInfo.process.logFile || '~/.netmount/openlist/log/log.log')
           }}>{t('log')}</Link>): {openlistInfo.version.version}
           <br />
         </Card>
