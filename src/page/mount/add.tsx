@@ -1,9 +1,8 @@
-import { Button, Checkbox, Collapse, Form, FormInstance, Input, Notification, Radio, Select, Space, Switch } from '@arco-design/web-react'
+import { Button, Checkbox, Form, FormInstance, Input, Notification, Radio, Select, Space } from '@arco-design/web-react'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom';
-import { ParametersType } from '../../type/defaults';
-import { formatPath, getProperties, getURLSearchParam, getWinFspInstallState, showPathInExplorer } from '../../utils/utils';
+import { formatPath, getURLSearchParam, getWinFspInstallState, showPathInExplorer } from '../../utils/utils';
 import { defaultMountConfig, defaultVfsConfig, vfsCacheModeParam } from '../../controller/storage/mount/parameters/defaults';
 import { rcloneInfo } from '../../services/rclone';
 import { addMountStorage, editMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage } from '../../controller/storage/mount/mount';
@@ -16,8 +15,6 @@ import { searchStorageInfo } from '../../controller/storage/allList';
 
 const FormItem = Form.Item;
 
-const CollapseItem = Collapse.Item;
-
 
 export default function AddMount_page() {
     const { t } = useTranslation()
@@ -26,7 +23,6 @@ export default function AddMount_page() {
     const [showAllOptions, setShowAllOptions] = useState(false)
     const [mountPath, setMountPath] = useState<string>('')
     const [autoMount, setAutoMount] = useState(true)
-    const [allowEditMountPath, setAllowEditMountPath] = useState(false) // 新增：是否允许编辑挂载路径
     //const [autoMountPath, setAutoMountPath] = useState(true)//自动分配盘符
     //const [notification, contextHolder] = Notification.useNotification();
     const [parameters, setParameters] = useState<{ vfsOpt: VfsOptions, mountOpt: MountOptions }>({ mountOpt: defaultMountConfig, vfsOpt: defaultVfsConfig })
@@ -111,9 +107,8 @@ export default function AddMount_page() {
 
         if (isEditMode) {
             editMode();
-            // 编辑模式下默认不允许修改挂载路径，除非用户明确选择
-            setAllowEditMountPath(false)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     useEffect(() => {
@@ -123,6 +118,7 @@ export default function AddMount_page() {
             setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, VolumeName: storageName ? storageName : '' } })
             mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mountPath])
 
     useEffect(() => {
@@ -146,12 +142,13 @@ export default function AddMount_page() {
                 mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
             }
         }
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [storageName])
 
     useEffect(() => {
         vfsOptFormHook && vfsOptFormHook.setFieldsValue(parameters.vfsOpt);
         mountOptFormHook && mountOptFormHook.setFieldsValue(parameters.mountOpt)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vfsOptFormHook, mountOptFormHook])
 
 

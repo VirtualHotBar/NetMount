@@ -1,20 +1,17 @@
-import React, { useEffect, useReducer, useState } from 'react'
+import React, { useEffect, useReducer } from 'react'
 
-import { Alert, Avatar, Button, Card, Descriptions, Grid, Link, Modal, Notification, Space, Typography } from "@arco-design/web-react"
-import { Test } from "../../controller/test"
+import { Alert, Button, Card, Descriptions, Grid, Link, Modal, Notification, Space, Typography } from "@arco-design/web-react"
 import { rcloneInfo } from '../../services/rclone'
 import { hooks } from '../../services/hook';
 import { checkUpdate } from '../../controller/update/update';
-import { getVersion } from '@tauri-apps/api/app';
 import * as shell from '@tauri-apps/plugin-shell';
 import { formatETA, formatSize } from '../../utils/utils';
 import { useTranslation } from 'react-i18next';
 import { nmConfig } from '../../services/config';
-import { IconCloud, IconList, IconSelectAll, IconStorage, IconSwap } from '@arco-design/web-react/icon';
+import { IconCloud, IconList, IconStorage, IconSwap } from '@arco-design/web-react/icon';
 import { filterHideStorage } from '../../controller/storage/storage';
 const Row = Grid.Row;
 const Col = Grid.Col;
-const { Meta } = Card;
 
 let checkedUpdate: boolean = false;
 
@@ -22,7 +19,7 @@ let checkedUpdate: boolean = false;
 
 function Home_page() {
   const { t } = useTranslation()
-  const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
+  const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
   const [modal, contextHolder] = Modal.useModal();
   const [notification, noticeContextHolder] = Notification.useNotification();
   const storageList=filterHideStorage(rcloneInfo.storageList)

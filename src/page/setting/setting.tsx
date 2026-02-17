@@ -1,7 +1,5 @@
 import React, { useEffect, useReducer, useState } from 'react'
-import { DevTips_module } from '../other/devTips'
-import { Button, Card, Collapse, Divider, Form, Grid, Input, Link, Message, Modal, Select, Space, Switch, Typography } from '@arco-design/web-react'
-import { Test } from '../../controller/test'
+import { Button, Card, Collapse, Form, Grid, Input, Link, Message, Modal, Select, Space, Switch } from '@arco-design/web-react'
 import { nmConfig, osInfo, roConfig, saveNmConfig } from '../../services/config';
 import { getAutostartState, setAutostartState, setThemeMode } from '../../controller/setting/setting';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +7,7 @@ import { getVersion } from '@tauri-apps/api/app';
 import * as shell from '@tauri-apps/plugin-shell';
 import { rcloneInfo } from '../../services/rclone';
 import { setLocalized } from '../../controller/language/localized';
-import { formatPath, openUrlInBrowser, restartSelf, set_devtools_state } from '../../utils/utils';
+import { formatPath, openUrlInBrowser, set_devtools_state } from '../../utils/utils';
 import { showLog } from '../other/modal';
 import { openlistInfo } from '../../services/openlist';
 import * as dialog from '@tauri-apps/plugin-dialog';
@@ -24,7 +22,7 @@ export default function Setting_page() {
   const { t } = useTranslation()
   const [autostart, setAutostart] = useState<boolean>()
   const [modal, contextHolder] = Modal.useModal();
-  const [ignored, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
+  const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
   const [version, setVersion] = useState<string>()
 
   const getInfo = async () => {
@@ -163,7 +161,6 @@ export default function Setting_page() {
         <Card title={t('tools')} style={{}} size='small'>
           <Space>
             <Button onClick={async () => { await set_devtools_state(true) }}>{t('devtools')}</Button>
-            <Button onClick={Test}>Test</Button>
           </Space>
 
         </Card>

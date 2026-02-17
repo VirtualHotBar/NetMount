@@ -1,6 +1,6 @@
 import { CSSProperties, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Checkbox, Form, FormInstance, FormItemProps, Grid, Input, InputNumber, InputTag, Link, Message, Notification, Select, Space, Switch, Tooltip, Typography } from "@arco-design/web-react";
+import { Button, Form, FormInstance, Grid, Input, InputNumber, Select, Switch, Tooltip } from "@arco-design/web-react";
 import { rcloneInfo } from "../../services/rclone";
 import { FilterType, StorageParamItemType } from "../../type/controller/storage/info";
 import { ParametersType } from "../../type/defaults";
@@ -19,8 +19,8 @@ function paramsType2FormItems(params: ParametersType, isAdvanced: boolean = fals
     getProperties(params).forEach((item) => {
         if (filter.includes(item.key)) return;
         
-        let valueType: 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function' | 'array' = typeof item.value;
-        let formItem: StorageParamItemType = {
+        const valueType: 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function' | 'array' = typeof item.value;
+        const formItem: StorageParamItemType = {
             label: item.key,
             name: item.key,
             description: item.key,
@@ -39,21 +39,21 @@ function paramsType2FormItems(params: ParametersType, isAdvanced: boolean = fals
                 formItem.type = 'number'
                 break;
          case 'object':
-                if (item.value.select) {//选择器
+                if ((item.value as { select?: string[] })?.select) {//选择器
                     formItem.type = 'string'
-                    formItem.default = item.value.default
-                    formItem.select = item.value.select.map((item: string) => {
+                    formItem.default = (item.value as { default?: unknown })?.default
+                    formItem.select = (item.value as { select: string[] }).select.map((selectItem: string) => {
                         return {
-                            label: item,
-                            value: item,
-                            help: item
+                            label: selectItem,
+                            value: selectItem,
+                            help: selectItem
                         }
                     })
 
                 } else {
                     formItem.type = 'string'
                 }
-                break; 
+                break;
             default:
                 formItem.type = 'string'
                 break;
@@ -83,7 +83,7 @@ function filter(filters: FilterType[], formValuesResult: ParametersType) {
 function StorageAndPathInputer({ value, onChange }: { value?: string, onChange?(value: string): void }) {
     if (value == undefined) value = '';
     if (value.includes(openlistInfo.markInRclone)) {
-        let tempPath = formatPathRclone(value.substring(value.indexOf(':') + 1));
+        const tempPath = formatPathRclone(value.substring(value.indexOf(':') + 1));
         if (tempPath.includes('/')) {
             value = tempPath.replace('/', ':')
         } else {
@@ -172,7 +172,7 @@ function InputFormItemContent_module({ data, formValuesResult /* style */ }: {
             }
 
             if (data.select) {//选择器
-                let selectContent: JSX.Element[] = [];
+                const selectContent: JSX.Element[] = [];
 
                 for (const item of data.select) {
                     //过滤

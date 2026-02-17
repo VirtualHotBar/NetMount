@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Layout, Menu, Breadcrumb, Button, Message, Grid, ConfigProvider } from '@arco-design/web-react';
+import { Layout, Menu, Button, Message, Grid, ConfigProvider } from '@arco-design/web-react';
 import "@arco-themes/react-vhbs/css/arco.css";
 //import "@arco-design/web-react/dist/css/arco.css";
-import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 
-import { Test } from './controller/test';
 import { Routers } from './type/routers';
 import { Home_page } from './page/home/home';
 import { Storage_page } from './page/storage/storage';
@@ -16,18 +15,16 @@ import { Transmit_page } from './page/transmit/transmit';
 import { Task_page } from './page/task/task';
 import Setting_page from './page/setting/setting';
 import AddMount_page from './page/mount/add';
-import { IconAttachment, IconClose, IconCloud, IconHome, IconLink, IconList, IconMinus, IconSettings, IconStorage, IconSwap } from '@arco-design/web-react/icon';
+import { IconClose, IconCloud, IconHome, IconList, IconMinus, IconSettings, IconStorage, IconSwap } from '@arco-design/web-react/icon';
 import { windowsHide, windowsMini } from './controller/window';
-import { rcloneInfo } from './services/rclone';
 import { AddTask_page } from './page/task/add';
 import { hooks } from './services/hook';
 import { getLocale } from './controller/language/language';
 import { nmConfig } from './services/config';
 import { getLangCode } from './controller/language/localized';
-import { Locale } from '@arco-design/web-react/es/locale/interface';
 
 const { Item: MenuItem, SubMenu } = Menu;
-const { Sider, Header, Content, Footer } = Layout;
+const { Sider, Header, Content } = Layout;
 const Row = Grid.Row;
 const Col = Grid.Col;
 
@@ -37,7 +34,7 @@ function searchRoute(
     path: string,
     routes: Routers[]
 ): Routers | null {
-    for (let item of routes) {
+    for (const item of routes) {
         if (item.path === path) {
             return item;
         }
@@ -82,50 +79,6 @@ function mapRouters(routes: Routers[]): JSX.Element {
         })
     }</>
 }
-
-//生成面包屑
-function generateBreadcrumb(pathname: string, routes: Routers[]): JSX.Element[] {
-    const pathSnippets = pathname.split('/').filter(i => i);
-    const breadcrumbItems: JSX.Element[] = [];
-
-    if (pathSnippets.length == 1) {
-        return [];
-    }
-    // 创建面包屑项（根据是否有子菜单和是否隐藏子菜单决定是否为链接）
-    function createBreadcrumbItem(route: Routers): JSX.Element {
-        if (route.children && route.children.length > 0 && !route.hideChildren) {
-            return <>{route.title}</>;
-        } else {
-            return <Link to={route.path}>{route.title}</Link>;
-        }
-    }
-
-    pathSnippets.reduce((prevPath, pathSnippet) => {
-        const currentPath = `${prevPath}/${pathSnippet}`;
-        const route = searchRoute(currentPath, routes);
-
-        let breadcrumbItem: JSX.Element;
-
-        if (route) {
-            breadcrumbItem = (
-                <Breadcrumb.Item key={currentPath}>
-                    {createBreadcrumbItem(route)}
-                </Breadcrumb.Item>
-            );
-        } else {
-            breadcrumbItem = (
-                <Breadcrumb.Item key={currentPath}>
-                    {pathSnippet}
-                </Breadcrumb.Item>
-            );
-        }
-        breadcrumbItems.push(breadcrumbItem);
-        return currentPath;
-    }, '');
-
-    return breadcrumbItems;
-}
-
 
 function App() {
     //const [router, setRouter] = useState<Routers | null>();

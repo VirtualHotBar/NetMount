@@ -3,28 +3,28 @@ import { nmConfig, saveNmConfig } from "../../../services/config";
 import { hooks } from "../../../services/hook";
 import { rcloneInfo } from "../../../services/rclone";
 import { MountListItem } from "../../../type/config";
-import { ParametersType } from "../../../type/defaults";
 import { rclone_api_post } from "../../../utils/rclone/request";
 import { fs_exist_dir, fs_make_dir } from "../../../utils/utils";
-import { convertStoragePath, formatPathRclone } from "../storage";
+import { convertStoragePath } from "../storage";
 import {
   MountOptions,
   VfsOptions,
+  RcloneMountPoint,
 } from "../../../type/rclone/storage/mount/parameters";
 
 //列举存储
 async function reupMount(noRefreshUI?: boolean) {
-  const mountPoints: any[] =
-    (await rclone_api_post("/mount/listmounts"))?.mountPoints || [];
+  const response = await rclone_api_post("/mount/listmounts");
+  const mountPoints: RcloneMountPoint[] = response?.mountPoints || [];
 
   rcloneInfo.mountList = [];
 
-  mountPoints.forEach((tiem: any) => {
-    const name = tiem.Fs;
+  mountPoints.forEach((item: RcloneMountPoint) => {
+    const name = item.Fs;
     rcloneInfo.mountList.push({
       storageName: name, //name.substring(0, name.length - 1)
-      mountPath: tiem.MountPoint,
-      mountedTime: new Date(tiem.MountedOn),
+      mountPath: item.MountPoint,
+      mountedTime: new Date(item.MountedOn),
     });
   });
   !noRefreshUI && hooks.upMount();

@@ -10,9 +10,11 @@ pub fn get_available_ports(count: usize) -> Vec<u16> {
     use std::net::TcpListener;
     let mut ports = Vec::new();
     for _ in 0..count {
-        let listener = TcpListener::bind("127.0.0.1:0").expect("无法绑定端口");
-        let port = listener.local_addr().unwrap().port();
-        ports.push(port);
+        if let Ok(listener) = TcpListener::bind("127.0.0.1:0") {
+            if let Ok(addr) = listener.local_addr() {
+                ports.push(addr.port());
+            }
+        }
     }
     ports
 }

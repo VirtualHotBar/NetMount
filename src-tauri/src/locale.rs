@@ -10,7 +10,7 @@ impl Locale {
     }
 
     pub fn get(&self, id: &'static str) -> &'static str {
-        self.0.get(id).unwrap()
+        self.0.get(id).map_or(id, |v| *v)
     }
 }
 

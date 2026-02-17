@@ -1,12 +1,12 @@
-import { nmConfig, osInfo, readNmConfig, roConfig, saveNmConfig, setNmConfig } from "../services/config"
+import { nmConfig, osInfo, readNmConfig, roConfig, saveNmConfig } from "../services/config"
 import { rcloneInfo } from "../services/rclone"
 import { rclone_api_post } from "../utils/rclone/request"
+import { RcloneVersion } from "../type/rclone/rcloneInfo"
 import { startUpdateCont } from "./stats/continue"
 import { reupMount } from "./storage/mount/mount"
 import { reupStorage } from "./storage/storage"
 import { listenWindow, windowsHide } from "./window"
-import { NMConfig } from "../type/config"
-import { formatPath, randomString, restartSelf, sleep } from "../utils/utils"
+import { formatPath, sleep } from "../utils/utils"
 import { t } from "i18next"
 import { startRclone, stopRclone } from "../utils/rclone/process"
 import { getOsInfo } from "../utils/tauri/osInfo"
@@ -21,10 +21,11 @@ import { homeDir } from "@tauri-apps/api/path"
 import { openlist_api_get } from "../utils/openlist/request"
 import { openlistInfo } from "../services/openlist"
 import { addOpenlistInRclone } from "../utils/openlist/openlist"
-import { Test } from "./test"
 import { Notification } from "@arco-design/web-react"
 
-async function init(setStartStr: Function) {
+type SetStartStrFn = (str: string) => void;
+
+async function init(setStartStr: SetStartStrFn) {
 
     setStartStr(t('init'))
     roConfig.env.path.homeDir = await homeDir()
@@ -96,18 +97,60 @@ async function main() {
 }
 
 async function reupRcloneVersion() {
-    rcloneInfo.version = await rclone_api_post('/core/version',)
+    const version = await rclone_api_post('/core/version');
+    if (version) {
+        rcloneInfo.version = version as RcloneVersion;
+    }
 }
 
 async function reupOpenlistVersion() {
-    let version = await openlist_api_get('/api/admin/setting/get', { key: 'version' })
-    if (version.code !== 200) {
-        await sleep(500)
-        await reupOpenlistVersion()
-        return
-    }
-    openlistInfo.version.version = version.data.value || ''
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY_MS = 500;
+    let attempts = 0;
 
+    while (attempts < MAX_RETRIES) {
+        attempts++;
+        
+        // 主路径：尝试 /api/admin/setting/get
+        try {
+            const version = await openlist_api_get('/api/admin/setting/get', { key: 'version' });
+            
+            if (version.code === 200 && version.data?.value) {
+                openlistInfo.version.version = version.data.value;
+                console.log('OpenList version retrieved via /api/admin/setting/get:', version.data.value);
+                return true;
+            }
+        } catch (primaryError) {
+            console.warn(`Primary version endpoint attempt ${attempts} failed:`, primaryError);
+        }
+
+        // 如果还有重试次数，尝试回退路径
+        if (attempts < MAX_RETRIES) {
+            console.log(`Primary version endpoint failed, trying fallback... (attempt ${attempts}/${MAX_RETRIES})`);
+            
+            try {
+                const publicSettings = await openlist_api_get('/api/public/settings');
+                if (publicSettings.data?.version) {
+                    openlistInfo.version.version = publicSettings.data.version;
+                    console.log('OpenList version retrieved via /api/public/settings:', publicSettings.data.version);
+                    return true;
+                }
+            } catch (fallbackError) {
+                console.warn(`Fallback version endpoint attempt ${attempts} failed:`, fallbackError);
+            }
+
+            // 等待后重试
+            if (attempts < MAX_RETRIES) {
+                console.log(`All version endpoints failed, retrying in ${RETRY_DELAY_MS}ms... (attempt ${attempts + 1}/${MAX_RETRIES})`);
+                await sleep(RETRY_DELAY_MS);
+            }
+        }
+    }
+
+    // 所有重试都失败了
+    console.error('All version endpoints failed after', MAX_RETRIES, 'attempts. Using fallback version.');
+    openlistInfo.version.version = 'unknown';
+    return false;
 }
 
 

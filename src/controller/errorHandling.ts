@@ -4,7 +4,7 @@ import { t } from "i18next";
 import { ReactNode } from "react";
 import { set_devtools_state } from "../utils/utils";
 window.onerror = async function (msg, url, lineNo, columnNo, error) {
-    let message = [
+    const message = [
         'Message: ' + msg,
         'URL: ' + url,
         'Line: ' + lineNo,
@@ -30,7 +30,7 @@ async function errorThrowToUser(message: string) {
 
     await set_devtools_state(true)
     
-    let content = t('error_tips') + ',Error:' + message
+    const content = t('error_tips') + ',Error:' + message
 
     //提示错误
     await errorDialog(t('error'), content)

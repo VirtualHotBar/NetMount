@@ -1,11 +1,11 @@
-import { Button, Divider, Form, Grid, Input, InputNumber, Notification, Select, Space, Tooltip } from '@arco-design/web-react';
+import { Button, Form, Grid, Input, InputNumber, Notification, Select, Space, Tooltip } from '@arco-design/web-react';
 import React, { useReducer, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { nmConfig, roConfig, saveNmConfig } from '../../services/config';
+import { nmConfig, roConfig } from '../../services/config';
 import { TaskListItem } from '../../type/config';
 import { rcloneInfo } from '../../services/rclone';
 import { IconQuestionCircle } from '@arco-design/web-react/icon';
-import { filterHideStorage, formatPathRclone } from '../../controller/storage/storage';
+import { filterHideStorage } from '../../controller/storage/storage';
 import { useNavigate } from 'react-router-dom';
 import { saveTask } from '../../controller/task/task';
 import { formatPath, getURLSearchParam } from '../../utils/utils';

@@ -7,52 +7,72 @@ import { openlist_api_get, openlist_api_post } from "../../utils/openlist/reques
 import { formatPath } from "../../utils/utils"
 import { openlistInfo } from "../../services/openlist"
 import { RequestOptions } from "@arco-design/web-react/es/Upload"
-import { delMountStorage, getMountStorage, isMounted, unmountStorage } from "./mount/mount"
+import { delMountStorage } from "./mount/mount"
 import { nmConfig } from "../../services/config"
+import { OpenlistStorageItem } from "../../type/openlist/openlistInfo"
 
 //列举存储信息
 async function reupStorage() {
-    const storageListTemp: StorageList[] = []
-    //rclone
-    const dump = await rclone_api_post(
-        '/config/dump',
-    )
-
-    for (const storageName in dump) {
-        storageListTemp.push({
-            framework: 'rclone',
-            name: storageName,
-            type: dump[storageName].type,
-            space: await getStorageSpace(storageName),
-            hide: storageName.includes(openlistInfo.markInRclone)
-        })
-    }
-
-    //openlist
-    const list = (await openlist_api_get('/api/admin/storage/list')).data.content as any[]
-    for (const storage of list) {
-        storageListTemp.push({
-            framework: 'openlist',
-            name: storage.mount_path.substring(1),
-            type: storage.driver,
-            other: {
-                openlist: {
-                    id: storage.id,
-                    driverPath: storage.mount_path,
-                    status: storage.status
-                }
+    try {
+        const storageListTemp: StorageList[] = []
+        
+        //rclone
+        try {
+            const dump = await rclone_api_post('/config/dump')
+            for (const storageName in dump) {
+                storageListTemp.push({
+                    framework: 'rclone',
+                    name: storageName,
+                    type: dump[storageName].type,
+                    space: await getStorageSpace(storageName),
+                    hide: storageName.includes(openlistInfo.markInRclone)
+                })
             }
-        })
+        } catch (rcloneError) {
+            console.error('Failed to fetch rclone storage list:', rcloneError)
+            // rclone 失败不影响 openlist 的加载
+        }
+
+        //openlist
+        try {
+            const response = await openlist_api_get('/api/admin/storage/list')
+            const list = (response?.data?.content as OpenlistStorageItem[]) || []
+            for (const storage of list) {
+                // 数据验证
+                if (!storage || !storage.mount_path) {
+                    console.warn('Invalid storage data from OpenList:', storage)
+                    continue
+                }
+                storageListTemp.push({
+                    framework: 'openlist',
+                    name: storage.mount_path.substring(1),
+                    type: storage.driver,
+                    other: {
+                        openlist: {
+                            id: storage.id,
+                            driverPath: storage.mount_path,
+                            status: storage.status
+                        }
+                    }
+                })
+            }
+        } catch (openlistError) {
+            console.error('Failed to fetch OpenList storage list:', openlistError)
+            // openlist 失败不影响已加载的 rclone 存储
+        }
+
+        rcloneInfo.storageList = storageListTemp
+        hooks.upStorage()
+    } catch (error) {
+        console.error('Critical error in reupStorage:', error)
+        // 即使出错也触发更新，避免 UI 卡住
+        hooks.upStorage()
     }
-
-    rcloneInfo.storageList = storageListTemp
-
-    hooks.upStorage()
 }
 
 function filterHideStorage(storageList: StorageList[]) {//过滤隐藏的存储
-    let data: StorageList[] = []
-    for (let item of storageList) {
+    const data: StorageList[] = []
+    for (const item of storageList) {
         if (!item.hide)
             data.push(item)
     }
@@ -103,24 +123,39 @@ async function getStorageParams(name: string): Promise<ParametersType> {
     const storage = searchStorage(name)
 
     switch (storage?.framework) {
-        case 'rclone':
-            return await rclone_api_post(
+        case 'rclone': {
+            const result = await rclone_api_post(
                 '/config/get', {
                 name: storage?.name
             })
-        case 'openlist':
-            let params = (await openlist_api_get(
+            return result || {}
+        }
+        case 'openlist': {
+            const params = (await openlist_api_get(
                 '/api/admin/storage/get', {
                 id: storage?.other?.openlist?.id
             })).data;
-            params.addition = JSON.parse(params.addition);
+            // 安全解析 addition 字段
+            if (params.addition && typeof params.addition === 'string') {
+                try {
+                    params.addition = JSON.parse(params.addition);
+                } catch (parseError) {
+                    console.warn(`Failed to parse addition field for storage ${storage?.name}:`, parseError);
+                    console.warn('Raw addition value:', params.addition);
+                    // 保留原值，避免崩溃
+                    params.addition = {};
+                }
+            } else if (!params.addition) {
+                params.addition = {};
+            }
             return params
+        }
     }
     return {}
 }
 
 //转换存储路径
-const convertStoragePath = (storageName: string, path?: string, isDir?: boolean, noStorageName: boolean = false, onlyStorageName: boolean = false) => {
+const convertStoragePath = (storageName: string, path?: string, isDir?: boolean, noStorageName: boolean = false, onlyStorageName: boolean = false): string => {
     if (path === '/') { path = '' }
     const storage = searchStorage(storageName)
     console.log(storage);
@@ -130,21 +165,24 @@ const convertStoragePath = (storageName: string, path?: string, isDir?: boolean,
             return (noStorageName ? '' : storageName + ':') + (onlyStorageName ? '' : (path ? formatPathRclone(path, isDir) : ''))
         case 'openlist':
             return (noStorageName ? '' : openlistInfo.markInRclone + ':') + (onlyStorageName ? '' : (path ? formatPathRclone(storageName + '/' + path, isDir) : storageName))
+        default:
+            return ''
     }
 }
 
 
-function searchStorage(keyword: string) {
+function searchStorage(keyword: string): StorageList | undefined {
     for (const storage of rcloneInfo.storageList) {
         if (storage.name === keyword || (storage.framework === 'openlist' && storage.other?.openlist?.driverPath === keyword)) {
             return storage;
         }
     }
+    return undefined;
 }
 
 function getFileName(path: string): string {
     const pathArr = path.split('/')
-    return pathArr[pathArr.length - 1]
+    return pathArr[pathArr.length - 1] ?? ''
 }
 
 function formatPathRclone(path: string, isDir?: boolean): string {
@@ -167,10 +205,9 @@ function formatPathRclone(path: string, isDir?: boolean): string {
 //获取文件列表
 async function getFileList(storageName: string, path: string): Promise<FileInfo[] | undefined> {
     const storage = searchStorage(storageName)
-    let backData
     let fileList: FileInfo[] | undefined = undefined;
 
-    backData = await rclone_api_post(
+    const backData = await rclone_api_post(
         '/operations/list', {
         fs: convertStoragePath(storageName, undefined, undefined, undefined, true),
         remote: convertStoragePath(storageName, path, false, true)
@@ -178,7 +215,7 @@ async function getFileList(storageName: string, path: string): Promise<FileInfo[
     if (backData && backData.list) {
         fileList = []
         for (const file of backData.list) {
-            let filePath = storage?.framework === 'rclone' ? formatPathRclone(file.Path, false) : convertStoragePath(openlistInfo.markInRclone, file.Path, undefined, true)?.substring(storageName.length + 1)!
+            const filePath = storage?.framework === 'rclone' ? formatPathRclone(file.Path, false) : convertStoragePath(openlistInfo.markInRclone, file.Path, undefined, true)?.substring(storageName.length + 1) ?? ''
 
             fileList.push({
                 path: filePath,
@@ -195,13 +232,13 @@ async function getFileList(storageName: string, path: string): Promise<FileInfo[
 }
 
 //删除文件
-async function delFile(storageName: string, path: string, refreshCallback?: Function) {
-    let backData
+type RefreshCallback = () => void;
 
+async function delFile(storageName: string, path: string, refreshCallback?: RefreshCallback) {
     if (path.substring(0, 1) == '/') {
         path = path.substring(1, path.length)
     }
-    backData = await rclone_api_post(
+    await rclone_api_post(
         '/operations/deletefile', {
         fs: convertStoragePath(storageName, undefined, undefined, undefined, true),
         remote: convertStoragePath(storageName, path, false, true)
@@ -212,9 +249,8 @@ async function delFile(storageName: string, path: string, refreshCallback?: Func
     }
 }
 
-async function delDir(storageName: string, path: string, refreshCallback?: Function) {
-
-    const backData = await rclone_api_post(
+async function delDir(storageName: string, path: string, refreshCallback?: RefreshCallback) {
+    await rclone_api_post(
         '/operations/purge', {
         fs: convertStoragePath(storageName, undefined, undefined, undefined, true),
         remote: convertStoragePath(storageName, path, true, true)
@@ -226,8 +262,8 @@ async function delDir(storageName: string, path: string, refreshCallback?: Funct
 }
 
 //创建目录
-async function mkDir(storageName: string, path: string, refreshCallback?: Function) {
-    const backData = await rclone_api_post(
+async function mkDir(storageName: string, path: string, refreshCallback?: RefreshCallback) {
+    await rclone_api_post(
         '/operations/mkdir', {
         fs: convertStoragePath(storageName, undefined, undefined, undefined, true),
         remote: convertStoragePath(storageName, path, true, true)
@@ -240,7 +276,7 @@ async function mkDir(storageName: string, path: string, refreshCallback?: Functi
 
 //copyFile
 async function copyFile(storageName: string, path: string, destStoragename: string, destPath: string, pathF2f: boolean = false) {//pathF2f:destPath为文件时需要设置为true。(默认false时为文件夹，文件名来自srcPath)
-    const backData = await rclone_api_post(
+    await rclone_api_post(
         '/operations/copyfile', {
         srcFs: convertStoragePath(storageName, undefined, undefined, undefined, true),
         srcRemote: convertStoragePath(storageName, path, undefined, true),
@@ -250,8 +286,7 @@ async function copyFile(storageName: string, path: string, destStoragename: stri
 }
 
 async function moveFile(storageName: string, path: string, destStoragename: string, destPath: string, newNmae?: string, pathF2f: boolean = false) {
-
-    const backData = await rclone_api_post(
+    await rclone_api_post(
         '/operations/movefile', {
         srcFs: convertStoragePath(storageName, undefined, undefined, undefined, true),
         srcRemote: convertStoragePath(storageName, formatPathRclone(path), undefined, true),
@@ -264,7 +299,7 @@ async function moveFile(storageName: string, path: string, destStoragename: stri
 
 //copyDir
 async function copyDir(storageName: string, path: string, destStoragename: string, destPath: string) {
-    const backData = await rclone_api_post(
+    await rclone_api_post(
         '/sync/copy', {
         srcFs: convertStoragePath(storageName, path, true),
         dstFs: convertStoragePath(destStoragename, destPath, true) + getFileName(path)
@@ -272,7 +307,7 @@ async function copyDir(storageName: string, path: string, destStoragename: strin
 }
 
 async function moveDir(storageName: string, path: string, destStoragename: string, destPath: string, newNmae?: string) {
-    const backData = await rclone_api_post(
+    await rclone_api_post(
         '/sync/move', {
         srcFs: convertStoragePath(storageName, path, true),
         dstFs: convertStoragePath(destStoragename, destPath, true) + (newNmae ? newNmae : getFileName(path))
@@ -282,13 +317,13 @@ async function moveDir(storageName: string, path: string, destStoragename: strin
 //sync,需完整path(pathF2f)
 async function sync(storageName: string, path: string, destStoragename: string, destPath: string, bisync?: boolean) {//bisync:双向同步
     if (!bisync) {
-        const backData = await rclone_api_post(
+        await rclone_api_post(
             '/sync/sync', {//同步
             srcFs: convertStoragePath(storageName, path, true),
             dstFs: convertStoragePath(destStoragename, destPath, true)
         }, true)
     } else {
-        const backData = await rclone_api_post(
+        await rclone_api_post(
             '/sync/bisync', {//双向同步
             path1: convertStoragePath(storageName, path, true),
             path2: convertStoragePath(destStoragename, destPath, true)

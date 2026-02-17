@@ -6,5 +6,8 @@
 use netmount::init;
 
 fn main() {
-    init().unwrap();
+    if let Err(e) = init() {
+        eprintln!("Failed to initialize app: {}", e);
+        std::process::exit(1);
+    }
 }

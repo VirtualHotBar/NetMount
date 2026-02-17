@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::{env, fs::File, ops::Deref, path::Path, sync::RwLock};
 
 use config::Config;
-use fs::{fs_exist_dir, fs_make_dir, read_json_file, write_json_file};
+use fs::{fs_exist_dir, fs_make_dir, read_json_file, write_json_file, copy_file};
 use locale::Locale;
 use tray::Tray;
 
@@ -33,7 +33,7 @@ pub trait State: Send + Sync + 'static {}
 pub struct StateWrapper<T: State>(RwLock<T>);
 
 pub trait AppExt {
-    fn app_main_window(&self) -> tauri::WebviewWindow<Runtime>;
+    fn app_main_window(&self) -> Option<tauri::WebviewWindow<Runtime>>;
     fn with_app_state<T: State, R>(&self, closure: impl FnOnce(&T) -> R) -> R;
     fn set_app_state<T: State>(&self, state: T);
     fn update_app_config(&self) -> anyhow::Result<()>;
@@ -45,8 +45,8 @@ pub trait AppExt {
 }
 
 impl<M: tauri::Manager<Runtime>> AppExt for M {
-    fn app_main_window(&self) -> tauri::WebviewWindow {
-        self.get_webview_window("main").unwrap()
+    fn app_main_window(&self) -> Option<tauri::WebviewWindow> {
+        self.get_webview_window("main")
     }
 
     fn with_app_state<T: State, R>(&self, closure: impl FnOnce(&T) -> R) -> R {
@@ -179,7 +179,9 @@ pub fn init() -> anyhow::Result<()> {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
-            app.app_main_window().toggle_visibility(Some(true)).ok();
+            if let Some(window) = app.app_main_window() {
+                let _ = window.toggle_visibility(Some(true));
+            }
         }))
         .plugin(tauri_plugin_autostart::init(
             MacosLauncher::LaunchAgent,
@@ -202,6 +204,7 @@ pub fn init() -> anyhow::Result<()> {
             restart_self,
             read_json_file,
             write_json_file,
+            copy_file,
             register_sidecar_pid,
             spawn_sidecar,
             kill_sidecar
@@ -229,7 +232,9 @@ pub fn init() -> anyhow::Result<()> {
 
             //开发者工具
             #[cfg(debug_assertions)]
-            app.app_main_window().toggle_devtools(Some(true));
+            if let Some(window) = app.app_main_window() {
+                window.toggle_devtools(Some(true));
+            }
             Ok(())
         })
         .run(tauri::generate_context!())?;
@@ -334,8 +339,11 @@ fn get_available_ports(count: usize) -> Vec<u16> {
 }
 
 #[tauri::command]
-fn get_temp_dir() -> String {
-    std::env::temp_dir().to_str().unwrap().to_owned()
+fn get_temp_dir() -> Result<String, String> {
+    std::env::temp_dir()
+        .to_str()
+        .map(|s| s.to_owned())
+        .ok_or_else(|| "Invalid temp directory path".to_string())
 }
 
 #[tauri::command]
