@@ -1,7 +1,5 @@
 use std::sync::Mutex;
 use std::collections::HashMap;
-use tauri::Manager;
-use tauri_plugin_shell::process::CommandChild;
 
 lazy_static::lazy_static! {
     static ref SIDECAR_CHILDREN: Mutex<HashMap<String, u32>> = Mutex::new(HashMap::new());
@@ -136,6 +134,7 @@ pub fn register_sidecar_pid(name: &str, pid: u32) {
 }
 
 /// 获取 sidecar PID
+#[allow(dead_code)]
 pub fn get_sidecar_pid(name: &str) -> Option<u32> {
     let children = SIDECAR_CHILDREN.lock().unwrap();
     children.get(name).copied()
@@ -196,6 +195,7 @@ pub fn kill_all_sidecars() {
 }
 
 /// 清理 Job Object
+#[allow(dead_code)]
 pub fn cleanup() {
     kill_all_sidecars();
     

@@ -306,7 +306,6 @@ fn rename_sidecar_binary(bin_path: &str, name: &str, original_name: &str) {
         .extension()
         .and_then(|e| e.to_str())
         .unwrap_or("");
-    let ext_with_dot = if ext.is_empty() { "" } else { "." };
     
     // 原始文件路径: binaries/rclone.exe 或 binaries/openlist.exe
     let original_path = Path::new(bin_path).join(original_name);
