@@ -1,5 +1,5 @@
 import { Button, Form, Grid, Input, InputNumber, Notification, Select, Space, Tooltip } from '@arco-design/web-react';
-import React, { useReducer, useEffect, useState } from 'react';
+import { useReducer, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { nmConfig, roConfig } from '../../services/config';
 import { TaskListItem } from '../../type/config';
@@ -62,11 +62,11 @@ function AddTask_page() {
     const storageList = filterHideStorage(rcloneInfo.storageList)
     const [taskInfo, dispatch] = useReducer(reducer, {
         name: 'task_' + (nmConfig.task ? nmConfig.task.length + 1 : 1),
-        taskType: roConfig.options.task.taskType.select[roConfig.options.task.taskType.defIndex],
+        taskType: roConfig.options.task.taskType.select[roConfig.options.task.taskType.defIndex] || 'copy',
         source: {
             storageName:
                 storageList && storageList.length > 0
-                    ? storageList[0].name
+                    ? storageList[0]?.name || ''
                     : '',
             path: '/',
         },
@@ -74,13 +74,13 @@ function AddTask_page() {
             storageName:
                 storageList && storageList.length > 0
                     ? (storageList.length > 1
-                        ? storageList[1].name
-                        : storageList[0].name)
+                        ? storageList[1]?.name || ''
+                        : storageList[0]?.name || '')
                     : '',
             path: '/',
         },
         run: {
-            mode: roConfig.options.task.runMode.select[roConfig.options.task.runMode.defIndex], time: {
+            mode: roConfig.options.task.runMode.select[roConfig.options.task.runMode.defIndex] || 'interval', time: {
                 intervalDays: 1,
                 h: 10,
                 m: 30,
@@ -94,7 +94,7 @@ function AddTask_page() {
     });
 
     const [timeMultiplier, setTimeMultiplier] = useState({
-        ...roConfig.options.task.dateMultiplier.select[roConfig.options.task.dateMultiplier.defIndex],
+        ...(roConfig.options.task.dateMultiplier.select[roConfig.options.task.dateMultiplier.defIndex] || { value: 1, name: 'day' }),
         multiplicand: 1
     })
 
@@ -102,7 +102,10 @@ function AddTask_page() {
 
     const editMode = () => {
         const name = getURLSearchParam('taskName')
-        dispatch({type:'setWhole',payload: nmConfig.task.find(item => item.name === name)!})
+        const task = nmConfig.task.find(item => item.name === name);
+        if (task) {
+            dispatch({type:'setWhole',payload: task} as Action)
+        }
     }
 
     useEffect(() => {
@@ -113,9 +116,11 @@ function AddTask_page() {
 
     useEffect(() => {
         if (taskInfo.run.mode === 'time') {
-            setTimeMultiplier({ ...roConfig.options.task.dateMultiplier.select[roConfig.options.task.dateMultiplier.defIndex], multiplicand: 1 })
+            const multiplier = roConfig.options.task.dateMultiplier.select[roConfig.options.task.dateMultiplier.defIndex];
+            setTimeMultiplier({ name: multiplier?.name || 'day', value: multiplier?.value || 1, multiplicand: 1 })
         } else if (taskInfo.run.mode === 'interval') {
-            setTimeMultiplier({ ...roConfig.options.task.intervalMultiplier.select[roConfig.options.task.intervalMultiplier.defIndex], multiplicand: 1 })
+            const multiplier = roConfig.options.task.intervalMultiplier.select[roConfig.options.task.intervalMultiplier.defIndex];
+            setTimeMultiplier({ name: multiplier?.name || 'day', value: multiplier?.value || 1, multiplicand: 1 })
         }
     }, [taskInfo.run.mode])
 
@@ -127,13 +132,13 @@ function AddTask_page() {
                 <Form.Item label={t('task_name')} hidden={isEditMode}>
                     <Input
                         value={taskInfo.name}
-                        onChange={(value) => dispatch({ type: 'setName', payload: value })}
+                        onChange={(value) => dispatch({ type: 'setName', payload: value } as Action)}
                         placeholder={t('please_input')}
                     />
                 </Form.Item>
                 <Form.Item label={t('task_run_mode')}>
                     <Select
-                        onChange={(value) => dispatch({ type: 'setRunTypeMode', payload: value })}
+                        onChange={(value) => dispatch({ type: 'setRunTypeMode', payload: value } as Action)}
                         value={taskInfo.run.mode}
                     >
                         {roConfig.options.task.runMode.select.map((item) => (
@@ -146,8 +151,11 @@ function AddTask_page() {
                         <Form.Item label={t('interval')}>
                             <Row>
                                 <Col flex={'6rem'}>
-                                    <Select value={timeMultiplier.value} onChange={(value) => {
-                                        setTimeMultiplier({ ...(taskInfo.run.mode === 'time' ? roConfig.options.task.dateMultiplier.select.find(item => item.value === value)! : roConfig.options.task.intervalMultiplier.select.find(item => item.value === value)!), multiplicand: timeMultiplier.multiplicand });
+                                    <Select value={timeMultiplier.value || 1} onChange={(value) => {
+                                        const found = (taskInfo.run.mode === 'time' ? roConfig.options.task.dateMultiplier.select : roConfig.options.task.intervalMultiplier.select).find(item => item.value === value);
+                                        if (found) {
+                                            setTimeMultiplier({ ...found, multiplicand: timeMultiplier.multiplicand });
+                                        }
                                     }}>
                                         {(taskInfo.run.mode === 'time' ? roConfig.options.task.dateMultiplier.select : roConfig.options.task.intervalMultiplier.select).map((item) => (
                                             <Select.Option value={item.value}>{t(item.name)}(*{item.value})</Select.Option>
@@ -174,7 +182,7 @@ function AddTask_page() {
                                                 min={0} max={23} precision={0}
                                                 value={taskInfo.run.time.h}
                                                 suffix={t('hour')}
-                                                onChange={(value) => dispatch({ type: 'setRunTime', payload: { ...taskInfo.run.time, h: value } })}
+                                                onChange={(value) => dispatch({ type: 'setRunTime', payload: { ...taskInfo.run.time, h: value } } as Action)}
                                             />
                                         </Col>
                                         <Col flex={'1'}>
@@ -182,7 +190,7 @@ function AddTask_page() {
                                                 min={0} max={59} precision={0}
                                                 value={taskInfo.run.time.m}
                                                 suffix={t('minute')}
-                                                onChange={(value) => dispatch({ type: 'setRunTime', payload: { ...taskInfo.run.time, m: value } })}
+                                                onChange={(value) => dispatch({ type: 'setRunTime', payload: { ...taskInfo.run.time, m: value } } as Action)}
                                             />
                                         </Col>
                                         <Col flex={'1'}>
@@ -190,7 +198,7 @@ function AddTask_page() {
                                                 min={0} max={59} precision={0}
                                                 value={taskInfo.run.time.s}
                                                 suffix={t('second')}
-                                                onChange={(value) => dispatch({ type: 'setRunTime', payload: { ...taskInfo.run.time, s: value } })}
+                                                onChange={(value) => dispatch({ type: 'setRunTime', payload: { ...taskInfo.run.time, s: value } } as Action)}
                                             />
                                         </Col>
                                     </Row>
@@ -202,7 +210,7 @@ function AddTask_page() {
 
                 <Form.Item label={t('task_type')}>
                     <Select
-                        onChange={(value) => dispatch({ type: 'setTaskType', payload: value })}
+                        onChange={(value) => dispatch({ type: 'setTaskType', payload: value } as Action)}
                         value={taskInfo.taskType}
                     >
                         {roConfig.options.task.taskType.select.map((item) => (
@@ -217,7 +225,7 @@ function AddTask_page() {
                             <Select
                                 value={taskInfo.source.storageName}
                                 placeholder={t('please_select')}
-                                onChange={(value) => dispatch({ type: 'setSourceStorageName', payload: value })}
+                                onChange={(value) => dispatch({ type: 'setSourceStorageName', payload: value } as Action)}
                             >
                                 {storageList.map((item) => (
                                     <Select.Option key={item.name} value={item.name}>
@@ -229,7 +237,7 @@ function AddTask_page() {
                         <Col flex={'auto'}>
                             <Input
                                 value={taskInfo.source.path}
-                                onChange={(value) => dispatch({ type: 'setSourcePath', payload: value })}
+                                onChange={(value) => dispatch({ type: 'setSourcePath', payload: value } as Action)}
                                 disabled={!taskInfo.source.storageName}
                             />
                         </Col>
@@ -248,7 +256,7 @@ function AddTask_page() {
                                 <Select
                                     value={taskInfo.target.storageName}
                                     placeholder={t('please_select')}
-                                    onChange={(value) => dispatch({ type: 'setTargetStorageName', payload: value })}
+                                    onChange={(value) => dispatch({ type: 'setTargetStorageName', payload: value } as Action)}
                                 >
                                     {storageList.map((item) => (
                                         <Select.Option key={item.name} value={item.name}>
@@ -260,7 +268,7 @@ function AddTask_page() {
                             <Col flex={'auto'}>
                                 <Input
                                     value={taskInfo.target.path}
-                                    onChange={(value) => dispatch({ type: 'setTargetPath', payload: value })}
+                                    onChange={(value) => dispatch({ type: 'setTargetPath', payload: value } as Action)}
                                     disabled={!taskInfo.target.storageName}
                                 />
                             </Col>
@@ -280,9 +288,9 @@ function AddTask_page() {
                     }}>{t('step_back')}</Button>
                     <Button type='primary' onClick={async () => {
                         if (taskInfo.run.mode === 'time') {
-                            taskInfo.run.time.intervalDays = timeMultiplier.multiplicand * timeMultiplier.value;
+                            taskInfo.run.time.intervalDays = timeMultiplier.multiplicand * (timeMultiplier.value || 1);
                         } else if (taskInfo.run.mode === 'interval') {
-                            taskInfo.run.interval = timeMultiplier.multiplicand * timeMultiplier.value;
+                            taskInfo.run.interval = timeMultiplier.multiplicand * (timeMultiplier.value || 1);
                         }
                         if (!isEditMode && nmConfig.task && (nmConfig.task.findIndex(item => item.name === taskInfo.name) !== -1) || !taskInfo.name) {
                             Notification.error({

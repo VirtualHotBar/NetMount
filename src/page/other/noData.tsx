@@ -1,5 +1,5 @@
 import { Result } from '@arco-design/web-react'
-import React from 'react'
+// import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 interface NoDataProps {
     tips?: string

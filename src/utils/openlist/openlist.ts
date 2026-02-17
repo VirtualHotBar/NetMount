@@ -18,7 +18,7 @@ async function getOpenlistToken() {
     
     // 提取 "Admin token:" 之后的内容，并只取第一行
     const tokenPart = resultStr.substring(startIndex + mark.length)
-    const firstLine = tokenPart.split('\n')[0].trim()
+    const firstLine = tokenPart.split('\n')[0]!.trim()
     
     console.log('getOpenlistToken: Extracted token length:', firstLine.length)
     return firstLine

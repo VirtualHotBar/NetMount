@@ -47,7 +47,8 @@ async function init(setStartStr: SetStartStrFn) {
         const matchingLang = roConfig.options.setting.language.select.find(
             (lang) => lang.langCode === navigator.language.toLowerCase()
         );
-        nmConfig.settings.language = matchingLang?.value || roConfig.options.setting.language.select[roConfig.options.setting.language.defIndex].value;
+        const defaultLang = roConfig.options.setting.language.select[roConfig.options.setting.language.defIndex];
+        nmConfig.settings.language = matchingLang?.value || defaultLang?.value || 'en';
         await setLocalized(nmConfig.settings.language);
     }
 

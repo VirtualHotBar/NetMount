@@ -1,11 +1,11 @@
-import { Button, Card, Form, FormInstance, Grid, Input, Message, Notification, Radio, Select, Space, Typography } from "@arco-design/web-react";
+import { Button, Card, Form, FormInstance, Grid, Input, Message, Notification, Radio, Space, Typography } from "@arco-design/web-react";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { createStorage } from "../../controller/storage/create";
 import { useNavigate } from "react-router-dom";
 import { getProperties, getURLSearchParam, openUrlInBrowser } from "../../utils/utils";
 import { getStorageParams, searchStorage } from "../../controller/storage/storage";
-import { rcloneInfo } from "../../services/rclone";
+// import { rcloneInfo } from "../../services/rclone";
 import { IconQuestionCircle } from "@arco-design/web-react/icon";
 import { nmConfig, roConfig } from "../../services/config";
 import { searchStorageInfo, storageInfoList } from "../../controller/storage/allList";
@@ -21,11 +21,12 @@ const filterDuplicates = (storageInfo: StorageInfoType[], t: (key: string) => st
     const newStorageList: StorageInfoType[] = [];
     const labels: string[] = [];
     for (let i = 0; i < storageInfo.length; i++) {
-        const label = t(storageInfo[i].label);
+        const item = storageInfo[i]!;
+        const label = t(item.label);
         if (!labels.includes(label)) {
 
             labels.push(label);
-            newStorageList.push(storageInfo[i]);
+            newStorageList.push(item);
         }
     }
     return newStorageList
@@ -172,11 +173,11 @@ function AddStorage_page() {
 
                 <InputForm_module
                     header={<FormItem label={'*' + t('storage_name')} hidden={isEditMode}>
-                        <Input value={storageName} onChange={(value) => {
+                        <Input value={storageName || ''} onChange={(value) => {
                             setStorageName(value)
                         }} />
                     </FormItem>} data={[...storageInfo.defaultParams.parameters/* ,...storageInfo.defaultParams.exParameters?.openlist?.additional||[] */]}
-                    showAdvanced={showAdvanced} overwriteValues={storageParams} setFormHook={(hook) => { setFormHook(hook) }} />
+                    showAdvanced={showAdvanced} overwriteValues={storageParams || {}} setFormHook={(hook) => { setFormHook(hook) }} />
                 <br />
 
                 <Row style={{ width: '100%' }}>

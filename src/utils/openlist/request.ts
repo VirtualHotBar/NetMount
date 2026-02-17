@@ -125,7 +125,7 @@ async function openlist_api_post(
                 'Authorization': openlistInfo.endpoint.auth.token,
                 'Content-Type': 'application/json'
             },
-            body: bodyData ? JSON.stringify(bodyData) : undefined,
+            body: bodyData ? JSON.stringify(bodyData) : null,
         });
         return handleApiResponse(res, fullPath, 'POST');
     }, fullPath, 'POST');

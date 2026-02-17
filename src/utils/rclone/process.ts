@@ -20,7 +20,7 @@ async function startRclone() {
     rcloneInfo.localArgs.path.tempDir = formatPath(nmConfig.settings.path.cacheDir + '/rclone/', osInfo.osType === "windows")
 
     //自动分配端口
-    rcloneInfo.endpoint.localhost.port = (await getAvailablePorts(2))[1]
+    rcloneInfo.endpoint.localhost.port = (await getAvailablePorts(2))[1]!
 
     rcloneInfo.endpoint.url = 'http://127.0.0.1:' + rcloneInfo.endpoint.localhost.port.toString()
 
@@ -57,7 +57,7 @@ async function stopRclone() {
     await delStorage(openlistInfo.markInRclone)
     await rclone_api_post('/core/quit')
     await invoke('kill_sidecar', { name: 'rclone' })
-    rcloneInfo.process.child = undefined
+    rcloneInfo.process.child = undefined as unknown as Child
 }
 
 async function restartRclone() {

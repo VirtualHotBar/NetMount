@@ -34,7 +34,7 @@ function detectDriverListStructure(data: unknown): 'object-map' | 'array' | 'unk
         // 检查第一个值是否有 config/common/additional 字段
         const record = data as Record<string, unknown>;
         const firstKey = Object.keys(record)[0];
-        const firstValue = record[firstKey] as Record<string, unknown> | undefined;
+        const firstValue = record[firstKey!] as Record<string, unknown> | undefined;
         if (firstValue && (firstValue.config || firstValue.common || firstValue.additional)) {
             return 'object-map';
         }
@@ -282,7 +282,7 @@ async function updateOpenlistStorageInfoListFallback(): Promise<StorageInfoType[
                         hide: ['mount_path', 'order', 'webdav_policy', 'web_proxy', 'remark'].includes(option.name),
                         select: option.type === 'select' && option.options 
                             ? option.options.split(',').map((item: string) => ({ label: item.trim(), value: item.trim(), help: item.trim() }))
-                            : undefined
+                            : []
                     }));
                 };
                 

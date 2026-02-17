@@ -1,18 +1,18 @@
-import React, { CSSProperties, useEffect, useReducer, useState } from 'react'
-import { Badge, Button, Dropdown, Grid, Input, Link, Menu, Message, Modal, Notification, Popconfirm, Select, Space, Spin, Table, TableColumnProps, Tabs, Typography, Upload } from '@arco-design/web-react';
+import { CSSProperties, useEffect, useReducer, useState } from 'react'
+import { Badge, Button, Dropdown, Grid, Input, Link, Menu, Message, Modal, Notification, Popconfirm, Select, Space, Spin, Table, TableColumnProps, Typography, Upload } from '@arco-design/web-react';
 import { IconCopy, IconDelete, IconEdit, IconFolderAdd, IconLeft, IconMore, IconPaste, IconRefresh, IconScissor, IconUpload } from '@arco-design/web-react/icon';
 import { rcloneInfo } from '../../services/rclone';
 import { useTranslation } from 'react-i18next';
 import { copyDir, copyFile, delDir, delFile, filterHideStorage, getFileList, mkDir, moveDir, moveFile, uploadFileRequest } from '../../controller/storage/storage';
 import { FileInfo } from '../../type/rclone/rcloneInfo';
-import { formatSize, getURLSearchParam, sleep } from '../../utils/utils';
+import { formatSize, getURLSearchParam } from '../../utils/utils';
 import { RequestOptions } from '@arco-design/web-react/es/Upload';
 import { NoData_module } from '../other/noData';
 import { clipListItem } from '../../type/page/storage/explorer';
-import { searchStorageInfo } from '../../controller/storage/allList';
+// import { searchStorageInfo } from '../../controller/storage/allList';
 const Row = Grid.Row;
 const Col = Grid.Col;//
-const TabPane = Tabs.TabPane;
+// const TabPane = Tabs.TabPane;
 const tipsStyle: CSSProperties = {
     textAlign: 'center',
     paddingTop: '6rem',
@@ -22,7 +22,7 @@ const tipsStyle: CSSProperties = {
 function ExplorerItem() {
     const { t } = useTranslation()
 
-    const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
+    const [, ] = useReducer(x => x + 1, 0);//刷新组件
     const [modal, contextHolder] = Modal.useModal();
     const [storageName, setStorageName] = useState<string>()
     const [path, setPath] = useState<string>()
@@ -217,7 +217,7 @@ function ExplorerItem() {
                         <Button /* type='secondary'  */ icon={<IconRefresh />} onClick={fileInfo} disabled={!storageName} type='text' title={t('refresh')} />
                     </Col>
                     <Col style={{ paddingLeft: '1rem', paddingRight: '0.2rem' }} flex='10rem'>
-                        <Select  /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) => {
+                        <Select  /* bordered={false} */ value={storageName || ''} placeholder={t('please_select')} onChange={(value) => {
                             if (value !== storageName) {
                                 setStorageName(value)
                                 setPathTemp('/')
@@ -278,7 +278,7 @@ function ExplorerItem() {
                     <>{
                         fileList ?
                             <Table columns={columns}
-                                loading={loading}
+                                loading={loading || false}
                                 pagination={false}
                                 rowKey='path'
                                 size='small'

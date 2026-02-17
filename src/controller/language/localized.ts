@@ -20,9 +20,8 @@ function getLangCode(lang: string): string {
       return value.langCode;
     }
   }
-  return roConfig.options.setting.language.select[
-    roConfig.options.setting.language.defIndex
-  ].langCode;
+  const select = roConfig.options.setting.language.select[roConfig.options.setting.language.defIndex];
+  return select?.langCode ?? 'en';
 }
 
 export { setLocalized, getLangCode };

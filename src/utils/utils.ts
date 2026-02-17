@@ -112,7 +112,7 @@ export function randomString(length: number): string {
     const alphanumericChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     //const specialChars = '!@#$%^&*()_+~`|}{[]:;?><,./-=';
     const specialChars = '';
-    const getRandomChar = (chars: string): string => chars[Math.floor(Math.random() * chars.length)];
+    const getRandomChar = (chars: string): string => chars[Math.floor(Math.random() * chars.length)]!;
 
     const randomString = Array.from({ length }, () =>
         Math.random() < 0.8 ? getRandomChar(alphanumericChars) : getRandomChar(specialChars)
@@ -174,9 +174,11 @@ export function compareVersions(v1: string, v2: string) {
     }
     
     for (let i = 0; i < maxParts; i++) {
-        if (splitV1[i] > splitV2[i]) {
+        const v1Part = splitV1[i]!;
+        const v2Part = splitV2[i]!;
+        if (v1Part > v2Part) {
             return 1;
-        } else if (splitV1[i] < splitV2[i]) {
+        } else if (v1Part < v2Part) {
             return -1;
         }
     }

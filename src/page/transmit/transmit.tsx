@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react'
-import { rcloneInfo, rcloneStatsHistory } from '../../services/rclone'
+import { useEffect, useState } from 'react'
+import { rcloneInfo } from '../../services/rclone'
 import { hooks } from '../../services/hook'
 import { RcloneTransferItem } from '../../type/rclone/stats'
-import { Card, Descriptions, List, Progress, Space, Statistic, Grid, Typography, Alert } from '@arco-design/web-react'
+import { Card, Descriptions, List, Progress, Space, Typography, Alert } from '@arco-design/web-react'
 import { formatETA, formatSize } from '../../utils/utils'
-import { Area } from '@ant-design/charts'
+// import { Area } from '@ant-design/charts'
 import { NoData_module } from '../other/noData'
 import { useTranslation } from 'react-i18next'
 import { openlistInfo } from '../../services/openlist'
-const Row = Grid.Row;
-const Col = Grid.Col;
+// const Row = Grid.Row;
+// const Col = Grid.Col;
 
 function Transmit_page() {
   const { t } = useTranslation()

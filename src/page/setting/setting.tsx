@@ -1,5 +1,5 @@
-import React, { useEffect, useReducer, useState } from 'react'
-import { Button, Card, Collapse, Form, Grid, Input, Link, Message, Modal, Select, Space, Switch } from '@arco-design/web-react'
+import { useEffect, useReducer, useState } from 'react'
+import { Button, Card, Form, Grid, Input, Link, Message, Modal, Select, Space, Switch } from '@arco-design/web-react'
 import { nmConfig, osInfo, roConfig, saveNmConfig } from '../../services/config';
 import { getAutostartState, setAutostartState, setThemeMode } from '../../controller/setting/setting';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +13,7 @@ import { openlistInfo } from '../../services/openlist';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import { exit } from '../../controller/main';
 
-const CollapseItem = Collapse.Item;
+// const CollapseItem = Collapse.Item;
 const FormItem = Form.Item;
 const Row = Grid.Row;
 const Col = Grid.Col;
@@ -46,7 +46,7 @@ export default function Setting_page() {
           <Form autoComplete='off' style={{ paddingRight: '0.8rem' }}>
             <FormItem label={t('language')}>
               <Select
-                defaultValue={nmConfig.settings.language}
+                defaultValue={nmConfig.settings.language || ''}
                 onChange={async (value) => {
                   nmConfig.settings.language = value
                   await saveNmConfig()
@@ -63,7 +63,7 @@ export default function Setting_page() {
             </FormItem>
             <FormItem label={t('theme_mode')}>
               <Select
-                defaultValue={nmConfig.settings.themeMode}
+                defaultValue={nmConfig.settings.themeMode || 'auto'}
                 onChange={(value) => {
                   nmConfig.settings.themeMode = value;
                   setThemeMode(value);
@@ -78,7 +78,7 @@ export default function Setting_page() {
               </Select>
             </FormItem>
             <FormItem label={t('autostart')}>
-              <Switch checked={autostart} /* disabled={osInfo.osType==='Darwin'} */ onChange={async (value) => {
+              <Switch checked={autostart || false} /* disabled={osInfo.osType==='Darwin'} */ onChange={async (value) => {
                 await setAutostartState(value);
                 setAutostart(value)
               }} />
@@ -92,13 +92,13 @@ export default function Setting_page() {
             </FormItem>
             <FormItem label={t('cache_path')}>
               <Input.Group compact>
-                <Input style={{ width: 'calc(100% - 4rem)' }} value={nmConfig.settings.path.cacheDir} />
+                <Input style={{ width: 'calc(100% - 4rem)' }} value={nmConfig.settings.path.cacheDir || ''} />
                 <Button style={{ width: '4rem' }} onClick={async () => {
                   let dirPath = await dialog.open({
                     title: t('please_select_cache_dir'),
                     multiple: false,
                     directory: true,
-                    defaultPath: nmConfig.settings.path.cacheDir
+                    defaultPath: nmConfig.settings.path.cacheDir || ''
                   });
                   dirPath = dirPath ? formatPath(dirPath, osInfo.platform === 'windows') : dirPath
                   if (dirPath && dirPath !== nmConfig.settings.path.cacheDir) {

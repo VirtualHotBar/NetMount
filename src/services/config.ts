@@ -63,11 +63,11 @@ let nmConfig: NMConfig = {
         url: 'https://api.hotpe.top/API/NetMount',
     },
     settings: {
-        themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex],
+        themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex]!,
         startHide: false,
         language: undefined,
         path: {
-            cacheDir: undefined
+            cacheDir: undefined as string | undefined
         }
     },
     framework: {

@@ -80,7 +80,7 @@ function searchStorageInfo(v: string | undefined, displayType: boolean = false):
             }
         }
     }
-    return storageInfoList[0]
+    return storageInfoList[0]!
 }
 
 

@@ -77,7 +77,7 @@ class TaskScheduler {
         if (task && task.run.runId !== undefined) {
             window.clearInterval(task.run.runId);
             window.clearTimeout(task.run.runId);
-            task.run.runId = undefined
+            (task.run.runId as number | undefined) = undefined
             console.log(`${taskName} task cancelled.`);
         }
     }

@@ -11,7 +11,7 @@ const OS_TYPE: &str = env::consts::OS;
 const DEFAULT_OPENLIST_VERSION: &str = "v4.1.10";
 
 // 版本标记文件
-const OPENLIST_VERSION_FILE: &str = "res/bin/openlist/.version";
+const OPENLIST_VERSION_FILE: &str = "binaries/openlist/.version";
 
 struct ResBinUrls {
     rclone: &'static str,

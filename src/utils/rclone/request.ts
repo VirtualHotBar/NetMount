@@ -39,20 +39,14 @@ async function handleApiResponse(
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     }
 
-    // 解析 JSON
-    let data: RcloneApiResponse;
+    // 解析 JSON 响应
     try {
-        return await fetch(rcloneInfo.endpoint.url + '/rc/noop', { 
-            method: 'POST', 
-            headers: getRcloneApiHeaders(),
-            body: '{}'
-        }).then(data => data.ok)
+        const data = await res.json();
+        return data as RcloneApiResponse;
     } catch (e) {
-        console.log(e)
-        return false;
+        // 如果不是 JSON，返回空对象
+        return {} as RcloneApiResponse;
     }
-
-    return data;
 }
 
 /**

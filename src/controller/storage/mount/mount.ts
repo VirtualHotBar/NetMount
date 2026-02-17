@@ -56,7 +56,7 @@ async function addMountStorage(
   mountPath: string,
   parameters: { vfsOpt: VfsOptions; mountOpt: MountOptions },
   autoMount?: boolean,
-) {
+): Promise<boolean> {
   if (getMountStorage(mountPath)) {
     return false;
   }
@@ -71,6 +71,7 @@ async function addMountStorage(
 
   await saveNmConfig();
   await reupMount();
+  return true;
 }
 
 async function delMountStorage(mountPath: string) {
@@ -94,7 +95,7 @@ async function editMountStorage(mountInfo: MountListItem, oldMountPath?: string)
   let found = false;
   const normalizedSearch = normalizeMountPath(searchPath);
   for (let i = 0; i < nmConfig.mount.lists.length; i++) {
-    if (normalizeMountPath(nmConfig.mount.lists[i].mountPath) === normalizedSearch) {
+    if (normalizeMountPath(nmConfig.mount.lists[i]!.mountPath) === normalizedSearch) {
       nmConfig.mount.lists[i] = mountInfo;
       found = true;
       break;

@@ -1,5 +1,5 @@
-import React, { useReducer } from 'react'
-import { DevTips_module } from '../other/devTips'
+import { useReducer } from 'react'
+// import { DevTips_module } from '../other/devTips'
 import { Button, Grid, Link, Modal, Space, Table, TableColumnProps, Typography } from '@arco-design/web-react'
 import { useTranslation } from 'react-i18next'
 import { nmConfig, roConfig } from '../../services/config'

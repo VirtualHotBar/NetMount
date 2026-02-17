@@ -1,9 +1,9 @@
-use rand::distributions::DistString as _;
+use rand::distr::SampleString as _;
 
 use crate::State;
 
 fn random_str(len: usize) -> String {
-    rand::distributions::Alphanumeric.sample_string(&mut rand::thread_rng(), len)
+    rand::distr::Alphanumeric.sample_string(&mut rand::rng(), len)
 }
 
 #[derive(Clone)]

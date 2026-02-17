@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer } from 'react'
+import { useEffect, useReducer } from 'react'
 
 import { Alert, Button, Card, Descriptions, Grid, Link, Modal, Notification, Space, Typography } from "@arco-design/web-react"
 import { rcloneInfo } from '../../services/rclone'

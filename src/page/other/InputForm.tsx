@@ -7,7 +7,7 @@ import { ParametersType } from "../../type/defaults";
 import { t } from "i18next";
 import { IconQuestionCircle } from "@arco-design/web-react/icon";
 import { getProperties } from "../../utils/utils";
-import { convertStoragePath, filterHideStorage, formatPathRclone, searchStorage } from "../../controller/storage/storage";
+import { convertStoragePath, filterHideStorage, formatPathRclone } from "../../controller/storage/storage";
 import { openlistInfo } from "../../services/openlist";
 const Row = Grid.Row;
 const Col = Grid.Col;

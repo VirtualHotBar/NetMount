@@ -20,10 +20,10 @@ serde = { version = "1.0", features = ["derive"] }
 anyhow = "1"
 itertools = "0"
 tauri-build = { version = "2.2", features = [] }
-indicatif = "0.17.8"
-reqwest = { version = "0.11", features = ["json", "stream", "blocking"] }
+indicatif = "0.18.4"
+reqwest = { version = "0.13", features = ["json", "stream", "blocking"] }
 futures-util = "0.3"
-zip = "1.1.4"
+zip = "2.4.2"
 tokio = { version = "1", features = ["full"] }
 tar = "0.4.40"
 flate2 = { version = "1.0.30", features = ["zlib"] }
@@ -38,9 +38,9 @@ tauri = { version = "2.2", features = [
 ] }
 anyhow = "1"
 anyhow-tauri = "1"
-phf = { version = "0.11", features = ["macros", "serde"] }
-rand = "0.8"
-reqwest = { version = "0.11", features = ["json", "stream"] }
+phf = { version = "0.13", features = ["macros", "serde"] }
+rand = "0.9"
+reqwest = { version = "0.13", features = ["json", "stream"] }
 tokio = { version = "1", features = ["full"] }
 futures-util = "0.3"
 tauri-plugin-shell = "2.3.5"
@@ -53,12 +53,12 @@ tauri-plugin-dialog = "2.6.0"
 lazy_static = "1.4"
 
 [target.'cfg(windows)'.dependencies]
-winreg = "0.10.1"
+winreg = "0.55"
 winapi = { version = "0.3.9", features = ["jobapi2", "processthreadsapi", "handleapi", "winnt"] }
 widestring = "1.2.1"
 
 [target.'cfg(not(windows))'.dependencies]
-nix = { version = "0.27", features = ["signal"] }
+nix = { version = "0.29", features = ["signal"] }
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

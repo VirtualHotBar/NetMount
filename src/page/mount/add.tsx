@@ -1,5 +1,5 @@
 import { Button, Checkbox, Form, FormInstance, Input, Notification, Radio, Select, Space } from '@arco-design/web-react'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom';
 import { formatPath, getURLSearchParam, getWinFspInstallState, showPathInExplorer } from '../../utils/utils';
@@ -102,7 +102,7 @@ export default function AddMount_page() {
         } else if (getURLSearchParam('name')) {
             setStorageName(getURLSearchParam('name'))
         } else if (!storageName) {
-            setStorageName(storageList[0].name)
+            setStorageName(storageList[0]?.name || '')
         }
 
         if (isEditMode) {
@@ -164,7 +164,7 @@ export default function AddMount_page() {
             {/* 基础选项 - 始终显示 */}
             <div style={{ marginBottom: showAllOptions ? '1rem' : '0' }}>
                 <FormItem label={t('storage')}>
-                    <Select /* bordered={false} */ value={storageName} placeholder={t('please_select')} onChange={(value) =>
+                    <Select /* bordered={false} */ value={storageName || ''} placeholder={t('please_select')} onChange={(value) =>
                         setStorageName(value)
                     }>
                         {

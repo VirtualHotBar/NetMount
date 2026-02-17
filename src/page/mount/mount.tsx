@@ -1,5 +1,5 @@
 import { Alert, Button, Grid, Message, Space, Table, TableColumnProps, Typography } from '@arco-design/web-react'
-import React, { useEffect, useReducer, useState } from 'react'
+import { useEffect, useReducer, useState } from 'react'
 import { rcloneInfo } from '../../services/rclone'
 import { delMountStorage, isMounted, mountStorage, reupMount, unmountStorage } from '../../controller/storage/mount/mount'
 import { useTranslation } from 'react-i18next'

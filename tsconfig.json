@@ -23,18 +23,17 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "forceConsistentCasingInFileNames": true,
 
     /* 路径别名 */
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@services/*": ["src/services/*"],
-      "@utils/*": ["src/utils/*"],
-      "@type/*": ["src/type/*"],
-      "@controller/*": ["src/controller/*"],
-      "@page/*": ["src/page/*"]
+      "@/*": ["./src/*"],
+      "@services/*": ["./src/services/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@type/*": ["./src/type/*"],
+      "@controller/*": ["./src/controller/*"],
+      "@page/*": ["./src/page/*"]
     }
   },
   "include": ["src"],

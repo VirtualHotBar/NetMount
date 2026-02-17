@@ -3,12 +3,12 @@ import { takeMidStr, takeRightStr } from '../utils';
 import { Aria2Attrib } from '../../type/utils/aria2';
 
 class Aria2 {
-    private filePath: string = '';
+    // private filePath: string = '';
     private command: Command<string>;
     private process: Child | null = null;
 
     constructor(url: string, saveDir: string, saveName: string, thread: number = 8, callback: (attrib: Aria2Attrib) => void) {
-        this.filePath = saveDir + saveName;
+        // this.filePath = saveDir + saveName;
         const args = [
             '-d', saveDir,
             '-o', saveName,
