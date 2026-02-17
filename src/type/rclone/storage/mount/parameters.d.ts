@@ -7,6 +7,7 @@
 //https://rclone.org/commands/rclone_mount/#options-opt
 
 interface VfsOptions {
+    [key: string]: unknown;
     CacheMaxAge: number;
     CacheMaxSize: number;
     CacheMode: string;
@@ -40,6 +41,7 @@ interface VfsOptions {
 }
 
 interface MountOptions {
+    [key: string]: unknown;
     AllowNonEmpty: boolean;
     AllowOther: boolean;
     AllowRoot: boolean;
@@ -77,6 +79,5 @@ interface RcloneMountListResponse {
 }
 
 export { VfsOptions, MountOptions, RcloneMountPoint, RcloneMountListResponse }
-
 
 

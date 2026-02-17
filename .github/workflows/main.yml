@@ -97,7 +97,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      - uses: dtolnay/rust-toolchain@${{ env.RUST_TOOLCHAIN }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
@@ -198,8 +200,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
-      - uses: dtolnay/rust-toolchain@${{ env.RUST_TOOLCHAIN }}
+      - uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: stable
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Cache Rust dependencies
