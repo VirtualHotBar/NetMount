@@ -1,5 +1,7 @@
 name: "CI/CD"
 
+# 发布Release（创建tag）：git tag -a v1.0.0 && git push origin v1.0.0
+
 on:
   push:
     branches: [main, master]
@@ -222,6 +224,10 @@ jobs:
             target: 'x86_64-pc-windows-msvc'
             args: ''
             arch: 'x86_64'
+          - platform: 'windows-latest'
+            target: 'aarch64-pc-windows-msvc'
+            args: '--target aarch64-pc-windows-msvc'
+            arch: 'aarch64'
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 30
     steps:
@@ -237,7 +243,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.target == 'aarch64-pc-windows-msvc' && 'aarch64-pc-windows-msvc' || '' }}
 
       # Rust 缓存 - 按目标平台分离缓存
       - name: Cache Rust dependencies

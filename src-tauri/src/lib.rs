@@ -431,6 +431,14 @@ async fn spawn_sidecar(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     
+    // Windows: 隐藏命令行窗口
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        use winapi::um::winbase::CREATE_NO_WINDOW;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    
     let mut child = tokio::process::Command::from(cmd)
         .spawn()
         .map_err(|e| format!("Failed to spawn sidecar: {}", e))?;
