@@ -36,27 +36,30 @@ if (tags.length === 0) {
   );
 }
 
+// Allow CURRENT_TAG to be a future tag (not yet tagged).
+// If it's not the latest tag, we assume we're generating changelog for an upcoming release.
 const latestTag = tags[0];
 if (latestTag !== currentTag) {
-  const msg = [
-    `CURRENT_TAG (${currentTag}) is not the latest tag (${latestTag}).`,
-    `Refusing to generate changelog for wrong range.`,
-    `If you're backporting, set CURRENT_TAG explicitly and adjust tag ordering logic.`,
-  ].join(' ');
-  throw new Error(msg);
+  console.warn(`Warning: CURRENT_TAG (${currentTag}) is not the latest tag (${latestTag}).`);
+  console.warn('Assuming this is an upcoming release and generating changelog from latest tag to HEAD.');
 }
 
-// Ensure the tag exists locally (create-release created it remotely).
+// Check if the tag exists locally; if not, we'll use HEAD as the end of range.
+let tagExists = false;
 try {
-  git(['rev-parse', '--verify', `refs/tags/${currentTag}`]);
+  // Suppress stderr to avoid "fatal: Needed a single revision" output
+  execFileSync('git', ['rev-parse', '--verify', `refs/tags/${currentTag}`], {
+    encoding: 'utf8',
+    stdio: ['pipe', 'pipe', 'ignore'],
+  });
+  tagExists = true;
 } catch {
-  throw new Error(
-    `Tag ${currentTag} not found locally. Did you run 'git fetch --tags' after creating the release?`,
-  );
+  console.warn(`Tag ${currentTag} not found locally. Using HEAD as end of range.`);
 }
 
 const prevTag = tags.find((t) => t !== currentTag) || '';
-const range = prevTag ? `${prevTag}..${currentTag}` : currentTag;
+const endRef = tagExists ? currentTag : 'HEAD';
+const range = prevTag ? `${prevTag}..${endRef}` : endRef;
 
 const raw = git(['log', '--no-merges', '--pretty=format:%H\t%s', range]);
 const lines = raw ? raw.split('\n') : [];

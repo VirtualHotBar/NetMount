@@ -26,3 +26,4 @@ dist-ssr
 
 src-tauri/res/bin
 mark.md
+changelog.md
