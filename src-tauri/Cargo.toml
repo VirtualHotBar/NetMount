@@ -55,7 +55,7 @@ lazy_static = "1.4"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55"
-winapi = { version = "0.3.9", features = ["jobapi2", "processthreadsapi", "handleapi", "winnt"] }
+winapi = { version = "0.3.9", features = ["jobapi2", "processthreadsapi", "handleapi", "winnt", "winbase"] }
 widestring = "1.2.1"
 
 [target.'cfg(not(windows))'.dependencies]
