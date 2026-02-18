@@ -243,7 +243,14 @@ pub fn init() -> anyhow::Result<()> {
             }
             Ok(())
         })
-        .run(tauri::generate_context!())?;
+        .build(tauri::generate_context!())?
+        .run(|_, event| match event {
+            tauri::RunEvent::ExitRequested { .. } | tauri::RunEvent::Exit => {
+                // Ensure sidecars don't survive app shutdown on any platform.
+                sidecar::cleanup();
+            }
+            _ => {}
+        });
     Ok(())
 }
 

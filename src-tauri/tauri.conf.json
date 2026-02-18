@@ -26,7 +26,8 @@
         "sidebarImage": "img/nsis/sidebar.bmp",
         "headerImage": "img/nsis/header.bmp",
         "languages": ["SimpChinese", "English"],
-        "installerIcon": "img/icons/icon.ico"
+        "installerIcon": "img/icons/icon.ico",
+        "installerHooks": "pack/nsis/hooks.nsh"
       }
     },
     "macOS": {

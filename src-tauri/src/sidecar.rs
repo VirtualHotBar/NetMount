@@ -171,8 +171,14 @@ pub fn kill_sidecar(name: &str) -> bool {
 
 /// 终止所有 sidecar 进程
 pub fn kill_all_sidecars() {
-    let children = SIDECAR_CHILDREN.lock().unwrap();
-    for (name, pid) in children.iter() {
+    // Drain first to avoid holding the mutex while terminating processes and to
+    // prevent double-kill attempts (e.g. when cleanup is invoked multiple times during shutdown).
+    let entries: Vec<(String, u32)> = {
+        let mut children = SIDECAR_CHILDREN.lock().unwrap();
+        children.drain().collect()
+    };
+
+    for (name, pid) in entries.iter() {
         #[cfg(target_os = "windows")]
         unsafe {
             use winapi::um::processthreadsapi::TerminateProcess;
