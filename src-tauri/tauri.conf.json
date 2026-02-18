@@ -6,7 +6,7 @@
     "devUrl": "http://localhost:5173"
   },
   "bundle": {
-    "targets": ["nsis", "dmg", "app", "deb", "rpm", "appimage", "updater"],
+    "targets": ["nsis", "dmg", "app", "deb", "rpm", "appimage"],
     "active": true,
     "category": "DeveloperTool",
     "copyright": "(C) 2024-Present  VirtualHotBar",
