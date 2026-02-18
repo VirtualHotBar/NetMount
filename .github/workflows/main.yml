@@ -130,7 +130,7 @@ jobs:
             src-tauri/binaries/openlist
             src-tauri/binaries/rclone-x86_64-unknown-linux-gnu
             src-tauri/binaries/openlist-x86_64-unknown-linux-gnu
-          key: binaries-linux-x86_64-${{ env.RCLONE_VERSION }}-${{ env.OPENLIST_VERSION }}
+          key: binaries-x86_64-unknown-linux-gnu-${{ env.RCLONE_VERSION }}-${{ env.OPENLIST_VERSION }}
 
       - run: pnpm install --frozen-lockfile
 
@@ -224,9 +224,9 @@ jobs:
             target: 'x86_64-pc-windows-msvc'
             args: ''
             arch: 'x86_64'
-          - platform: 'windows-latest'
+          - platform: 'windows-11-arm'
             target: 'aarch64-pc-windows-msvc'
-            args: '--target aarch64-pc-windows-msvc'
+            args: ''
             arch: 'aarch64'
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 30
@@ -243,7 +243,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.target == 'aarch64-pc-windows-msvc' && 'aarch64-pc-windows-msvc' || '' }}
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       # Rust 缓存 - 按目标平台分离缓存
       - name: Cache Rust dependencies
