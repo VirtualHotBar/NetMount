@@ -1,6 +1,6 @@
 name: "CI/CD"
 
-# 发布Release（创建tag）：git tag -a v1.2.0 && git push origin v1.2.0
+# 发布Release（创建tag）：git tag v1.2.0 && git push origin v1.2.0
 
 on:
   push:
@@ -141,6 +141,8 @@ jobs:
           RUST_BACKTRACE: 1
           # Tauri 签名私钥
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          # Tauri 签名私钥密码（如果密钥已加密）
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.cache-binaries.outputs.cache-hit }}
 
   # ========== Release 创建 ==========
@@ -283,6 +285,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Tauri 签名私钥
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          # Tauri 签名私钥密码（如果密钥已加密）
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           # 使用缓存时跳过下载
           NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.cache-binaries.outputs.cache-hit }}
         with:
