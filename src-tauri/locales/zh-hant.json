@@ -595,5 +595,17 @@
     "please_select_cache_dir":"請選擇緩存路徑",
     "select":"選擇",
     "ask_restartself":"是否重啓軟件？",
-    "after_changing_the_cache_directory_tips":"更改緩存目錄後，請手動清理舊緩存目錄，重啓軟件以生效。"
+    "after_changing_the_cache_directory_tips":"更改緩存目錄後，請手動清理舊緩存目錄，重啓軟件以生效。",
+    "check_for_updates": "檢查更新",
+    "update_check_complete": "檢查完成",
+    "already_latest_version": "已是最新版本",
+    "check_update_failed": "檢查更新失敗",
+    "new_version_available": "發現新版本",
+    "download_and_install": "下載並安裝",
+    "downloading": "正在下載",
+    "download_complete": "下載完成",
+    "restarting_app": "正在重啟應用...",
+    "update_failed": "更新失敗",
+    "later": "稍後",
+    "ok": "確定"
 }

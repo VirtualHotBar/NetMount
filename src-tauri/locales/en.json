@@ -583,5 +583,17 @@
     "please_select_cache_dir":"Please select a cache directory",
     "select":"Select",
     "ask_restartself":"Do you want to restart the software?",
-    "after_changing_the_cache_directory_tips":"After changing the cache directory, please manually clear the old cache directory and restart the software for it to take effect."
+    "after_changing_the_cache_directory_tips":"After changing the cache directory, please manually clear the old cache directory and restart the software for it to take effect.",
+    "check_for_updates": "Check for Updates",
+    "update_check_complete": "Check Complete",
+    "already_latest_version": "You are already on the latest version",
+    "check_update_failed": "Failed to check for updates",
+    "new_version_available": "New version available",
+    "download_and_install": "Download and Install",
+    "downloading": "Downloading",
+    "download_complete": "Download complete",
+    "restarting_app": "Restarting application...",
+    "update_failed": "Update failed",
+    "later": "Later",
+    "ok": "OK"
 }

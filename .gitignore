@@ -27,3 +27,4 @@ dist-ssr
 src-tauri/res/bin
 mark.md
 changelog.md
+tauri_netmount.key

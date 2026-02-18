@@ -16,6 +16,7 @@ import { setThemeMode } from "./setting/setting"
 import { setLocalized } from "./language/localized"
 import { checkNotice } from "./update/notice"
 import { updateStorageInfoList } from "./storage/allList"
+import { checkForUpdate } from "./update/tauriUpdater"
 import { restartOpenlist, startOpenlist, stopOpenlist } from "../utils/openlist/process"
 import { homeDir } from "@tauri-apps/api/path"
 import { openlist_api_get, openlist_api_ping } from "../utils/openlist/request"
@@ -92,6 +93,11 @@ async function init(setStartStr: SetStartStrFn) {
     startComponentWatchdog()
 
     await main()
+
+    // 启动后静默检查应用更新（延迟 5 秒，不阻塞启动）
+    setTimeout(() => {
+        checkForUpdate(true).catch(err => console.error('Update check failed:', err))
+    }, 5000)
 }
 
 async function main() {

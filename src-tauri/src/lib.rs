@@ -176,7 +176,7 @@ pub fn init() -> anyhow::Result<()> {
         }
     }
 
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
@@ -190,8 +190,13 @@ pub fn init() -> anyhow::Result<()> {
         .plugin(tauri_plugin_autostart::init(
             MacosLauncher::LaunchAgent,
             Some(vec![]),
-        ))
-        .invoke_handler(tauri::generate_handler![
+        ));
+
+    // Updater 插件 (桌面端自动更新)
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+
+    builder.invoke_handler(tauri::generate_handler![
             toggle_devtools,
             get_config,
             update_config,

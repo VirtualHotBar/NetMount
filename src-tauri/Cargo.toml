@@ -58,6 +58,10 @@ winreg = "0.55"
 winapi = { version = "0.3.9", features = ["jobapi2", "processthreadsapi", "handleapi", "winnt", "winbase"] }
 widestring = "1.2.1"
 
+# Tauri Updater (桌面端自动更新)
+[target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
+tauri-plugin-updater = "2"
+
 [target.'cfg(not(windows))'.dependencies]
 nix = { version = "0.29", features = ["signal"] }
 

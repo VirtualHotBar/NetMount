@@ -6,6 +6,7 @@
     "devUrl": "http://localhost:5173"
   },
   "bundle": {
+    "createUpdaterArtifacts": true,
     "targets": ["nsis", "dmg", "app", "deb", "rpm", "appimage"],
     "active": true,
     "category": "DeveloperTool",
@@ -43,7 +44,17 @@
   },
   "productName": "NetMount",
   "identifier": "com.vhbs.netmount",
-  "plugins": {},
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://api.hotpe.top/API/NetMount/TauriUpdate?target={{target}}&arch={{arch}}&current_version={{current_version}}"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY0NThFQ0I5OUUyQkFENTUKUldSVnJTdWV1ZXhZOUxaY2dKRUNvYjBuK09WUVovSzNxYk1mQWFzNytQSHhadjlncXAxRW03QXEK",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  },
   "app": {
     "withGlobalTauri": true,
     "macOSPrivateApi": true,

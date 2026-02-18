@@ -186,6 +186,8 @@
     "os:allow-hostname",
     "process:allow-restart",
     "process:allow-exit",
+    "updater:allow-check",
+    "updater:allow-download-and-install",
     "fs:default",
     "shell:default",
     "process:default",

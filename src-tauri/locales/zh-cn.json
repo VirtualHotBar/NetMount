@@ -594,5 +594,17 @@
     "please_select_cache_dir": "请选择缓存目录",
     "select": "选择",
     "ask_restartself": "是否重启软件？",
-    "after_changing_the_cache_directory_tips": "更改缓存目录后，请手动清理旧缓存目录，重启软件以生效。"
+    "after_changing_the_cache_directory_tips": "更改缓存目录后，请手动清理旧缓存目录，重启软件以生效。",
+    "check_for_updates": "检查更新",
+    "update_check_complete": "检查完成",
+    "already_latest_version": "已是最新版本",
+    "check_update_failed": "检查更新失败",
+    "new_version_available": "发现新版本",
+    "download_and_install": "下载并安装",
+    "downloading": "正在下载",
+    "download_complete": "下载完成",
+    "restarting_app": "正在重启应用...",
+    "update_failed": "更新失败",
+    "later": "稍后",
+    "ok": "确定"
 }
