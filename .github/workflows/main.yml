@@ -262,22 +262,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - name: Install Windows dependencies
-        if: matrix.platform == 'windows-latest'
-        run: |
-          # 安装 .NET Framework 3.5（WiX 必需）
-          Enable-WindowsOptionalFeature -Online -FeatureName NetFx3 -All -NoRestart
-          
-          # 安装 WiX Toolset
-          if (!(Test-Path "C:\Program Files (x86)\WiX Toolset v3.14\bin\candle.exe")) {
-            choco install wixtoolset --version 3.14.1 --no-progress -y
-          } else {
-            Write-Host "WiX Toolset already installed, skipping..."
-          }
-          
-          # 设置 WIX 环境变量（让 Tauri 使用系统安装的 WiX）
-          echo "WIX=C:\Program Files (x86)\WiX Toolset v3.14" >> $env:GITHUB_ENV
-          echo "C:\Program Files (x86)\WiX Toolset v3.14\bin" >> $env:GITHUB_PATH
+      # NSIS 安装程序不需要额外依赖，Tauri 会自动处理
 
       - run: pnpm install --frozen-lockfile
 

@@ -6,7 +6,7 @@
     "devUrl": "http://localhost:5173"
   },
   "bundle": {
-    "targets": "all",
+    "targets": ["nsis", "dmg", "app", "deb", "rpm", "appimage", "updater"],
     "active": true,
     "category": "DeveloperTool",
     "copyright": "(C) 2024-Present  VirtualHotBar",
@@ -25,12 +25,7 @@
       "webviewInstallMode": {
         "type": "embedBootstrapper"
       },
-      "wix": {
-        "bannerPath": "img/wix/banner.png",
-        "dialogImagePath": "img/wix/dialog.png",
-        "language": ["zh-CN", "en-US"],
-        "template": "pack/wix.wxs"
-      },
+
       "nsis": {
         "sidebarImage": "img/nsis/sidebar.bmp",
         "headerImage": "img/nsis/header.bmp",
