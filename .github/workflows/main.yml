@@ -265,7 +265,12 @@ jobs:
       - name: Install Windows dependencies (WiX)
         if: matrix.platform == 'windows-latest'
         run: |
-          choco install wixtoolset --version 3.14.1 --no-progress -y
+          # 检查是否已安装 WiX
+          if (!(Test-Path "C:\Program Files (x86)\WiX Toolset v3.14\bin\candle.exe")) {
+            choco install wixtoolset --version 3.14.1 --no-progress -y
+          } else {
+            Write-Host "WiX Toolset already installed, skipping..."
+          }
           echo "C:\Program Files (x86)\WiX Toolset v3.14\bin" >> $env:GITHUB_PATH
 
       - run: pnpm install --frozen-lockfile

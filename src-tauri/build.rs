@@ -3,8 +3,15 @@ use std::os::unix::fs::PermissionsExt;
 use std::process::exit;
 use std::{env, path::Path};
 
-// 获取操作系统类型
+// 获取操作系统类型（编译时）
 const OS_TYPE: &str = env::consts::OS;
+
+/// 获取目标操作系统类型（支持交叉编译）
+fn get_target_os() -> String {
+    // 优先使用 Cargo 提供的目标 OS（支持交叉编译）
+    env::var("CARGO_CFG_TARGET_OS")
+        .unwrap_or_else(|_| env::consts::OS.to_string())
+}
 
 // OpenList 版本控制
 // 默认固定版本，避免 "latest" 漂移导致的接口不兼容问题
@@ -277,6 +284,10 @@ fn check_res_bin() {
     let binding = normalize_arch(&binding);
     let arch = binding.as_str();
     let bin_path = "binaries/";
+    
+    // 获取目标操作系统（支持交叉编译）
+    let target_os = get_target_os();
+    println!("cargo:warning=Target OS: {}, Arch: {}", target_os, arch);
 
     // 获取 OpenList 版本
     let openlist_version = get_openlist_version();
@@ -289,7 +300,7 @@ fn check_res_bin() {
         println!("cargo:warning=Using default OpenList version (set NETMOUNT_OPENLIST_VERSION to override)");
     }
 
-    let res_bin_urls = match OS_TYPE {
+    let res_bin_urls = match target_os.as_str() {
         "windows" => match arch {
             "aarch64" | "arm64" => ResBinUrls {
                 rclone: "https://downloads.rclone.org/rclone-current-windows-arm64.zip",
@@ -338,7 +349,7 @@ fn check_res_bin() {
         },
         _ => ResBinUrls {
             rclone: "",
-            openlist: build_openlist_url(&openlist_version, OS_TYPE, arch),
+            openlist: build_openlist_url(&openlist_version, &target_os, arch),
         },
     };
     
@@ -355,7 +366,7 @@ fn check_res_bin() {
 
     let skip_downloads = env_truthy("NETMOUNT_SKIP_BIN_DOWNLOADS") || env_truthy("NETMOUNT_SKIP_DOWNLOADS");
 
-    if OS_TYPE == "windows" {
+    if target_os == "windows" {
         //下载winfsp
         let winfsp_url =
             "https://github.com/winfsp/winfsp/releases/download/v2.0/winfsp-2.0.23075.msi";
@@ -373,7 +384,7 @@ fn check_res_bin() {
         };
     }
 
-    let rclone_name = match OS_TYPE {
+    let rclone_name = match target_os.as_str() {
         "windows" => "rclone.exe",
         _ => "rclone",
     };
@@ -381,7 +392,7 @@ fn check_res_bin() {
     // 检查原始文件名或重命名后的文件名是否存在
     if !Path::new(rclone_path).exists() && !check_sidecar_binary_exists(bin_path, "rclone", rclone_name) {
         if res_bin_urls.rclone.is_empty() {
-            panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
+            panic!("Unsupported OS or architecture: {} {}", target_os, arch);
         }
         if skip_downloads {
             panic!(
@@ -454,7 +465,7 @@ Expected {} or renamed sidecar (rclone-{}).",
         }
     };
 
-    let openlist_name = match OS_TYPE {
+    let openlist_name = match target_os.as_str() {
         "windows" => "openlist.exe",
         _ => "openlist",
     };
@@ -463,7 +474,7 @@ Expected {} or renamed sidecar (rclone-{}).",
     // 检查原始文件名或重命名后的文件名是否存在
     if !Path::new(openlist_path).exists() && !check_sidecar_binary_exists(bin_path, "openlist", openlist_name) {
         if res_bin_urls.openlist.is_empty() {
-            panic!("Unsupported OS or architecture: {} {}", OS_TYPE, arch);
+            panic!("Unsupported OS or architecture: {} {}", target_os, arch);
         }
         if skip_downloads {
             panic!(
