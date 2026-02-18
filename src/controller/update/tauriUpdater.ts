@@ -2,6 +2,11 @@ import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { Modal } from '@arco-design/web-react';
 import { t } from 'i18next';
+import {
+  createDownloadedAndRestartingContent,
+  createDownloadingContent,
+  createUpdateAvailableContent,
+} from '../../page/other/updateModal';
 
 interface UpdateInfo {
   version: string;
@@ -65,30 +70,7 @@ function showUpdateDialog(update: UpdateInfo) {
   let downloaded = 0;
   let total = 0;
 
-  const content = (
-    <div>
-      <p style={{ marginBottom: 12 }}>
-        {t('new_version_available')}: v{update.version}
-      </p>
-      {update.body && (
-        <div
-          style={{
-            maxHeight: 200,
-            overflow: 'auto',
-            background: 'var(--color-fill-1)',
-            padding: 12,
-            borderRadius: 4,
-            marginBottom: 12,
-            fontSize: 13,
-          }}
-        >
-          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
-            {formatReleaseNotes(update.body)}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
+  const content = createUpdateAvailableContent(update.version, update.body);
 
   updateModal = Modal.confirm({
     title: t('update_available'),
@@ -108,49 +90,32 @@ function showUpdateDialog(update: UpdateInfo) {
         okButtonProps: { loading: true, disabled: true },
         cancelButtonProps: { disabled: true },
         closable: false,
-        content: (
-          <div>
-            <p style={{ marginBottom: 8 }}>{t('downloading')}...</p>
-            <p style={{ color: 'var(--color-text-3)', fontSize: 13 }}>
-              {total > 0 ? `${formatBytes(downloaded)} / ${formatBytes(total)}` : formatBytes(downloaded)}
-            </p>
-          </div>
-        ),
+        content: createDownloadingContent(downloaded, total),
       });
 
       try {
         await update.downloadAndInstall((event) => {
           switch (event.event) {
-            case 'Started':
-              total = event.data.contentLength || 0;
+            case 'Started': {
+              const e = event as Extract<DownloadEvent, { event: 'Started' }>;
+              total = e.data.contentLength || 0;
               break;
-            case 'Progress':
-              downloaded += event.data.chunkLength;
+            }
+            case 'Progress': {
+              const e = event as Extract<DownloadEvent, { event: 'Progress' }>;
+              downloaded += e.data.chunkLength;
               updateModal?.update({
-                content: (
-                  <div>
-                    <p style={{ marginBottom: 8 }}>{t('downloading')}...</p>
-                    <p style={{ color: 'var(--color-text-3)', fontSize: 13 }}>
-                      {total > 0
-                        ? `${formatBytes(downloaded)} / ${formatBytes(total)} (${Math.round((downloaded / total) * 100)}%)`
-                        : formatBytes(downloaded)}
-                    </p>
-                  </div>
-                ),
+                content: createDownloadingContent(downloaded, total),
               });
               break;
+            }
             case 'Finished':
               updateModal?.update({
                 okText: t('ok'),
                 okButtonProps: { loading: false, disabled: true },
                 cancelButtonProps: { disabled: true },
                 closable: false,
-                content: (
-                  <div>
-                    <p>{t('download_complete')}</p>
-                    <p style={{ color: 'var(--color-text-3)', fontSize: 13 }}>{t('restarting_app')}</p>
-                  </div>
-                ),
+                content: createDownloadedAndRestartingContent(),
               });
               break;
           }
@@ -175,27 +140,4 @@ function showUpdateDialog(update: UpdateInfo) {
       updateModal = null;
     },
   });
-}
-
-/**
- * 格式化发布说明
- */
-function formatReleaseNotes(body: string): string {
-  // 移除 markdown 标题符号
-  return body
-    .replace(/^#+\s*/gm, '')
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/\*(.*?)\*/g, '$1')
-    .trim();
-}
-
-/**
- * 格式化字节大小
- */
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
