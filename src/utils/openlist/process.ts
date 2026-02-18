@@ -22,6 +22,14 @@ async function startOpenlist() {
     // 先保存配置到文件
     await modifyOpenlistConfig()
 
+    // 无条件重置 admin 密码，避免升级/迁移导致的密码不一致
+    try {
+        await setOpenlistPass(nmConfig.framework.openlist.password)
+    } catch (e) {
+        // 预启动阶段重置失败（例如 CLI 不可用），继续启动，稍后再尝试修复
+        console.warn('OpenList pre-start password reset failed, will retry after server starts:', e)
+    }
+
     const args: string[] = [
         'server',
         ...addParams()
@@ -48,9 +56,14 @@ async function startOpenlist() {
     openlistInfo.process.logFile = openlistLogFile()
     console.log('openlist spawned from Rust, PID:', pid)
 
-    // 服务启动后再设置密码和获取 token
-    await setOpenlistPass(nmConfig.framework.openlist.password)
-    openlistInfo.endpoint.auth.token = await getOpenlistToken()
+    // 服务启动后再获取 token；若失败则尝试重置密码后重试一次
+    try {
+        openlistInfo.endpoint.auth.token = await getOpenlistToken()
+    } catch (e) {
+        console.warn('OpenList token fetch failed, trying to reset password and retry:', e)
+        await setOpenlistPass(nmConfig.framework.openlist.password)
+        openlistInfo.endpoint.auth.token = await getOpenlistToken()
+    }
 
     // OpenList v4 默认可能未启用 WebDAV 权限，导致 rclone 访问 /dav 出现 403
     await ensureOpenlistWebdavPermissions(nmConfig.framework.openlist.user)

@@ -50,11 +50,11 @@ function detectDriverListStructure(data: unknown): 'object-map' | 'array' | 'unk
 // 将数组结构转换为对象映射结构
 function normalizeDriverList(data: unknown): Record<string, DriverInfo> {
     const structure = detectDriverListStructure(data);
-    
+
     if (structure === 'object-map') {
         return data as Record<string, DriverInfo>;
     }
-    
+
     if (structure === 'array') {
         const result: Record<string, DriverInfo> = {};
         (data as DriverInfo[]).forEach((driver) => {
@@ -63,7 +63,7 @@ function normalizeDriverList(data: unknown): Record<string, DriverInfo> {
         });
         return result;
     }
-    
+
     console.error('Unknown driver list structure:', data);
     return {};
 }
@@ -71,15 +71,15 @@ function normalizeDriverList(data: unknown): Record<string, DriverInfo> {
 // 安全获取驱动配置
 function safeGetDriverConfig(provider: DriverInfo, key: string): { name?: string } {
     const defaultConfig = { name: key };
-    
+
     if (!provider) return defaultConfig;
-    
+
     // 容错：config 可能缺失
     if (!provider.config) {
         console.warn(`Driver ${key} missing config field, using fallback`);
         return { name: key };
     }
-    
+
     return {
         name: provider.config.name || key
     };
@@ -88,35 +88,35 @@ function safeGetDriverConfig(provider: DriverInfo, key: string): { name?: string
 // 安全获取驱动参数列表
 function safeGetDriverOptions(provider: DriverInfo, field: 'common' | 'additional'): DriverOption[] {
     if (!provider) return [];
-    
+
     const options = provider[field];
-    
+
     if (!options) {
         console.warn(`Driver ${provider.name || 'unknown'} missing ${field} field`);
         return [];
     }
-    
+
     if (!Array.isArray(options)) {
         console.warn(`Driver ${provider.name || 'unknown'} ${field} is not an array`);
         return [];
     }
-    
+
     return options;
 }
 
 async function updateOpenlistStorageInfoList() {
     try {
         const response = await openlist_api_get('/api/admin/driver/list');
-        
+
         if (!response.data) {
             console.error('Failed to get driver list: no data in response', response);
             return [];
         }
-        
+
         // 归一化驱动列表（处理双结构）
         const openlistProviders = normalizeDriverList(response.data);
         const openlistStorageInfoList: StorageInfoType[] = [];
-        
+
         // 可选：回退方案 - 如果归一化失败，尝试使用 driver/names + driver/info
         if (Object.keys(openlistProviders).length === 0) {
             console.log('Driver list normalization failed, trying fallback approach...');
@@ -126,27 +126,27 @@ async function updateOpenlistStorageInfoList() {
         for (const key in openlistProviders) {
             try {
                 const provider = openlistProviders[key];
-                
+
                 // 容错：跳过无效的驱动数据
                 if (!provider || typeof provider !== 'object') {
                     console.warn(`Skipping invalid driver data for key: ${key}`);
                     continue;
                 }
-                
+
                 const config = safeGetDriverConfig(provider, key);
                 const commonOptions = safeGetDriverOptions(provider, 'common');
                 const additionalOptions = safeGetDriverOptions(provider, 'additional');
-                
+
                 const getStorageParams = (options: DriverOption[], prefix: string = ''): StorageParamItemType[] => {
                     const storageParams: StorageParamItemType[] = [];
-                    
+
                     for (const option of options) {
                         // 容错：跳过无效的选项
                         if (!option || typeof option !== 'object') {
                             console.warn(`Skipping invalid option in driver ${key}`);
                             continue;
                         }
-                        
+
                         const storageParam: StorageParamItemType = {
                             label: option.name || 'unknown',
                             name: prefix + (option.name || 'unknown'),
@@ -196,7 +196,7 @@ async function updateOpenlistStorageInfoList() {
                         }
 
                         // 为隐藏无用参数
-                        if (['mount_path', 'order', 'webdav_policy', 'web_proxy', 'remark', 'order_by', 'order_direction', 'enable_sign', 'cache_expiration', 'down_proxy_url', 'extract_folder'].includes(option.name)) {
+                        if (['mount_path', 'order', 'webdav_policy', 'web_proxy', 'remark', 'order_by', 'order_direction', 'enable_sign', 'cache_expiration', 'down_proxy_url', 'extract_folder', 'disable_index'].includes(option.name)) {
                             storageParam.hide = true;
                         }
 
@@ -234,7 +234,7 @@ async function updateOpenlistStorageInfoList() {
 
         console.log(`Successfully loaded ${openlistStorageInfoList.length} OpenList drivers`);
         return openlistStorageInfoList;
-        
+
     } catch (error) {
         console.error('Failed to update OpenList storage info list:', error);
         // 出错时返回空数组而不是抛出异常，避免UI崩溃
@@ -246,16 +246,16 @@ async function updateOpenlistStorageInfoList() {
 async function updateOpenlistStorageInfoListFallback(): Promise<StorageInfoType[]> {
     try {
         console.log('Using fallback: /api/admin/driver/names + /api/admin/driver/info');
-        
+
         // 获取驱动名称列表
         const namesResponse = await openlist_api_get('/api/admin/driver/names');
         if (!namesResponse.data || !Array.isArray(namesResponse.data)) {
             console.error('Failed to get driver names:', namesResponse);
             return [];
         }
-        
+
         const openlistStorageInfoList: StorageInfoType[] = [];
-        
+
         // 逐个获取驱动详情
         for (const driverName of namesResponse.data) {
             try {
@@ -264,13 +264,13 @@ async function updateOpenlistStorageInfoListFallback(): Promise<StorageInfoType[
                     console.warn(`Failed to get info for driver ${driverName}`);
                     continue;
                 }
-                
+
                 // 将单驱动信息转换为兼容格式
                 const provider = infoResponse.data;
                 const config = safeGetDriverConfig(provider, driverName);
                 const commonOptions = safeGetDriverOptions(provider, 'common');
                 const additionalOptions = safeGetDriverOptions(provider, 'additional');
-                
+
                 // 复用参数解析逻辑（简化版）
                 const parseOptions = (options: DriverOption[], prefix: string = ''): StorageParamItemType[] => {
                     return options.map(option => ({
@@ -284,12 +284,12 @@ async function updateOpenlistStorageInfoListFallback(): Promise<StorageInfoType[
                         isPassword: false,
                         mark: [],
                         hide: ['mount_path', 'order', 'webdav_policy', 'web_proxy', 'remark'].includes(option.name),
-                        select: option.type === 'select' && option.options 
+                        select: option.type === 'select' && option.options
                             ? option.options.split(',').map((item: string) => ({ label: item.trim(), value: item.trim(), help: item.trim() }))
                             : []
                     }));
                 };
-                
+
                 openlistStorageInfoList.push({
                     label: 'storage.' + normalizeStorageId(config.name ?? driverName),
                     type: driverName,
@@ -305,16 +305,16 @@ async function updateOpenlistStorageInfoListFallback(): Promise<StorageInfoType[
                         }
                     }
                 });
-                
+
             } catch (e) {
                 console.warn(`Error fetching driver info for ${driverName}:`, e);
                 continue;
             }
         }
-        
+
         console.log(`Fallback: Successfully loaded ${openlistStorageInfoList.length} OpenList drivers`);
         return openlistStorageInfoList;
-        
+
     } catch (error) {
         console.error('Fallback approach also failed:', error);
         return [];

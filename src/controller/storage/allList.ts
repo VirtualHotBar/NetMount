@@ -11,7 +11,7 @@ async function updateStorageInfoList() {
         ...(await updateRcloneStorageInfoList()),)
 
     //移除不需要的存储
-    const unneededStorages:string[]=['Virtual','Crypt','Alias','SMB','FTP','WebDAV']
+    const unneededStorages:string[]=['Virtual','Crypt','Alias','SMB','FTP','WebDav']
     storageInfoList=storageInfoList.filter(item => !unneededStorages.includes(item.type));
 
     //给存储排序

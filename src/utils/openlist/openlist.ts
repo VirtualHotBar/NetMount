@@ -6,6 +6,7 @@ import { nmConfig } from "../../services/config"
 import { rclone_api_post } from "../rclone/request"
 import { mergeObjects } from "../utils"
 import { openlist_api_get, openlist_api_post } from "./request"
+import { runSidecarOnce } from "../sidecar"
 
 
 
@@ -66,6 +67,20 @@ async function getOpenlistToken(): Promise<string> {
 }
 
 async function setOpenlistPass(pass: string) {
+    // v1.1.2 行为：每次启动都无条件写入 admin 密码，避免升级/迁移导致的“密码不一致”卡死。
+    // OpenList 提供 CLI：openlist --data <dir> admin set <pass>
+    try {
+        await runSidecarOnce(
+            'binaries/openlist',
+            ['--data', openlistDataDir(), 'admin', 'set', pass],
+            { timeoutMs: 15_000 }
+        )
+        return
+    } catch (e) {
+        console.warn('OpenList CLI password reset failed, falling back to API-based reset:', e)
+    }
+
+    // Fallback: try to reset via admin API (requires server to be running).
     const username = nmConfig.framework.openlist.user
 
     // Fast path: if desired password already works, just set token and return.

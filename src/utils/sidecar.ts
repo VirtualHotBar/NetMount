@@ -8,12 +8,30 @@ type WaitReadyOptions = {
   logEveryMs?: number
 }
 
+type RunSidecarOnceResult = {
+  code: number
+  stdout: string
+  stderr: string
+}
+
 function shortSidecarName(nameOrBinary: string): string {
   return nameOrBinary.includes('/') ? (nameOrBinary.split('/').pop() || nameOrBinary) : nameOrBinary
 }
 
 async function spawnSidecar(binary: string, args: string[]): Promise<number> {
   return await invoke<number>('spawn_sidecar', { name: binary, args })
+}
+
+async function runSidecarOnce(
+  binary: string,
+  args: string[],
+  opts?: { timeoutMs?: number }
+): Promise<RunSidecarOnceResult> {
+  return await invoke<RunSidecarOnceResult>('run_sidecar_once', {
+    name: binary,
+    args,
+    timeout_ms: opts?.timeoutMs,
+  })
 }
 
 async function killSidecar(nameOrBinary: string): Promise<boolean> {
@@ -46,5 +64,4 @@ async function waitForReady(check: () => Promise<boolean>, opts: WaitReadyOption
   }
 }
 
-export { spawnSidecar, killSidecar, waitForReady, shortSidecarName }
-
+export { spawnSidecar, runSidecarOnce, killSidecar, waitForReady, shortSidecarName }

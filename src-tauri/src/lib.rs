@@ -218,6 +218,7 @@ pub fn init() -> anyhow::Result<()> {
             copy_file,
             register_sidecar_pid,
             spawn_sidecar,
+            run_sidecar_once,
             kill_sidecar
         ])
         .setup(|app| {
@@ -599,6 +600,140 @@ async fn spawn_sidecar(
     }
     
     Ok(pid)
+}
+
+#[derive(serde::Serialize)]
+struct RunSidecarOnceResult {
+    code: i32,
+    stdout: String,
+    stderr: String,
+}
+
+#[tauri::command]
+async fn run_sidecar_once(
+    app: tauri::AppHandle<Runtime>,
+    name: String,
+    args: Vec<String>,
+    timeout_ms: Option<u64>,
+) -> Result<RunSidecarOnceResult, String> {
+    use std::io::Write as _;
+    use std::process::Stdio;
+
+    // 从 "binaries/rclone" 提取 "rclone"
+    let sidecar_name = name.split('/').last().unwrap_or(&name);
+
+    // 构建 target triple（与 build.rs 保持一致）
+    let target_triple = format!(
+        "{}-{}",
+        match env::consts::ARCH {
+            "x86_64" => "x86_64",
+            "x86" => "i686",
+            "aarch64" => "aarch64",
+            _ => env::consts::ARCH,
+        },
+        match env::consts::OS {
+            "windows" => "pc-windows-msvc",
+            "linux" => "unknown-linux-gnu",
+            "macos" => "apple-darwin",
+            _ => env::consts::OS,
+        }
+    );
+
+    let sidecar_path = app
+        .path()
+        .resolve(
+            format!(
+                "binaries/{}-{}{}",
+                sidecar_name,
+                target_triple,
+                if env::consts::OS == "windows" { ".exe" } else { "" }
+            ),
+            tauri::path::BaseDirectory::Resource,
+        )
+        .map_err(|e| format!("Failed to resolve sidecar path: {}", e))?;
+
+    let work_dir = app
+        .path()
+        .home_dir()
+        .map_err(|e| format!("Failed to get home dir: {}", e))?
+        .join(".netmount");
+    if !work_dir.exists() {
+        let _ = std::fs::create_dir_all(&work_dir);
+    }
+
+    // sidecar 统一诊断日志：~/.netmount/log/sidecar-<name>.log
+    let log_dir = work_dir.join("log");
+    let _ = std::fs::create_dir_all(&log_dir);
+    let sidecar_log_path = log_dir.join(format!("sidecar-{}.log", sidecar_name));
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&sidecar_log_path)
+    {
+        let _ = writeln!(
+            f,
+            "\n=== run once {} ===\npath: {}\nargs: {}\n",
+            sidecar_name,
+            sidecar_path.display(),
+            args.join(" ")
+        );
+    }
+
+    let mut cmd = std::process::Command::new(&sidecar_path);
+    cmd.args(&args)
+        .current_dir(&work_dir)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        use winapi::um::winbase::CREATE_NO_WINDOW;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    let child = tokio::process::Command::from(cmd)
+        .spawn()
+        .map_err(|e| format!("Failed to spawn sidecar: {}", e))?;
+
+    let timeout_ms = timeout_ms.unwrap_or(15_000);
+    let output = tokio::time::timeout(tokio::time::Duration::from_millis(timeout_ms), child.wait_with_output())
+        .await
+        .map_err(|_| format!("Sidecar {} timed out after {}ms", sidecar_name, timeout_ms))?
+        .map_err(|e| format!("Failed to wait sidecar {}: {}", sidecar_name, e))?;
+
+    let code = output.status.code().unwrap_or(-1);
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&sidecar_log_path)
+    {
+        let _ = writeln!(f, "[exit] code: {}", code);
+        if !stdout.trim().is_empty() {
+            let _ = writeln!(f, "[stdout]\n{}", stdout.trim_end());
+        }
+        if !stderr.trim().is_empty() {
+            let _ = writeln!(f, "[stderr]\n{}", stderr.trim_end());
+        }
+    }
+
+    if output.status.success() {
+        return Ok(RunSidecarOnceResult { code, stdout, stderr });
+    }
+
+    let mut msg = format!("Sidecar {} exited with code {}", sidecar_name, code);
+    if !stdout.trim().is_empty() {
+        msg.push_str("\nstdout:\n");
+        msg.push_str(stdout.trim_end());
+    }
+    if !stderr.trim().is_empty() {
+        msg.push_str("\nstderr:\n");
+        msg.push_str(stderr.trim_end());
+    }
+    Err(msg)
 }
 
 #[tauri::command]
