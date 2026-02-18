@@ -67,8 +67,9 @@ async function getOpenlistToken(): Promise<string> {
 }
 
 async function setOpenlistPass(pass: string) {
-    // v1.1.2 行为：每次启动都无条件写入 admin 密码，避免升级/迁移导致的“密码不一致”卡死。
+    // v1.1.2 行为：每次启动都无条件写入 admin 密码，避免升级/迁移导致的"密码不一致"卡死。
     // OpenList 提供 CLI：openlist --data <dir> admin set <pass>
+    // 预启动阶段可能失败（数据库不存在），服务启动后再调用此函数会成功
     try {
         await runSidecarOnce(
             'binaries/openlist',
@@ -77,66 +78,9 @@ async function setOpenlistPass(pass: string) {
         )
         return
     } catch (e) {
-        console.warn('OpenList CLI password reset failed, falling back to API-based reset:', e)
+        console.warn('OpenList CLI password reset failed:', e)
+        throw new Error('OpenList CLI password reset failed')
     }
-
-    // Fallback: try to reset via admin API (requires server to be running).
-    const username = nmConfig.framework.openlist.user
-
-    // Fast path: if desired password already works, just set token and return.
-    try {
-        const token = await openlist_login(username, pass)
-        openlistInfo.endpoint.auth.token = token
-        return
-    } catch {
-        // continue
-    }
-
-    // Bootstrap path: try common defaults, then update password via admin API.
-    const fallbackPasswords = ['admin', '']
-    let bootstrapToken = ''
-    for (const p of fallbackPasswords) {
-        try {
-            bootstrapToken = await openlist_login(username, p)
-            break
-        } catch {
-            // try next
-        }
-    }
-
-    if (!bootstrapToken) {
-        throw new Error('OpenList password mismatch: cannot login with configured password and no bootstrap password worked')
-    }
-
-    openlistInfo.endpoint.auth.token = bootstrapToken
-
-    // Find user, then update password
-    const listRes = await openlist_api_get('/api/admin/user/list')
-    const list = (listRes.data?.content as OpenlistUser[]) || []
-    const user = list.find(u => u?.username === username)
-    if (!user) {
-        throw new Error(`OpenList user not found for password update: ${username}`)
-    }
-
-    const updateBody: OpenlistUser & { password: string } = {
-        id: user.id,
-        username: user.username,
-        password: pass,
-        base_path: user.base_path ?? '/',
-        role: user.role ?? 0,
-        permission: user.permission ?? 0,
-        disabled: user.disabled ?? false,
-        sso_id: user.sso_id ?? '',
-    }
-
-    const updateRes = await openlist_api_post('/api/admin/user/update', updateBody)
-    if (updateRes.code !== 200) {
-        throw new Error(`OpenList password update failed: ${JSON.stringify(updateRes)}`)
-    }
-
-    // Re-login using desired password
-    const token = await openlist_login(username, pass)
-    openlistInfo.endpoint.auth.token = token
 }
 
 type OpenlistConfig = typeof openlistInfo.openlistConfig;
