@@ -141,6 +141,9 @@ fn main() -> anyhow::Result<()> {
     println!("cargo:rerun-if-env-changed=NETMOUNT_SKIP_WINFSP_DOWNLOAD");
     println!("cargo:rerun-if-env-changed=NETMOUNT_GITHUB_PROXY");
     println!("cargo:rerun-if-env-changed=NETMOUNT_SKIP_TAURI_BUILD");
+    // 交叉编译时目标架构会变化，需要重新运行 build.rs
+    println!("cargo:rerun-if-env-changed=CARGO_CFG_TARGET_ARCH");
+    println!("cargo:rerun-if-env-changed=CARGO_CFG_TARGET_OS");
     // Locales are compiled into OUT_DIR/language.rs at build-time, so we must
     // tell Cargo to rerun build.rs when any locale json changes.
     println!("cargo:rerun-if-changed=locales/");
@@ -663,6 +666,13 @@ fn get_target_triple() -> String {
 }
 
 fn get_arch() -> String {
+    // 优先使用 Cargo 提供的目标架构（支持交叉编译）
+    // CARGO_CFG_TARGET_ARCH 在交叉编译时会被设置为正确的目标架构
+    if let Ok(target_arch) = env::var("CARGO_CFG_TARGET_ARCH") {
+        return target_arch;
+    }
+
+    // 降级方案：检测构建机器架构
     #[cfg(not(target_os = "windows"))]
     {
         use std::process::Command;
@@ -672,13 +682,12 @@ fn get_arch() -> String {
             .output()
             .expect("failed to execute process");
 
-        
         if !output.status.success() {
             panic!("uname command failed");
         }
         return String::from_utf8_lossy(&output.stdout).trim().to_string();
     }
-    return env::consts::ARCH.to_owned();
+    env::consts::ARCH.to_owned()
 }
 
 use futures_util::stream::StreamExt;

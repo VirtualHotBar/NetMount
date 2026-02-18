@@ -218,6 +218,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
+      - name: Install Windows dependencies (WiX)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          choco install wixtoolset --version 3.14.1 --no-progress -y
+          echo "C:\Program Files (x86)\WiX Toolset v3.14\bin" >> $env:GITHUB_PATH
+
       - run: pnpm install --frozen-lockfile
 
       - name: Build Tauri app
