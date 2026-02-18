@@ -21,12 +21,15 @@ concurrency:
 env:
   NODE_VERSION: '20'
   RUST_TOOLCHAIN: stable
+  # 用于缓存二进制文件的 key
+  RCLONE_VERSION: "current"
+  OPENLIST_VERSION: "v4.1.10"
 
 jobs:
-  # ========== PR / Push 检查 ==========
-  check-i18n:
+  # ========== 快速检查（合并为一个 job，并行执行所有检查）==========
+  quick-checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -36,39 +39,46 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run check:i18n
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          shared-key: check
 
-  lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
+      # 一次性安装所有依赖
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-  type-check:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: npx tsc --noEmit
+      # 并行运行所有检查
+      - name: Run checks
+        run: |
+          # 使用后台进程并行运行
+          pnpm run check:i18n &
+          I18N_PID=$!
+          
+          pnpm run lint &
+          LINT_PID=$!
+          
+          npx tsc --noEmit &
+          TSC_PID=$!
+          
+          # 等待所有后台任务完成，并收集退出码
+          wait $I18N_PID
+          I18N_EXIT=$?
+          
+          wait $LINT_PID
+          LINT_EXIT=$?
+          
+          wait $TSC_PID
+          TSC_EXIT=$?
+          
+          # 如果任何检查失败，返回非零退出码
+          if [ $I18N_EXIT -ne 0 ] || [ $LINT_EXIT -ne 0 ] || [ $TSC_EXIT -ne 0 ]; then
+            echo "Checks failed: i18n=$I18N_EXIT lint=$LINT_EXIT tsc=$TSC_EXIT"
+            exit 1
+          fi
 
+  # ========== 前端构建（独立 job，可并行）==========
   frontend-build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -84,7 +94,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
 
-  # Tauri 构建检查（仅在 PR/push 时运行，不生成产物）
+  # ========== Tauri 构建检查（使用缓存的二进制文件）==========
   tauri-check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -98,24 +108,40 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
           shared-key: tauri-check
-      - name: install system dependencies
+
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      # 缓存二进制文件（rclone/openlist）
+      - name: Cache binaries
+        uses: actions/cache@v4
+        id: cache-binaries
+        with:
+          path: |
+            src-tauri/binaries/rclone
+            src-tauri/binaries/openlist
+            src-tauri/binaries/rclone-x86_64-unknown-linux-gnu
+            src-tauri/binaries/openlist-x86_64-unknown-linux-gnu
+          key: binaries-linux-x86_64-${{ env.RCLONE_VERSION }}-${{ env.OPENLIST_VERSION }}
+
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run tauri build --no-bundle
+
+      # 如果缓存命中，跳过下载
+      - name: Build Tauri (check only)
+        run: pnpm run tauri build --no-bundle
         env:
           RUST_BACKTRACE: 1
+          NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.cache-binaries.outputs.cache-hit }}
 
-  # ========== Release 创建（Tag Push 自动触发，手动触发可选）==========
+  # ========== Release 创建 ==========
   create-release:
-    needs: [check-i18n, lint, type-check, frontend-build, tauri-check]
+    needs: [quick-checks, frontend-build, tauri-check]
     if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true')
     permissions:
       contents: write
@@ -166,7 +192,7 @@ jobs:
             })
             return data.id
 
-  # ========== 多平台构建 Tauri 应用 ==========
+  # ========== 多平台构建 Tauri 应用（使用缓存优化）==========
   build-tauri:
     needs: [create-release]
     if: needs.create-release.result == 'success'
@@ -179,15 +205,19 @@ jobs:
           - platform: 'macos-latest'
             target: 'aarch64-apple-darwin'
             args: '--target aarch64-apple-darwin'
+            arch: 'aarch64'
           - platform: 'macos-latest'
             target: 'x86_64-apple-darwin'
             args: '--target x86_64-apple-darwin'
+            arch: 'x86_64'
           - platform: 'ubuntu-22.04'
             target: 'x86_64-unknown-linux-gnu'
             args: ''
+            arch: 'x86_64'
           - platform: 'windows-latest'
             target: 'x86_64-pc-windows-msvc'
             args: ''
+            arch: 'x86_64'
     runs-on: ${{ matrix.platform }}
     timeout-minutes: 30
     steps:
@@ -205,12 +235,26 @@ jobs:
           toolchain: stable
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
+      # Rust 缓存 - 按目标平台分离缓存
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
           key: ${{ matrix.target }}
           cache-on-failure: true
+
+      # 缓存二进制文件
+      - name: Cache binaries
+        uses: actions/cache@v4
+        id: cache-binaries
+        with:
+          path: |
+            src-tauri/binaries/rclone
+            src-tauri/binaries/openlist
+            src-tauri/binaries/rclone-${{ matrix.target }}${{ matrix.platform == 'windows-latest' && '.exe' || '' }}
+            src-tauri/binaries/openlist-${{ matrix.target }}${{ matrix.platform == 'windows-latest' && '.exe' || '' }}
+            src-tauri/binaries/winfsp.msi
+          key: binaries-${{ matrix.target }}-${{ env.RCLONE_VERSION }}-${{ env.OPENLIST_VERSION }}
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
@@ -226,10 +270,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # 如果二进制文件已缓存，跳过下载
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 使用缓存时跳过下载
+          NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.cache-binaries.outputs.cache-hit }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.args }}
