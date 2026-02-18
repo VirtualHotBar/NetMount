@@ -657,20 +657,24 @@ fn rename_sidecar_binary(bin_path: &str, name: &str, original_name: &str) {
 }
 
 fn get_target_triple() -> String {
-    let os = match env::consts::OS {
+    // 优先使用 Cargo 提供的目标信息（支持交叉编译）
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_else(|_| env::consts::OS.to_string());
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_else(|_| env::consts::ARCH.to_string());
+    
+    let os = match target_os.as_str() {
         "windows" => "pc-windows-msvc",
         "linux" => "unknown-linux-gnu",
         "macos" => "apple-darwin",
         "freebsd" => "unknown-freebsd",
-        _ => env::consts::OS,
+        _ => &target_os,
     };
     
-    let arch = match env::consts::ARCH {
+    let arch = match target_arch.as_str() {
         "x86_64" => "x86_64",
         "x86" => "i686",
         "aarch64" | "arm64" => "aarch64",
         "arm" => "armv7",
-        _ => env::consts::ARCH,
+        _ => &target_arch,
     };
     
     format!("{}-{}", arch, os)
