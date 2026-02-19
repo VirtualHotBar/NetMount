@@ -10,8 +10,8 @@ async function updateStorageInfoList() {
         ...(await updateOpenlistStorageInfoList()),
         ...(await updateRcloneStorageInfoList()),)
 
-    //移除不需要的存储
-    const unneededStorages:string[]=['Virtual','Crypt','Alias','SMB','FTP','WebDav']
+    //移除不需要的存储（一般有大写是openlist，全小写是rclone）
+    const unneededStorages:string[]=['Virtual','Crypt','Alias','SMB','FTP','Chunk','WebDav','UrlTree','onedrive']
     storageInfoList=storageInfoList.filter(item => !unneededStorages.includes(item.type));
 
     //给存储排序

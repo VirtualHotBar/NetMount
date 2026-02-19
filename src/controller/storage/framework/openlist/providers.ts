@@ -196,7 +196,22 @@ async function updateOpenlistStorageInfoList() {
                         }
 
                         // 为隐藏无用参数
-                        if (['mount_path', 'order', 'webdav_policy', 'web_proxy', 'remark', 'order_by', 'order_direction', 'enable_sign', 'cache_expiration', 'down_proxy_url', 'extract_folder', 'disable_index'].includes(option.name)) {
+                        if (['mount_path',
+                            'order',
+                            'webdav_policy',
+                            'web_proxy',
+                            'remark',
+                            'order_by',
+                            'order_direction',
+                            'enable_sign',
+                            'cache_expiration',
+                            'down_proxy_url',
+                            'extract_folder',
+                            'disable_index',
+                            'disable_proxy_sign',
+                            'custom_cache_policies',
+                            'disable_disk_usage',
+                            'enable_direct_upload'].includes(option.name)) {
                             storageParam.hide = true;
                         }
 
@@ -204,6 +219,17 @@ async function updateOpenlistStorageInfoList() {
                         if (option.name === 'webdav_policy') {
                             storageParam.default = "native_proxy"; // 本机代理
                         }
+
+                        // 设置不缓存
+                        if (option.name === 'cache_expiration') {
+                            storageParam.default = "0"; // 不缓存
+                        }
+
+                        // 设置容量使用显示
+                        if (option.name === 'disable_disk_usage') {
+                            storageParam.default = "false";
+                        }
+
 
                         storageParams.push(storageParam);
                     }
