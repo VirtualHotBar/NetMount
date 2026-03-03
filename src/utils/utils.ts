@@ -304,3 +304,7 @@ export async function sleep(ms: number) {
 export async function getAvailablePorts(count: number = 1) {
     return await invoke('get_available_ports',{count:count}) as number[]
 }
+
+export async function isPortAvailable(port: number) {
+    return await invoke('is_port_available', { port }) as boolean
+}

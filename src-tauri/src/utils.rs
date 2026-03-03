@@ -19,6 +19,11 @@ pub fn get_available_ports(count: usize) -> Vec<u16> {
     ports
 }
 
+pub fn is_port_available(port: u16) -> bool {
+    use std::net::TcpListener;
+    TcpListener::bind(format!("127.0.0.1:{}", port)).is_ok()
+}
+
 #[cfg(target_os = "windows")]
 #[tauri::command]
 pub fn find_first_available_drive_letter() -> Result<Option<String>, io::Error> {

@@ -1,5 +1,5 @@
 import { Child } from "@tauri-apps/plugin-shell";
-import { formatPath, getAvailablePorts } from "../utils";
+import { formatPath, getAvailablePorts, isPortAvailable } from "../utils";
 import { openlistInfo } from "../../services/openlist";
 import { nmConfig, osInfo } from "../../services/config";
 import { ensureOpenlistWebdavPermissions, getOpenlistToken, modifyOpenlistConfig, setOpenlistPass } from "./openlist";
@@ -7,15 +7,42 @@ import { openlist_api_ping } from "./request";
 import { addParams, openlistDataDir } from "./paths";
 import { openlistLogFile } from "../netmountPaths";
 import { restartSidecar, startSidecarAndWait, stopSidecarGracefully } from "../sidecarService";
+import { invoke } from "@tauri-apps/api/core";
 
 async function startOpenlist() {
     //设置默认临时(缓存)目录
     openlistInfo.openlistConfig.temp_dir = formatPath(nmConfig.settings.path.cacheDir + '/openlist/', osInfo.osType === "windows")
 
-    //自动分配端口
-    openlistInfo.openlistConfig.scheme!.http_port = (await getAvailablePorts(2))[1]!
+    // 检查配置文件中是否已有端口配置
+    const dataDir = openlistDataDir()
+    const configPath = dataDir + '/config.json'
+    let existingPort: number | null = null
+    
+    try {
+        const oldConfig = await invoke('read_json_file', { path: configPath }) as Record<string, unknown>
+        if (oldConfig?.scheme && typeof oldConfig.scheme === 'object') {
+            const scheme = oldConfig.scheme as Record<string, unknown>
+            if (scheme.http_port && typeof scheme.http_port === 'number') {
+                existingPort = scheme.http_port
+                console.log('Found existing port in config:', existingPort)
+            }
+        }
+    } catch (e) {
+        console.log('No existing config file or unable to read:', e)
+    }
 
-    openlistInfo.endpoint.url = 'http://localhost:' + (openlistInfo.openlistConfig.scheme?.http_port || 5573)
+    // 如果配置文件中有端口且端口可用，则复用；否则分配新端口
+    let port: number
+    if (existingPort && await isPortAvailable(existingPort)) {
+        port = existingPort
+        console.log('Reusing existing port:', port, '(port is available)')
+    } else {
+        port = (await getAvailablePorts(2))[1]!
+        console.log('Allocating new port:', port, existingPort ? '(existing port is occupied)' : '')
+    }
+
+    openlistInfo.openlistConfig.scheme!.http_port = port
+    openlistInfo.endpoint.url = 'http://localhost:' + port
     console.log('OpenList will start on port:', openlistInfo.openlistConfig.scheme?.http_port)
     console.log('OpenList endpoint URL:', openlistInfo.endpoint.url)
 
