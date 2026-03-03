@@ -67,6 +67,10 @@ async function startOpenlist() {
 
     // OpenList v4 默认可能未启用 WebDAV 权限，导致 rclone 访问 /dav 出现 403
     await ensureOpenlistWebdavPermissions(nmConfig.framework.openlist.user)
+
+    // OpenList 在用户更新后可能使旧 token 失效（PwdTS 变化），这里强制刷新一次 token
+    openlistInfo.endpoint.auth.token = ''
+    openlistInfo.endpoint.auth.token = await getOpenlistToken()
 }
 
 async function stopOpenlist() {
