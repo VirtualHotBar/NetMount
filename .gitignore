@@ -28,3 +28,5 @@ src-tauri/res/bin
 mark.md
 changelog.md
 tauri_netmount.key
+
+.tmp_openlist_src
