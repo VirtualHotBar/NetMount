@@ -152,6 +152,83 @@ fn maybe_add_redacted_json_file<W: Write + Seek>(
     Ok(())
 }
 
+fn maybe_add_mount_snapshot<W: Write + Seek>(
+    app: &tauri::AppHandle<Runtime>,
+    zip: &mut zip::ZipWriter<W>,
+    entry_name: &str,
+    path: &Path,
+) -> anyhow::Result<()> {
+    if !path.exists() {
+        return Ok(());
+    }
+    ensure_under_app_data_dir(app, path)?;
+
+    let content = fs::read_to_string(path)?;
+    let json: serde_json::Value = serde_json::from_str(&content)?;
+    let lists = json
+        .get("mount")
+        .and_then(|v| v.get("lists"))
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default();
+
+    let mounts: Vec<serde_json::Value> = lists
+        .iter()
+        .map(|item| {
+            let storage_name = item
+                .get("storageName")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default();
+            let mount_path = item
+                .get("mountPath")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default();
+            let auto_mount = item
+                .get("autoMount")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+
+            let vfs_opt = item
+                .get("parameters")
+                .and_then(|v| v.get("vfsOpt"))
+                .unwrap_or(&serde_json::Value::Null);
+            let mount_opt = item
+                .get("parameters")
+                .and_then(|v| v.get("mountOpt"))
+                .unwrap_or(&serde_json::Value::Null);
+
+            serde_json::json!({
+                "storageName": storage_name,
+                "mountPath": mount_path,
+                "autoMount": auto_mount,
+                "vfs": {
+                    "CacheMode": vfs_opt.get("CacheMode"),
+                    "CacheMaxSize": vfs_opt.get("CacheMaxSize"),
+                    "CacheMaxAge": vfs_opt.get("CacheMaxAge"),
+                    "ReadOnly": vfs_opt.get("ReadOnly"),
+                    "WriteBack": vfs_opt.get("WriteBack")
+                },
+                "mount": {
+                    "MountType": mount_opt.get("MountType"),
+                    "NetworkMode": mount_opt.get("NetworkMode"),
+                    "VolumeName": mount_opt.get("VolumeName"),
+                    "AllowOther": mount_opt.get("AllowOther"),
+                    "AllowRoot": mount_opt.get("AllowRoot")
+                }
+            })
+        })
+        .collect();
+
+    let snapshot = serde_json::json!({
+        "count": mounts.len(),
+        "mounts": mounts
+    });
+
+    let pretty = serde_json::to_string_pretty(&snapshot)?;
+    zip_add_string(zip, entry_name, &pretty)?;
+    Ok(())
+}
+
 #[tauri::command]
 pub fn export_diagnostics(
     app: tauri::AppHandle<Runtime>,
@@ -206,6 +283,14 @@ pub fn export_diagnostics(
         ) {
             warnings.push(format!("openlist config: {}", e));
         }
+        if let Err(e) = maybe_add_mount_snapshot(
+            app,
+            &mut zip,
+            "netmount/mount.snapshot.json",
+            &data_dir.join("config.json"),
+        ) {
+            warnings.push(format!("mount snapshot: {}", e));
+        }
 
         // log tails
         if let Err(e) = maybe_add_tail_file(
@@ -255,4 +340,3 @@ fn now_ms() -> u128 {
         .map(|d| d.as_millis())
         .unwrap_or(0)
 }
-

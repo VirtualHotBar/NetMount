@@ -1,4 +1,4 @@
-import { Button, Checkbox, Form, FormInstance, Input, Notification, Radio, Select, Space } from '@arco-design/web-react'
+import { Alert, Button, Checkbox, Form, FormInstance, Input, Notification, Radio, Select, Space } from '@arco-design/web-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +34,7 @@ export default function AddMount_page() {
     const storageList = filterHideStorage(rcloneInfo.storageList)
     const isEditMode = (getURLSearchParam('edit') === 'true')
     const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows');
+    const isMacOS = rcloneInfo.version.os.toLowerCase().includes('darwin');
 
     // 判断是否为预定义路径：自动盘符、桌面路径
     const isPredefinedPath = mountPath === '*' || mountPath.startsWith('~/Desktop/');
@@ -41,6 +42,7 @@ export default function AddMount_page() {
     const isMountPathCustom = !isPredefinedPath;
     // 是否为盘符路径（Windows）：自动盘符或盘符格式
     const mountPathuIsDriveLetter = isWindows && (mountPath === '*' || mountPath.endsWith(':') || mountPath.endsWith(':/'));
+    const cacheMode = String(parameters.vfsOpt.CacheMode || 'writes').toLowerCase();
 
     const checkWinFspState = async () => {
         if (osInfo.osType === "windows" && rcloneInfo.endpoint.isLocal) {
@@ -144,9 +146,39 @@ export default function AddMount_page() {
     }, [storageName])
 
     useEffect(() => {
+        if (isMacOS && !parameters.mountOpt.MountType) {
+            setParameters((prev) => ({
+                ...prev,
+                mountOpt: {
+                    ...prev.mountOpt,
+                    MountType: 'nfsmount'
+                }
+            }));
+            mountOptFormHook?.setFieldsValue({ MountType: 'nfsmount' });
+        }
+    }, [isMacOS, mountOptFormHook, parameters.mountOpt.MountType])
+
+    useEffect(() => {
         vfsOptFormHook && vfsOptFormHook.setFieldsValue(parameters.vfsOpt);
         mountOptFormHook && mountOptFormHook.setFieldsValue(parameters.mountOpt)
     }, [vfsOptFormHook, mountOptFormHook])
+
+    const applyCachePreset = (mode: 'off' | 'minimal' | 'writes' | 'full') => {
+        const next = { ...parameters.vfsOpt, CacheMode: mode };
+        if (mode === 'off' || mode === 'minimal') {
+            next.CacheMaxSize = 1073741824; // 1GB
+            next.WriteBack = 1000000000; // 1s
+        } else if (mode === 'writes') {
+            next.CacheMaxSize = 10737418240; // 10GB
+            next.WriteBack = 5000000000; // 5s
+        } else {
+            next.CacheMaxSize = 21474836480; // 20GB
+            next.WriteBack = 15000000000; // 15s
+            next.ReadAhead = 67108864; // 64MB
+        }
+        setParameters({ ...parameters, vfsOpt: next });
+        vfsOptFormHook?.setFieldsValue(next);
+    }
 
 
 
@@ -206,23 +238,78 @@ export default function AddMount_page() {
                 </FormItem>
 
                 {!showAllOptions &&
-                    <FormItem label={t('mount_options')}>
-                        <Space>
-                            <Checkbox checked={parameters.vfsOpt.ReadOnly} onChange={(checked) => {
-                                vfsOptFormHook?.setFieldValue('ReadOnly', checked)
-                            }} >{t('read_only')}</Checkbox>
-                            {mountPathuIsDriveLetter && <Checkbox checked={!parameters.mountOpt.NetworkMode} onChange={(checked) => {
-                                mountOptFormHook?.setFieldValue('NetworkMode', !checked)
-                            }} >{t('simulate_hard_drive')}</Checkbox>}
-                        </Space>
-                    </FormItem>
+                    <>
+                        <FormItem label={t('mount_options')}>
+                            <Space>
+                                <Checkbox checked={parameters.vfsOpt.ReadOnly} onChange={(checked) => {
+                                    vfsOptFormHook?.setFieldValue('ReadOnly', checked)
+                                }} >{t('read_only')}</Checkbox>
+                                {mountPathuIsDriveLetter && <Checkbox checked={!parameters.mountOpt.NetworkMode} onChange={(checked) => {
+                                    mountOptFormHook?.setFieldValue('NetworkMode', !checked)
+                                }} >{t('simulate_hard_drive')}</Checkbox>}
+                            </Space>
+                        </FormItem>
+                        {isMacOS && (
+                            <FormItem label={t('mount_backend')}>
+                                <Select
+                                    value={parameters.mountOpt.MountType || 'nfsmount'}
+                                    onChange={(value) => {
+                                        setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, MountType: value } })
+                                        mountOptFormHook?.setFieldValue('MountType', value)
+                                    }}
+                                >
+                                    <Select.Option value="nfsmount">nfsmount ({t('recommend')})</Select.Option>
+                                    <Select.Option value="fuse-t">fuse-t</Select.Option>
+                                    <Select.Option value="macfuse">macfuse</Select.Option>
+                                </Select>
+                            </FormItem>
+                        )}
+                        <FormItem label={t('cache_strategy')}>
+                            <Space wrap>
+                                <Button type={cacheMode === 'writes' ? 'primary' : 'secondary'} onClick={() => applyCachePreset('writes')}>{t('preset_balanced')}</Button>
+                                <Button type={cacheMode === 'full' ? 'primary' : 'secondary'} onClick={() => applyCachePreset('full')}>{t('preset_performance')}</Button>
+                                <Button type={cacheMode === 'minimal' ? 'primary' : 'secondary'} onClick={() => applyCachePreset('minimal')}>{t('preset_low_disk')}</Button>
+                                <Button type={cacheMode === 'off' ? 'primary' : 'secondary'} onClick={() => applyCachePreset('off')}>{t('preset_compatibility')}</Button>
+                            </Space>
+                        </FormItem>
+                    </>
                 }
+                {!showAllOptions && (
+                    <Alert
+                        style={{ marginTop: '0.5rem' }}
+                        type={cacheMode === 'full' ? 'warning' : 'info'}
+                        content={
+                            cacheMode === 'full'
+                                ? t('cache_mode_tip_full')
+                                : cacheMode === 'off'
+                                    ? t('cache_mode_tip_off')
+                                    : cacheMode === 'minimal'
+                                        ? t('cache_mode_tip_minimal')
+                                        : t('cache_mode_tip_writes')
+                        }
+                    />
+                )}
+                {showAllOptions && isMacOS && (
+                    <FormItem label={t('mount_backend')}>
+                        <Select
+                            value={parameters.mountOpt.MountType || 'nfsmount'}
+                            onChange={(value) => {
+                                setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, MountType: value } })
+                                mountOptFormHook?.setFieldValue('MountType', value)
+                            }}
+                        >
+                            <Select.Option value="nfsmount">nfsmount ({t('recommend')})</Select.Option>
+                            <Select.Option value="fuse-t">fuse-t</Select.Option>
+                            <Select.Option value="macfuse">macfuse</Select.Option>
+                        </Select>
+                    </FormItem>
+                )}
             </div>
 
             {/* 高级选项 - 仅在展开时显示 */}
             {
                 <div style={{ display: showAllOptions ? 'block' : 'none' }}>
-                    <InputForm_module data={paramsType2FormItems(defaultMountConfig)} onChange={(data) => {
+                    <InputForm_module data={paramsType2FormItems(defaultMountConfig, undefined, ['MountType'])} onChange={(data) => {
                         setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, ...data } })
                     }} overwriteValues={parameters.mountOpt as unknown as ParametersType} setFormHook={(form) => {
                         //form.setFieldsValue(parameters.mountOpt)
@@ -230,7 +317,7 @@ export default function AddMount_page() {
                     }} />
                     <InputForm_module data={[vfsCacheModeParam, ...paramsType2FormItems(defaultVfsConfig, undefined, ['CacheMode'])]} onChange={(data) => {
                         setParameters({ ...parameters, vfsOpt: { ...parameters.vfsOpt, ...data } })
-                    }} overwriteValues={{ ...parameters.vfsOpt, CacheMode: 'full' } as unknown as ParametersType} setFormHook={(form) => {
+                    }} overwriteValues={parameters.vfsOpt as unknown as ParametersType} setFormHook={(form) => {
                         //form.setFieldsValue(parameters.vfsOpt);
                         setVfsOptFormHook(form)
                     }} />

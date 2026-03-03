@@ -32,6 +32,26 @@
 - 启动开发环境：pnpm tauri-dev
 - 构建可执行文件：pnpm tauri-build
 
+## 挂载策略建议（Issue #102）
+
+新增挂载或排查挂载问题时，建议优先按以下策略配置：
+
+- 缓存模式（CacheMode）：
+  - `writes`：默认推荐，读写平衡，适合大多数场景。
+  - `full`：兼容性更好，但本地缓存占用明显增加。
+  - `minimal`：磁盘占用较低，适合轻量浏览和顺序读取。
+  - `off`：缓存最少，但随机读取性能和兼容性相对较弱。
+- macOS 挂载后端（MountType）：
+  - 优先 `nfsmount`（推荐）
+  - 其次 `fuse-t`
+  - `macfuse` 仅在确有兼容性需求时使用
+
+诊断导出（设置页 -> 导出诊断包）会包含：
+
+- `netmount/config.redacted.json`
+- `netmount/mount.snapshot.json`（挂载关键参数快照）
+- `logs/*.tail`（组件日志尾部）
+
 ## 截图
 ![image](https://github.com/VirtualHotBar/NetMount/assets/96966978/a919b68e-a165-411f-a99b-d184b3f264b0)
 
