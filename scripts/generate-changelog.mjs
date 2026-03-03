@@ -57,7 +57,10 @@ try {
   console.warn(`Tag ${currentTag} not found locally. Using HEAD as end of range.`);
 }
 
-const prevTag = tags.find((t) => t !== currentTag) || '';
+const currentTagIndex = tags.indexOf(currentTag);
+const prevTag = tagExists
+  ? (currentTagIndex >= 0 ? tags[currentTagIndex + 1] || '' : '')
+  : tags[0] || '';
 const endRef = tagExists ? currentTag : 'HEAD';
 const range = prevTag ? `${prevTag}..${endRef}` : endRef;
 
