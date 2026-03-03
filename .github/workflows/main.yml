@@ -132,6 +132,34 @@ jobs:
             src-tauri/binaries/openlist-x86_64-unknown-linux-gnu
           key: binaries-x86_64-unknown-linux-gnu-${{ env.RCLONE_VERSION }}-${{ env.OPENLIST_VERSION }}
 
+      - name: Resolve skip-downloads flag
+        id: resolve-skip-downloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.cache-binaries.outputs.cache-hit }}" != "true" ]; then
+            echo "skip_downloads=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          has_rclone=false
+          has_openlist=false
+
+          if [ -f "src-tauri/binaries/rclone" ] || [ -f "src-tauri/binaries/rclone-x86_64-unknown-linux-gnu" ]; then
+            has_rclone=true
+          fi
+
+          if [ -f "src-tauri/binaries/openlist" ] || [ -f "src-tauri/binaries/openlist-x86_64-unknown-linux-gnu" ]; then
+            has_openlist=true
+          fi
+
+          if [ "$has_rclone" = "true" ] && [ "$has_openlist" = "true" ]; then
+            echo "skip_downloads=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip_downloads=false" >> "$GITHUB_OUTPUT"
+            echo "Cache hit but required binaries are missing; downloads remain enabled."
+          fi
+
       - run: pnpm install --frozen-lockfile
 
       # 如果缓存命中，跳过下载
@@ -143,7 +171,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           # Tauri 签名私钥密码（如果密钥已加密）
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.cache-binaries.outputs.cache-hit }}
+          NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.resolve-skip-downloads.outputs.skip_downloads }}
 
   # ========== Release 创建 ==========
   create-release:
@@ -265,10 +293,43 @@ jobs:
           path: |
             src-tauri/binaries/rclone
             src-tauri/binaries/openlist
-            src-tauri/binaries/rclone-${{ matrix.target }}${{ matrix.platform == 'windows-latest' && '.exe' || '' }}
-            src-tauri/binaries/openlist-${{ matrix.target }}${{ matrix.platform == 'windows-latest' && '.exe' || '' }}
+            src-tauri/binaries/rclone-${{ matrix.target }}${{ contains(matrix.platform, 'windows') && '.exe' || '' }}
+            src-tauri/binaries/openlist-${{ matrix.target }}${{ contains(matrix.platform, 'windows') && '.exe' || '' }}
             src-tauri/binaries/winfsp.msi
           key: binaries-${{ matrix.target }}-${{ env.RCLONE_VERSION }}-${{ env.OPENLIST_VERSION }}
+
+      - name: Resolve skip-downloads flag
+        id: resolve-skip-downloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.cache-binaries.outputs.cache-hit }}" != "true" ]; then
+            echo "skip_downloads=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ext=""
+          if [ "${{ contains(matrix.platform, 'windows') }}" = "true" ]; then
+            ext=".exe"
+          fi
+
+          has_rclone=false
+          has_openlist=false
+
+          if [ -f "src-tauri/binaries/rclone${ext}" ] || [ -f "src-tauri/binaries/rclone-${{ matrix.target }}${ext}" ]; then
+            has_rclone=true
+          fi
+
+          if [ -f "src-tauri/binaries/openlist${ext}" ] || [ -f "src-tauri/binaries/openlist-${{ matrix.target }}${ext}" ]; then
+            has_openlist=true
+          fi
+
+          if [ "$has_rclone" = "true" ] && [ "$has_openlist" = "true" ]; then
+            echo "skip_downloads=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip_downloads=false" >> "$GITHUB_OUTPUT"
+            echo "Cache hit but required binaries are missing for target ${{ matrix.target }}; downloads remain enabled."
+          fi
 
       - name: Install Linux dependencies
         if: contains(matrix.platform, 'ubuntu')
@@ -288,7 +349,7 @@ jobs:
           # Tauri 签名私钥密码（如果密钥已加密）
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           # 使用缓存时跳过下载
-          NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.cache-binaries.outputs.cache-hit }}
+          NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.resolve-skip-downloads.outputs.skip_downloads }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.args }}
