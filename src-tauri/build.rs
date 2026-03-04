@@ -3,9 +3,6 @@ use std::os::unix::fs::PermissionsExt;
 use std::process::exit;
 use std::{env, path::Path};
 
-// 获取操作系统类型（编译时）
-const OS_TYPE: &str = env::consts::OS;
-
 /// 获取目标操作系统类型（支持交叉编译）
 fn get_target_os() -> String {
     // 优先使用 Cargo 提供的目标 OS（支持交叉编译）
