@@ -684,8 +684,19 @@
     "owner": "所有者",
     "shareUrl": "分享連結",
     "user_agent": "User-Agent",
-    "project_id": "專案ID",
-    "use_s3_upload_method": "使用S3上傳方式",
+    "project_id": "專案 ID",
+    "use_s3_upload_method": "使用 S3 上傳方式",
     "mode": "模式",
-    "level": "等級"
+    "level": "等級",
+    "saving": "保存中...",
+    "data_management": "數據管理",
+    "export_config": "導出配置",
+    "export_config_description": "將當前配置打包為 ZIP 文件（排除日誌）",
+    "export": "導出",
+    "config_exported": "配置已導出",
+    "import_config": "導入配置",
+    "import_config_description": "從 ZIP 文件恢復配置（需要重啓）",
+    "import": "導入",
+    "confirm_import": "確認導入",
+    "confirm_import_description": "導入配置將覆蓋當前所有配置並自動重啓軟件，是否繼續？"
 }

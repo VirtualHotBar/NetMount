@@ -222,7 +222,7 @@ async function updateOpenlistStorageInfoList() {
 
                         // 设置不缓存
                         if (option.name === 'cache_expiration') {
-                            storageParam.default = "0"; // 不缓存
+                            storageParam.default = 0; // 不缓存 (数字类型)
                         }
 
                         // 设置容量使用显示

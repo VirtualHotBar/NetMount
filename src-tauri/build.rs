@@ -25,7 +25,7 @@ const DEFAULT_OPENLIST_VERSION: &str = "v4.1.10";
 // - NETMOUNT_SKIP_TAURI_BUILD: skip tauri_build::try_build to avoid transient Windows file lock issues
 
 // 版本标记文件
-const OPENLIST_VERSION_FILE: &str = "binaries/openlist/.version";
+const OPENLIST_VERSION_FILE: &str = "binaries/openlist.version";
 
 struct ResBinUrls {
     rclone: &'static str,

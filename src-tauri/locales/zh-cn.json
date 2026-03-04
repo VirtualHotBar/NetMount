@@ -687,5 +687,16 @@
     "project_id": "项目ID",
     "use_s3_upload_method":"使用S3上传方式",
     "mode": "模式",
-    "level": "等级"
+    "level": "等级",
+    "saving": "保存中...",
+    "data_management": "数据管理",
+    "export_config": "导出配置",
+    "export_config_description": "将当前配置打包为 ZIP 文件（排除日志）",
+    "export": "导出",
+    "config_exported": "配置已导出",
+    "import_config": "导入配置",
+    "import_config_description": "从 ZIP 文件恢复配置（需要重启）",
+    "import": "导入",
+    "confirm_import": "确认导入",
+    "confirm_import_description": "导入配置将覆盖当前所有配置并自动重启软件，是否继续？"
 }

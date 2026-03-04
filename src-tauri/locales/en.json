@@ -687,5 +687,16 @@
     "project_id": "Project ID",
     "use_s3_upload_method": "Use S3 Upload Method",
     "mode": "Mode",
-    "level": "Level"
+    "level": "Level",
+    "saving": "Saving...",
+    "data_management": "Data Management",
+    "export_config": "Export Configuration",
+    "export_config_description": "Package current configuration into a ZIP file (excluding logs)",
+    "export": "Export",
+    "config_exported": "Configuration exported",
+    "import_config": "Import Configuration",
+    "import_config_description": "Restore configuration from ZIP file (requires restart)",
+    "import": "Import",
+    "confirm_import": "Confirm Import",
+    "confirm_import_description": "Importing configuration will overwrite all current settings and automatically restart the software. Continue?"
 }

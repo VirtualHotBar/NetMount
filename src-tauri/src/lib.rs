@@ -219,7 +219,9 @@ pub fn init() -> anyhow::Result<()> {
             register_sidecar_pid,
             spawn_sidecar,
             run_sidecar_once,
-            kill_sidecar
+            kill_sidecar,
+            fs::export_config,
+            fs::import_config
         ])
         .setup(|app| {
             // 初始化 Job Object（Windows 进程树管理）

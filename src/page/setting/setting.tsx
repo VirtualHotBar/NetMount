@@ -155,6 +155,107 @@ export default function Setting_page() {
 
 
         </Card>
+        <Card title={t('data_management')} style={{}} size='small'>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>{t('export_config')}</div>
+                <div style={{ fontSize: '0.85rem', color: '#86909c' }}>
+                  {t('export_config_description')}
+                </div>
+              </div>
+              <Button type="primary" status="success" onClick={async () => {
+                try {
+                  const ts = new Date().toISOString().replace(/[:.]/g, '-')
+                  const path = await dialog.save({
+                    title: t('export_config'),
+                    defaultPath: `netmount-config-${ts}.zip`,
+                    filters: [{ name: 'Zip', extensions: ['zip'] }],
+                  })
+                  if (!path) return
+                  const out = await invoke<string>('export_config', { outPath: path })
+                  Message.success(`${t('config_exported')}: ${out}`)
+                } catch (e) {
+                  const msg = (() => {
+                    if (typeof e === 'string') return e
+                    if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
+                      return (e as { message: string }).message
+                    }
+                    try {
+                      return JSON.stringify(e)
+                    } catch {
+                      return String(e)
+                    }
+                  })()
+                  Message.error(msg)
+                }
+              }}>{t('export')}</Button>
+            </div>
+            
+            <div style={{ height: '1px', backgroundColor: '#e5e6eb', margin: '0.5rem 0' }} />
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: 500, marginBottom: '0.5rem' }}>{t('import_config')}</div>
+                <div style={{ fontSize: '0.85rem', color: '#86909c' }}>
+                  {t('import_config_description')}
+                </div>
+              </div>
+              <Button type="primary" status="warning" onClick={async () => {
+                try {
+                  const path = await dialog.open({
+                    title: t('import_config'),
+                    multiple: false,
+                    filters: [{ name: 'Zip', extensions: ['zip'] }],
+                  })
+                  if (!path) return
+                  
+                  Modal.confirm({
+                    title: t('confirm_import'),
+                    content: t('confirm_import_description'),
+                    okButtonProps: { status: 'warning' },
+                    onOk: async () => {
+                      try {
+                        const result = await invoke<string>('import_config', { zipPath: path })
+                        Message.success(result)
+                        // 延迟重启
+                        setTimeout(() => {
+                          exit(true)
+                        }, 1000)
+                      } catch (e) {
+                        const msg = (() => {
+                          if (typeof e === 'string') return e
+                          if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
+                            return (e as { message: string }).message
+                          }
+                          try {
+                            return JSON.stringify(e)
+                          } catch {
+                            return String(e)
+                          }
+                        })()
+                        Message.error(msg)
+                      }
+                    },
+                  })
+                } catch (e) {
+                  const msg = (() => {
+                    if (typeof e === 'string') return e
+                    if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
+                      return (e as { message: string }).message
+                    }
+                    try {
+                      return JSON.stringify(e)
+                    } catch {
+                      return String(e)
+                    }
+                  })()
+                  Message.error(msg)
+                }
+              }}>{t('import')}</Button>
+            </div>
+          </Space>
+        </Card>
         <Card title={t('components')} style={{}} size='small'>
           <Link onClick={() => { shell.open(roConfig.url.rclone) }}>Rclone</Link>(<Link onClick={() => {
             if ((rcloneInfo.process.log || '').trim()) {
