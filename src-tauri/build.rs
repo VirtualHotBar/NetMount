@@ -369,7 +369,7 @@ fn check_res_bin() {
     if target_os == "windows" {
         //下载winfsp
         let winfsp_url =
-            "https://github.com/winfsp/winfsp/releases/download/v2.0/winfsp-2.0.23075.msi";
+            "https://github.com/winfsp/winfsp/releases/download/v2.1/winfsp-2.1.25156.msi";
         let winfsp_path = &format!("{}winfsp.msi", bin_path);
         if !Path::new(winfsp_path).exists() && !skip_downloads && !env_truthy("NETMOUNT_SKIP_WINFSP_DOWNLOAD") {
             download_with_progress(winfsp_url, winfsp_path, |total_size, downloaded| {
