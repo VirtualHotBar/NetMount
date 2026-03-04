@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useState } from 'react'
-import { Button, Card, Form, Grid, Input, Link, Message, Modal, Select, Space, Switch, Tooltip } from '@arco-design/web-react'
+import { Button, Card, Collapse, Form, Grid, Input, Link, Message, Modal, Select, Space, Switch, Tooltip } from '@arco-design/web-react'
 import { nmConfig, osInfo, roConfig, saveNmConfig } from '../../services/config';
 import { getAutostartState, setAutostartState, setThemeMode } from '../../controller/setting/setting';
 import { useTranslation } from 'react-i18next';
@@ -248,6 +248,45 @@ export default function Setting_page() {
             </Space>
 
           </Space>
+        </Card>
+        <Card title={t('advanced_settings')} style={{}} size='small'>
+          <Form autoComplete='off' style={{ paddingRight: '0.8rem' }}>
+            <Collapse  bordered={false} style={{ marginBottom: '0.75rem' }}>
+              <Collapse.Item name='extra_startup_args' header={t('extra_startup_args')}>
+                <FormItem label={'Rclone'}>
+                  <Input
+                    value={nmConfig.framework.rclone.extraArgs || ''}
+                    placeholder='e.g. --log-level=DEBUG --rc-enable-metrics'
+                    onChange={(value) => {
+                      nmConfig.framework.rclone.extraArgs = value
+                      forceUpdate()
+                    }}
+                  />
+                </FormItem>
+                <FormItem label={'OpenList'}>
+                  <Input
+                    value={nmConfig.framework.openlist.extraArgs || ''}
+                    placeholder='e.g. --log.level=debug'
+                    onChange={(value) => {
+                      nmConfig.framework.openlist.extraArgs = value
+                      forceUpdate()
+                    }}
+                  />
+                </FormItem>
+              </Collapse.Item>
+            </Collapse>
+            <div style={{ width: '100%', textAlign: 'right' }}>
+              <Button
+                type='primary'
+                onClick={async () => {
+                  await saveNmConfig()
+                  Message.success(t('saved'))
+                }}
+              >
+                {t('save')}
+              </Button>
+            </div>
+          </Form>
         </Card>
         <Card title={t('components')} style={{}} size='small'>
           <Link onClick={() => { shell.open(roConfig.url.rclone) }}>Rclone</Link>(<Link onClick={() => {

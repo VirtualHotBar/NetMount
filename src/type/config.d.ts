@@ -24,10 +24,12 @@ interface NMConfig {
         rclone: {
             user: string,
             password: string,
+            extraArgs?: string,
         },
         openlist: {
             user: string,
             password: string,
+            extraArgs?: string,
         }
     }
 }

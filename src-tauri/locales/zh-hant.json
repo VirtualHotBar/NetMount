@@ -199,6 +199,10 @@
     "log": "日誌",
     "start_hide": "啟動時隱藏視窗",
     "auto_recover_components": "元件異常自動修復",
+    "advanced_settings": "高級設置",
+    "extra_startup_args": "額外啟動參數",
+    "rclone_extra_args": "Rclone 額外啟動參數",
+    "openlist_extra_args": "OpenList 額外啟動參數",
     "quit": "退出",
     "tray_show": "顯示主視窗",
     "open_log_dir": "打開日誌目錄",
@@ -704,3 +708,4 @@
     "export_import_config_description": "導出當前配置或者從文件恢復配置",
     "confirm_import_description": "導入配置將覆蓋當前所有配置並自動重啓軟件，是否繼續？"
 }
+
