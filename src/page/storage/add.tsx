@@ -178,7 +178,7 @@ function AddStorage_page() {
                             setStorageName(value)
                         }} disabled={submitting} />
                     </FormItem>} data={[...storageInfo.defaultParams.parameters/* ,...storageInfo.defaultParams.exParameters?.openlist?.additional||[] */]}
-                    showAdvanced={showAdvanced} overwriteValues={storageParams || {}} setFormHook={(hook) => { setFormHook(hook) }} disabled={submitting} />
+                    showAdvanced={showAdvanced} overwriteValues={storageParams || {}} setFormHook={(hook) => { setFormHook(hook) }} />
                 <br />
 
                 <Row style={{ width: '100%' }}>

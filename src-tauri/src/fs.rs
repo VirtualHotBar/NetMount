@@ -282,26 +282,33 @@ pub fn import_config(
         let zip_path = resolve_tilde(app, zip_path)?;
         
         if !zip_path.exists() {
-            return Err(anyhow::anyhow!("Backup file does not exist"));
+            return Err(anyhow::anyhow!("备份文件不存在"));
         }
         
         if !zip_path.to_string_lossy().to_ascii_lowercase().ends_with(".zip") {
-            return Err(anyhow::anyhow!("Backup file must be a zip file"));
+            return Err(anyhow::anyhow!("备份文件必须是 ZIP 格式"));
         }
 
         // 打开 zip 文件
-        let file = fs::File::open(&zip_path)?;
-        let mut zip = zip::ZipArchive::new(file)?;
+        let file = fs::File::open(&zip_path)
+            .map_err(|e| anyhow::anyhow!("无法打开备份文件：{}", e))?;
+        let mut zip = zip::ZipArchive::new(file)
+            .map_err(|e| anyhow::anyhow!("无法读取 ZIP 文件：{}", e))?;
         
         // 验证目录结构
-        validate_zip_structure(&mut zip)?;
+        validate_zip_structure(&mut zip)
+            .map_err(|e| anyhow::anyhow!("无效的备份文件：{}", e))?;
         
-        // 解压到临时目录
+        // 获取数据目录
         let data_dir = app
             .path()
             .home_dir()
             .map_err(|e| anyhow::anyhow!("Failed to get home dir: {}", e))?
             .join(".netmount");
+        
+        // 确保数据目录存在
+        fs::create_dir_all(&data_dir)?;
+        
         let temp_dir = data_dir.join(".backup_temp");
         
         // 如果临时目录已存在，先删除
@@ -341,7 +348,7 @@ pub fn import_config(
         let backup_dir = data_dir.join(".backup_old");
         if data_dir.exists() {
             if backup_dir.exists() {
-                fs::remove_dir_all(&backup_dir)?;
+                let _ = fs::remove_dir_all(&backup_dir);
             }
             // 复制当前配置到备份目录（排除临时目录）
             for entry in fs::read_dir(&data_dir)? {
@@ -358,14 +365,14 @@ pub fn import_config(
                 let dst = backup_dir.join(&file_name);
                 
                 if src.is_dir() {
-                    copy_dir_all(&src, &dst)?;
+                    let _ = copy_dir_all(&src, &dst);
                 } else {
-                    fs::copy(&src, &dst)?;
+                    let _ = fs::copy(&src, &dst);
                 }
             }
         }
         
-        // 删除旧配置
+        // 删除旧配置（忽略失败，因为文件可能被占用）
         for entry in fs::read_dir(&data_dir)? {
             let entry = entry?;
             let file_name = entry.file_name();
@@ -378,9 +385,9 @@ pub fn import_config(
             
             let path = entry.path();
             if path.is_dir() {
-                fs::remove_dir_all(&path)?;
+                let _ = fs::remove_dir_all(&path);
             } else {
-                fs::remove_file(&path)?;
+                let _ = fs::remove_file(&path);
             }
         }
         
@@ -403,8 +410,14 @@ pub fn import_config(
         // 保留旧备份（可选：可以在成功后删除）
         // fs::remove_dir_all(&backup_dir)?;
         
-        Ok(format!("Configuration imported successfully from {}", zip_path.display()))
+        Ok(format!("配置导入成功，文件来源：{}", zip_path.display()))
     }
 
-    inner(&app, &zip_path).map_err(Into::into)
+    inner(&app, &zip_path)
+        .map_err(|e| {
+            // 提供更友好的错误信息
+            let msg = e.to_string();
+            anyhow::anyhow!("导入配置失败：{}", msg)
+        })
+        .map_err(Into::into)
 }

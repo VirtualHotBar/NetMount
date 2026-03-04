@@ -216,11 +216,20 @@ export default function Setting_page() {
                     okButtonProps: { status: 'warning' },
                     onOk: async () => {
                       try {
+                        // 先停止 rclone 和 openlist，避免文件占用
+                        await invoke('stop_components')
+                        
+                        // 短暂等待，确保进程完全停止
+                        await new Promise(resolve => setTimeout(resolve, 500))
+                        
+                        // 导入配置
                         const result = await invoke<string>('import_config', { zipPath: path })
+                        
                         Message.success(result)
-                        // 延迟重启
+                        
+                        // 延迟重启（不保存当前配置，直接使用导入的配置）
                         setTimeout(() => {
-                          exit(true)
+                          invoke('restart_self')
                         }, 1000)
                       } catch (e) {
                         const msg = (() => {

@@ -212,6 +212,7 @@ pub fn init() -> anyhow::Result<()> {
             fs_exist_dir,
             fs_make_dir,
             restart_self,
+            stop_components,
             read_text_file_tail,
             read_json_file,
             write_json_file,
@@ -295,6 +296,30 @@ fn update_config(
 #[tauri::command]
 fn restart_self(app: tauri::AppHandle<Runtime>) {
     app.restart()
+}
+
+#[tauri::command]
+async fn stop_components() -> Result<(), String> {
+    use std::time::Duration;
+    
+    // 停止 rclone
+    if let Some(pid) = sidecar::get_sidecar_pid("rclone") {
+        println!("Stopping rclone (PID: {})", pid);
+        sidecar::kill_sidecar("rclone");
+        // 等待进程完全退出
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
+    
+    // 停止 openlist
+    if let Some(pid) = sidecar::get_sidecar_pid("openlist") {
+        println!("Stopping openlist (PID: {})", pid);
+        sidecar::kill_sidecar("openlist");
+        // 等待进程完全退出
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
+    
+    println!("All components stopped");
+    Ok(())
 }
 
 #[tauri::command]

@@ -26,6 +26,7 @@ import { Notification } from "@arco-design/web-react"
 import { rclone_api_noop } from "../utils/rclone/request"
 import { defaultCacheDir } from "../utils/netmountPaths"
 import { hooks } from "../services/hook"
+import { exit as tauriExit } from "@tauri-apps/plugin-process"
 
 type SetStartStrFn = (str: string) => void;
 
@@ -83,10 +84,16 @@ async function init(setStartStr: SetStartStrFn) {
 }
 
 async function runStartupTasksInBackground() {
+    hooks.startup.storageInitDone = false
+    hooks.startup.storageSyncing = true
+    hooks.startup.storageInitFailed = false
+    hooks.upStartup()
+
     const failedSteps = new Set<string>()
     const runStep = async (label: string, fn: () => Promise<unknown>) => {
         try {
             await fn()
+            return true
         } catch (e) {
             console.error(`[startup] ${label} failed:`, e)
             if (!failedSteps.has(label)) {
@@ -94,10 +101,26 @@ async function runStartupTasksInBackground() {
                 Notification.warning({
                     id: `startup_step_failed_${label.replace(/\s+/g, '_')}`,
                     title: t('warning'),
-                    content: `Startup task failed: ${label}`,
+                    content: t('startup_task_failed', { step: label }),
                 })
             }
+            return false
         }
+    }
+
+    hooks.retryStartupStorageSync = async () => {
+        hooks.startup.storageSyncing = true
+        hooks.startup.storageInitFailed = false
+        hooks.upStartup()
+        const refreshOk = await runStep('refresh storages and mounts', async () => {
+            await reupStorage()
+            await addOpenlistInRclone()
+            await reupMount()
+        })
+        hooks.startup.storageInitDone = refreshOk
+        hooks.startup.storageSyncing = false
+        hooks.startup.storageInitFailed = !refreshOk
+        hooks.upStartup()
     }
 
     await Promise.allSettled([
@@ -111,11 +134,15 @@ async function runStartupTasksInBackground() {
         runStep('update storage providers', updateStorageInfoList)
     ])
 
-    await runStep('refresh storages and mounts', async () => {
+    const refreshOk = await runStep('refresh storages and mounts', async () => {
         await reupStorage()
         await addOpenlistInRclone()
         await reupMount()
     })
+    hooks.startup.storageInitDone = refreshOk
+    hooks.startup.storageSyncing = false
+    hooks.startup.storageInitFailed = !refreshOk
+    hooks.upStartup()
 
     await runStep('auto mount', autoMount)
     await runStep('start task scheduler', startTaskScheduler)
@@ -207,7 +234,7 @@ async function exit(isRestartSelf: boolean = false) {
             //await restartSelf()
             location.reload()
         } else {
-            await process.exit();
+            await tauriExit(0);
         }
     }
 }
