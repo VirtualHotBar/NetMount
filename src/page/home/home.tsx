@@ -22,7 +22,7 @@ function Home_page() {
   const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
   const [modal, contextHolder] = Modal.useModal();
   const [notification, noticeContextHolder] = Notification.useNotification();
-  const storageList=filterHideStorage(rcloneInfo.storageList)
+  const storageList = filterHideStorage(rcloneInfo.storageList)
 
   useEffect(() => {
     const showNotice = () => {
@@ -42,7 +42,7 @@ function Home_page() {
     showNotice()
 
     if (!checkedUpdate) {
-      checkUpdate(async (info,localVersions) => {
+      checkUpdate(async (info, localVersions) => {
         modal.confirm!({
           title: t('update_available'),
           content: <>
@@ -59,8 +59,8 @@ function Home_page() {
     }
 
     return () => {
-      hooks.upNotice = () => {}
-      hooks.upStartup = () => {}
+      hooks.upNotice = () => { }
+      hooks.upStartup = () => { }
     }
   }, [])
 
@@ -97,7 +97,7 @@ function Home_page() {
               type='info'
               content={
                 <Space>
-                  <Spin size={14} />
+                  <Spin />
                   {t('startup_storage_mount_syncing')}
                 </Space>
               }
