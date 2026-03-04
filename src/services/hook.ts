@@ -4,6 +4,7 @@ const hooks: Hooks = {
     upStats:()=>{},
     upStorage:()=>{},
     upMount:()=>{},
+    upNotice:()=>{},
     navigate:()=>{},
     setLocaleStr:()=>{}
 }

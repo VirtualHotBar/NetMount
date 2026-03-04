@@ -25,17 +25,20 @@ function Home_page() {
   const storageList=filterHideStorage(rcloneInfo.storageList)
 
   useEffect(() => {
-    hooks.upStats = forceUpdate;
-    console.log(nmConfig.notice);
-
-    if (nmConfig.notice && !nmConfig.notice.displayed && nmConfig.notice.data.content) {
-      notification.info!({
-        ...(nmConfig.notice.data.title && { title: nmConfig.notice.data.title }),
-        content: nmConfig.notice.data.content,
-        ...{ duration: nmConfig.notice.manual_close ? 1000*60*60*24*365 : 3000 },
-      })
-      nmConfig.notice.displayed = true
+    const showNotice = () => {
+      if (nmConfig.notice && !nmConfig.notice.displayed && nmConfig.notice.data.content) {
+        notification.info!({
+          ...(nmConfig.notice.data.title && { title: nmConfig.notice.data.title }),
+          content: nmConfig.notice.data.content,
+          ...{ duration: nmConfig.notice.manual_close ? 1000 * 60 * 60 * 24 * 365 : 3000 },
+        })
+        nmConfig.notice.displayed = true
+      }
     }
+
+    hooks.upStats = forceUpdate;
+    hooks.upNotice = showNotice
+    showNotice()
 
     if (!checkedUpdate) {
       checkUpdate(async (info,localVersions) => {
@@ -54,6 +57,9 @@ function Home_page() {
       checkedUpdate = true;
     }
 
+    return () => {
+      hooks.upNotice = () => {}
+    }
   }, [])
 
   return (

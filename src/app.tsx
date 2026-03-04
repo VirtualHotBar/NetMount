@@ -1,23 +1,13 @@
-import React, { useEffect, useState } from 'react'
-import { Layout, Menu, Button, Message, Grid, ConfigProvider } from '@arco-design/web-react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
+import { Layout, Menu, Button, Message, Grid, ConfigProvider, Spin } from '@arco-design/web-react';
 import "@arco-themes/react-vhbs/css/arco.css";
 //import "@arco-design/web-react/dist/css/arco.css";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 
 import { Routers } from './type/routers';
-import { Home_page } from './page/home/home';
-import { Storage_page } from './page/storage/storage';
-import { AddStorage_page } from './page/storage/add';
-import { Explorer_page } from './page/storage/explorer';
-import { Mount_page } from './page/mount/mount';
-import { Transmit_page } from './page/transmit/transmit';
-import { Task_page } from './page/task/task';
-import Setting_page from './page/setting/setting';
-import AddMount_page from './page/mount/add';
 import { IconClose, IconCloud, IconHome, IconList, IconMinus, IconSettings, IconStorage, IconSwap } from '@arco-design/web-react/icon';
 import { windowsHide, windowsMini } from './controller/window';
-import { AddTask_page } from './page/task/add';
 import { hooks } from './services/hook';
 import { getLocale } from './controller/language/language';
 import { nmConfig } from './services/config';
@@ -27,6 +17,23 @@ const { Item: MenuItem, SubMenu } = Menu;
 const { Sider, Header, Content } = Layout;
 const Row = Grid.Row;
 const Col = Grid.Col;
+
+const HomePage = React.lazy(() => import('./page/home/home').then(module => ({ default: module.Home_page })))
+const StoragePage = React.lazy(() => import('./page/storage/storage').then(module => ({ default: module.Storage_page })))
+const AddStoragePage = React.lazy(() => import('./page/storage/add').then(module => ({ default: module.AddStorage_page })))
+const ExplorerPage = React.lazy(() => import('./page/storage/explorer').then(module => ({ default: module.Explorer_page })))
+const MountPage = React.lazy(() => import('./page/mount/mount').then(module => ({ default: module.Mount_page })))
+const AddMountPage = React.lazy(() => import('./page/mount/add'))
+const TransmitPage = React.lazy(() => import('./page/transmit/transmit').then(module => ({ default: module.Transmit_page })))
+const TaskPage = React.lazy(() => import('./page/task/task').then(module => ({ default: module.Task_page })))
+const AddTaskPage = React.lazy(() => import('./page/task/add').then(module => ({ default: module.AddTask_page })))
+const SettingPage = React.lazy(() => import('./page/setting/setting'))
+
+const routeLoadingFallback = (
+    <div style={{ width: '100%', textAlign: 'center', paddingTop: '2rem' }}>
+        <Spin size={28} />
+    </div>
+)
 
 
 //递归查询对应的路由
@@ -89,11 +96,11 @@ function App() {
     const [selectedKeys, setSelectedKeys] = useState<string[]>(['/']);
 
 
-    const routers: Array<Routers> = [
+    const routers: Array<Routers> = useMemo(() => [
         {
             title: <><IconHome />{t('home')}</>,
             path: '/',
-            component: <Home_page />,
+            component: <HomePage />,
         },
         {
             title: <><IconCloud />{t('storage')}</>,
@@ -102,62 +109,62 @@ function App() {
                 {
                     title: t('manage'),
                     path: '/storage/manage',
-                    component: <Storage_page />,
+                    component: <StoragePage />,
                     hideChildren: true,
                     children: [
                         {
                             title: t('add'),
                             path: '/storage/manage/add',
                             key: '/storage/manage',//因为父菜单隐藏了子菜单项，在此页面时设置父菜单key以选择父菜单项
-                            component: <AddStorage_page />,
+                            component: <AddStoragePage />,
                         }
                     ]
                 },
                 {
                     title: t('explorer'),
                     path: '/storage/explorer',
-                    component: <Explorer_page />
+                    component: <ExplorerPage />
                 }
             ]
         }, {
             title: <><IconStorage />{t('mount')}</>,
             path: '/mount',
-            component: <Mount_page />,
+            component: <MountPage />,
             hideChildren: true,
             children: [
                 {
                     title: t('add'),
                     path: '/mount/add',
                     key: '/mount',//因为父菜单隐藏了子菜单项，在此页面时设置父菜单key以选择父菜单项
-                    component: <AddMount_page />,
+                    component: <AddMountPage />,
                 }
             ]
         },
         {
             title: <><IconSwap style={{ transform: 'rotate(90deg)' }} />{t('transmit')}</> /* +(rcloneInfo.stats.transferring? '(' + rcloneInfo.stats.transferring.length + ')': '') */,
             path: '/transmit',
-            component: <Transmit_page />,
+            component: <TransmitPage />,
         },
         {
             title: <><IconList />{t('task')}</>,
             path: '/task',
-            component: <Task_page />,
+            component: <TaskPage />,
             hideChildren: true,
             children: [
                 {
                     title: t('add'),
                     path: '/task/add',
                     key: '/task',//因为父菜单隐藏了子菜单项，在此页面时设置父菜单key以选择父菜单项
-                    component: <AddTask_page />,
+                    component: <AddTaskPage />,
                 }
             ]
         },
         {
             title: <><IconSettings />{t('setting')}</>,
             path: '/setting',
-            component: <Setting_page />,
+            component: <SettingPage />,
         }
-    ]
+    ], [t])
 
     useEffect(() => {
         hooks.setLocaleStr = setLocaleStr
@@ -226,7 +233,9 @@ function App() {
                     </Sider>
                     <Content style={{ maxHeight: '100%', padding: '1.1rem' }}>
                         {/* <Breadcrumb style={{ margin: '16px 0' }}>{generateBreadcrumb(location.pathname, routers)}</Breadcrumb> */}
-                        <Routes>{mapRouters(routers)}</Routes>
+                        <Suspense fallback={routeLoadingFallback}>
+                            <Routes>{mapRouters(routers)}</Routes>
+                        </Suspense>
                     </Content>
                 </Layout>
             </Layout>

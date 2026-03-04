@@ -25,6 +25,7 @@ import { addOpenlistInRclone } from "../utils/openlist/openlist"
 import { Notification } from "@arco-design/web-react"
 import { rclone_api_noop } from "../utils/rclone/request"
 import { defaultCacheDir } from "../utils/netmountPaths"
+import { hooks } from "../services/hook"
 
 type SetStartStrFn = (str: string) => void;
 
@@ -70,34 +71,55 @@ async function init(setStartStr: SetStartStrFn) {
     await startRclone()
     await startOpenlist()
 
-    setStartStr(t('get_notice'))
-    await checkNotice()
-
     startUpdateCont()
 
-    await reupRcloneVersion()
-    await reupOpenlistVersion()
-    await updateStorageInfoList()
-    await reupStorage()
-    await addOpenlistInRclone()
-    //await reupStorage()//addOpenlistInRclone中结尾有reupStorage所以注释
-    await reupMount()
-
-    //自动挂载
-    await autoMount()
-
-    //await Test()
-    //开始任务队列
-    await startTaskScheduler()
-
     startComponentWatchdog()
-
-    await main()
+    runStartupTasksInBackground()
 
     // 启动后静默检查应用更新（延迟 5 秒，不阻塞启动）
     setTimeout(() => {
         checkForUpdate(true).catch(err => console.error('Update check failed:', err))
     }, 5000)
+}
+
+async function runStartupTasksInBackground() {
+    const failedSteps = new Set<string>()
+    const runStep = async (label: string, fn: () => Promise<unknown>) => {
+        try {
+            await fn()
+        } catch (e) {
+            console.error(`[startup] ${label} failed:`, e)
+            if (!failedSteps.has(label)) {
+                failedSteps.add(label)
+                Notification.warning({
+                    id: `startup_step_failed_${label.replace(/\s+/g, '_')}`,
+                    title: t('warning'),
+                    content: `Startup task failed: ${label}`,
+                })
+            }
+        }
+    }
+
+    await Promise.allSettled([
+        runStep('check notice', async () => {
+            await checkNotice()
+            hooks.upNotice()
+        }),
+        runStep('sync versions', async () => {
+            await Promise.allSettled([reupRcloneVersion(), reupOpenlistVersion()])
+        }),
+        runStep('update storage providers', updateStorageInfoList)
+    ])
+
+    await runStep('refresh storages and mounts', async () => {
+        await reupStorage()
+        await addOpenlistInRclone()
+        await reupMount()
+    })
+
+    await runStep('auto mount', autoMount)
+    await runStep('start task scheduler', startTaskScheduler)
+    await runStep('main startup hooks', main)
 }
 
 async function main() {
