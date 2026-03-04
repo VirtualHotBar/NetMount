@@ -7,7 +7,7 @@ import { hooks } from '../../services/hook'
 import { useNavigate } from 'react-router-dom'
 import { nmConfig, osInfo, roConfig } from '../../services/config'
 import { NoData_module } from '../other/noData'
-import { getWinFspInstallState, installWinFsp, openUrlInBrowser, showPathInExplorer } from '../../utils/utils'
+import { getWinFspInstallState, installWinFsp, openUrlInBrowser, openWinFspInstaller, showPathInExplorer } from '../../utils/utils'
 import { IconEye, IconQuestionCircle } from '@arco-design/web-react/icon'
 import { exit } from '../../controller/main'
 const Row = Grid.Row;
@@ -111,6 +111,7 @@ function Mount_page() {
                   }, 1500) */
                 } else {
                   Message.error(t('install_failed'))
+                  await openWinFspInstaller()
                 }
                 await getWinFspState()
                 setWinFspInstalling(false)

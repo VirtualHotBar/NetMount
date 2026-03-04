@@ -60,6 +60,7 @@ interface MountOptions {
     WritebackCache: boolean;
     DaemonWait?: number; 
     DeviceName?: string; 
+    MountType?: string;
     NetworkMode?: boolean;
     CaseInsensitive?: boolean | null; 
 }
@@ -79,5 +80,4 @@ interface RcloneMountListResponse {
 }
 
 export { VfsOptions, MountOptions, RcloneMountPoint, RcloneMountListResponse }
-
 

@@ -64,7 +64,7 @@
       "allow": [
         {
           "args": true,
-          "cmd": "src-tauri/binaries/aria2c",
+          "cmd": "aria2c",
           "name": "aria2c",
           "sidecar": false
         },
@@ -103,8 +103,8 @@
       "allow": [
         {
           "args": true,
-          "cmd": "src-tauri/binaries/aria2c",
-          "name": "ria2c",
+          "cmd": "aria2c",
+          "name": "aria2c",
           "sidecar": false
         },
         {
@@ -142,8 +142,8 @@
       "allow": [
         {
           "args": true,
-          "cmd": "src-tauri/binaries/aria2c",
-          "name": "ria2c",
+          "cmd": "aria2c",
+          "name": "aria2c",
           "sidecar": false
         },
         {

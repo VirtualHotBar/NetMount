@@ -6,7 +6,7 @@ const vfsCacheModeParam: StorageParamItemType = {
     name: 'CacheMode',
     description: 'CacheMode',
     type: 'string',
-    default: 'minimal',
+    default: 'writes',
     required: false,
     advanced: false,
     isPassword: false,
@@ -68,6 +68,7 @@ const defaultMountConfig: MountOptions = {
     WritebackCache: false,
     DaemonWait: 0,
     DeviceName: '',
+    MountType: '',
     NetworkMode: false, //挂载为网络驱动器
     //CaseInsensitive: null,
 };

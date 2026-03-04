@@ -1,7 +1,7 @@
 {
   "name": "netmount-gui",
   "private": true,
-  "version": "1.2.1",
+  "version": "1.2.2",
   "type": "module",
   "config": {
     "registry": "https://registry.npmmirror.com/"

@@ -23,6 +23,8 @@
 
 技术栈：Rust + TypeScript + Tauri + React + Vite
 
+依赖框架：![Rclone](https://github.com/rclone/rclone),![OpenList](https://github.com/OpenListTeam/OpenList)。
+
 开发环境:Nodejs(包管理PNPM) + Rust
 
 命令:

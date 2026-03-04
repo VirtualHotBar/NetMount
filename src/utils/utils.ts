@@ -147,10 +147,25 @@ export async function getWinFspInstallState() {
 
 export async function installWinFsp(): Promise<boolean> {
     try {
-        await runCmd('msiexec', ['/i', 'res\\bin\\winfsp.msi', '/passive'])
+        await runCmd('msiexec', ['/i', 'binaries\\winfsp.msi', '/passive'])
         return true
     } catch {
         return false
+    }
+}
+
+export async function openWinFspInstaller(): Promise<boolean> {
+    const installerPath = 'binaries\\winfsp.msi'
+    try {
+        await shell.open(installerPath)
+        return true
+    } catch {
+        try {
+            await runCmd('explorer', [installerPath])
+            return true
+        } catch {
+            return false
+        }
     }
 }
 
