@@ -21,14 +21,30 @@ type OpenlistLoginResponse = {
 async function openlist_login(username: string, password: string): Promise<string> {
     const url = openlistInfo.endpoint.url + '/api/auth/login'
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 8000)
+    const timeoutMs = 15_000
+    const timeoutId = setTimeout(
+        () => controller.abort(new DOMException(`OpenList login timeout after ${timeoutMs}ms`, 'TimeoutError')),
+        timeoutMs
+    )
     try {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password }),
-            signal: controller.signal
-        })
+        let res: Response
+        try {
+            res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+                signal: controller.signal
+            })
+        } catch (e) {
+            if (controller.signal.aborted) {
+                const reason = controller.signal.reason
+                const reasonMessage = reason instanceof Error
+                    ? reason.message
+                    : (typeof reason === 'string' ? reason : 'request aborted')
+                throw new Error(`OpenList login timed out: ${reasonMessage}`)
+            }
+            throw e
+        }
 
         const text = await res.text().catch(() => '')
         let json: OpenlistLoginResponse | undefined
@@ -61,9 +77,23 @@ async function getOpenlistToken(): Promise<string> {
     }
     const username = nmConfig.framework.openlist.user
     const password = nmConfig.framework.openlist.password
-    const token = await openlist_login(username, password)
-    openlistInfo.endpoint.auth.token = token
-    return token
+
+    const maxAttempts = 3
+    let lastError: unknown
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            const token = await openlist_login(username, password)
+            openlistInfo.endpoint.auth.token = token
+            return token
+        } catch (e) {
+            lastError = e
+            if (attempt < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 500))
+            }
+        }
+    }
+
+    throw new Error(`OpenList login failed after ${maxAttempts} attempts: ${String(lastError)}`)
 }
 
 async function setOpenlistPass(pass: string) {

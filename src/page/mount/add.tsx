@@ -189,7 +189,7 @@ export default function AddMount_page() {
         <div>
 
             <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{!isEditMode ? t('add_mount') : t('edit_mount')}</h2>
-            
+
             {/* 基础选项 - 始终显示 */}
             <div style={{ marginBottom: showAllOptions ? '1rem' : '0' }}>
                 <FormItem label={t('storage')}>
@@ -271,24 +271,23 @@ export default function AddMount_page() {
                                 <Button type={cacheMode === 'minimal' ? 'primary' : 'secondary'} onClick={() => applyCachePreset('minimal')}>{t('preset_low_disk')}</Button>
                                 <Button type={cacheMode === 'off' ? 'primary' : 'secondary'} onClick={() => applyCachePreset('off')}>{t('preset_compatibility')}</Button>
                             </Space>
+                            <Alert
+                                style={{ marginTop: '0.5rem' }}
+                                type={cacheMode === 'full' ? 'warning' : 'info'}
+                                content={
+                                    cacheMode === 'full'
+                                        ? t('cache_mode_tip_full')
+                                        : cacheMode === 'off'
+                                            ? t('cache_mode_tip_off')
+                                            : cacheMode === 'minimal'
+                                                ? t('cache_mode_tip_minimal')
+                                                : t('cache_mode_tip_writes')
+                                }
+                            />
                         </FormItem>
+
                     </>
                 }
-                {!showAllOptions && (
-                    <Alert
-                        style={{ marginTop: '0.5rem' }}
-                        type={cacheMode === 'full' ? 'warning' : 'info'}
-                        content={
-                            cacheMode === 'full'
-                                ? t('cache_mode_tip_full')
-                                : cacheMode === 'off'
-                                    ? t('cache_mode_tip_off')
-                                    : cacheMode === 'minimal'
-                                        ? t('cache_mode_tip_minimal')
-                                        : t('cache_mode_tip_writes')
-                        }
-                    />
-                )}
                 {showAllOptions && isMacOS && (
                     <FormItem label={t('mount_backend')}>
                         <Select
@@ -333,7 +332,7 @@ export default function AddMount_page() {
                     <Button disabled={!storageName || !mountPath} onClick={async () => {
                         // 编辑模式下获取原始路径
                         const originalMountPath = isEditMode ? getURLSearchParam('mountPath') : '';
-                        
+
                         if (!isEditMode && getMountStorage(mountPath)) {
                             Notification.error({
                                 title: t('error'),
@@ -354,13 +353,13 @@ export default function AddMount_page() {
                         }
 
                         mountPathTemp = formatPath(mountPathTemp, isWindows)
-                        
+
                         if (isEditMode) {
-                            await editMountStorage({ 
-                                storageName: storageName!, 
-                                mountPath: mountPathTemp, 
-                                parameters: parameters, 
-                                autoMount: autoMount 
+                            await editMountStorage({
+                                storageName: storageName!,
+                                mountPath: mountPathTemp,
+                                parameters: parameters,
+                                autoMount: autoMount
                             }, originalMountPath)
                         } else {
                             await addMountStorage(storageName!, mountPathTemp, parameters, autoMount)
