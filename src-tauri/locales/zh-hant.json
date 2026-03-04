@@ -694,12 +694,13 @@
     "saving": "保存中...",
     "data_management": "數據管理",
     "export_config": "導出配置",
-    "export_config_description": "將當前配置打包為 ZIP 文件（排除日誌）",
+    "export_config_description": "將當前配置打包為 ZIP 文件",
     "export": "導出",
     "config_exported": "配置已導出",
     "import_config": "導入配置",
-    "import_config_description": "從 ZIP 文件恢復配置（需要重啓）",
+    "import_config_description": "從 ZIP 文件恢復配置",
     "import": "導入",
     "confirm_import": "確認導入",
+    "export_import_config_description": "導出當前配置或者從文件恢復配置",
     "confirm_import_description": "導入配置將覆蓋當前所有配置並自動重啓軟件，是否繼續？"
 }

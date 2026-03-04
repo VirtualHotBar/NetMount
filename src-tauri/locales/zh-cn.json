@@ -701,5 +701,6 @@
     "import_config_description": "从 ZIP 文件恢复配置",
     "import": "导入",
     "confirm_import": "确认导入",
+    "export_import_config_description": "导出当前配置或者从文件恢复配置",
     "confirm_import_description": "导入配置将覆盖当前所有配置并自动重启软件，是否继续？"
 }

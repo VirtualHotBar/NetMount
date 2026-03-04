@@ -5,7 +5,7 @@ import { RcloneVersion } from "../type/rclone/rcloneInfo"
 import { startUpdateCont } from "./stats/continue"
 import { reupMount } from "./storage/mount/mount"
 import { reupStorage } from "./storage/storage"
-import { listenWindow, windowsHide } from "./window"
+import { listenWindow } from "./window"
 import { sleep } from "../utils/utils"
 import { t } from "i18next"
 import { restartRclone, startRclone, stopRclone } from "../utils/rclone/process"
@@ -43,10 +43,6 @@ async function init(setStartStr: SetStartStrFn) {
 
     setStartStr(t('read_config'))
     await readNmConfig()
-
-    if (nmConfig.settings.startHide) {
-        windowsHide()
-    }
 
     //设置语言
     if (nmConfig.settings.language) {

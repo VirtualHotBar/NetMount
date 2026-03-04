@@ -694,12 +694,13 @@
     "saving": "Saving...",
     "data_management": "Data Management",
     "export_config": "Export Configuration",
-    "export_config_description": "Package current configuration into a ZIP file (excluding logs)",
+    "export_config_description": "Package current configuration into a ZIP file",
     "export": "Export",
     "config_exported": "Configuration exported",
     "import_config": "Import Configuration",
-    "import_config_description": "Restore configuration from ZIP file (requires restart)",
+    "import_config_description": "Restore configuration from ZIP file",
     "import": "Import",
     "confirm_import": "Confirm Import",
+    "export_import_config_description": "Export current configuration or restore configuration from file",
     "confirm_import_description": "Importing configuration will overwrite all current settings and automatically restart the software. Continue?"
 }

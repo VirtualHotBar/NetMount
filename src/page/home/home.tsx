@@ -139,7 +139,7 @@ function Home_page() {
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Space style={{ height: '100%' }}>
             <Card style={{ width: '10rem', height: '6rem' }} hoverable >
-              <strong ><IconCloud /> {t('storage')}</strong>({isStorageInitPending ? '...' : (isStorageInitFailed ? '--' : storageCount)})<br />
+              <strong ><IconCloud /> {t('storage')}</strong>({isStorageInitPending ? '_' : (isStorageInitFailed ? '-' : storageCount)})<br />
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
                   <Button type='text' onClick={() => { hooks.navigate('/storage/manage/add') }}> {t('add')} </Button>
@@ -148,7 +148,7 @@ function Home_page() {
               </div>
             </Card>
             <Card style={{ width: '10rem', height: '6rem' }} hoverable>
-              <strong ><IconStorage /> {t('mount')}</strong>({isStorageInitPending ? '...' : (isStorageInitFailed ? '--' : rcloneInfo.mountList.length)})
+              <strong ><IconStorage /> {t('mount')}</strong>({isStorageInitPending ? '_' : (isStorageInitFailed ? '-' : rcloneInfo.mountList.length)})
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
                   <Button type='text' onClick={() => { hooks.navigate('/mount/add') }} > {t('add')} </Button>
