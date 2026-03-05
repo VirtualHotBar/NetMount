@@ -213,6 +213,7 @@ pub fn init() -> anyhow::Result<()> {
             fs_exist_dir,
             fs_make_dir,
             restart_self,
+            stop_components,
             read_text_file_tail,
             read_json_file,
             write_json_file,
@@ -220,7 +221,9 @@ pub fn init() -> anyhow::Result<()> {
             register_sidecar_pid,
             spawn_sidecar,
             run_sidecar_once,
-            kill_sidecar
+            kill_sidecar,
+            fs::export_config,
+            fs::import_config
         ])
         .setup(|app| {
             // 初始化 Job Object（Windows 进程树管理）
@@ -242,6 +245,25 @@ pub fn init() -> anyhow::Result<()> {
                 app.write_app_config(Config::default())?
             };
             app.update_app_config()?;
+
+            // 主窗口默认从 tauri.conf 设置为 visible=false，避免前端再隐藏造成闪屏。
+            // 在后端读取配置后再决定是否显示窗口。
+            let start_hide = app.with_app_state::<Config, _>(|config| {
+                config
+                    .0
+                    .get("settings")
+                    .and_then(|s| s.get("startHide"))
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false)
+            });
+            if let Some(window) = app.app_main_window() {
+                if start_hide {
+                    let _ = window.hide();
+                } else {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
 
             //开发者工具
             #[cfg(debug_assertions)]
@@ -294,6 +316,30 @@ fn update_config(
 #[tauri::command]
 fn restart_self(app: tauri::AppHandle<Runtime>) {
     app.restart()
+}
+
+#[tauri::command]
+async fn stop_components() -> Result<(), String> {
+    use std::time::Duration;
+    
+    // 停止 rclone
+    if let Some(pid) = sidecar::get_sidecar_pid("rclone") {
+        println!("Stopping rclone (PID: {})", pid);
+        sidecar::kill_sidecar("rclone");
+        // 等待进程完全退出
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
+    
+    // 停止 openlist
+    if let Some(pid) = sidecar::get_sidecar_pid("openlist") {
+        println!("Stopping openlist (PID: {})", pid);
+        sidecar::kill_sidecar("openlist");
+        // 等待进程完全退出
+        tokio::time::sleep(Duration::from_millis(300)).await;
+    }
+    
+    println!("All components stopped");
+    Ok(())
 }
 
 #[tauri::command]

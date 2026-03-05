@@ -161,6 +161,7 @@ jobs:
           fi
 
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run pretauri-build
 
       # 如果缓存命中，跳过下载
       - name: Build Tauri (check only)
@@ -338,6 +339,7 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run pretauri-build
 
       # 如果二进制文件已缓存，跳过下载
       - name: Build Tauri app
@@ -352,6 +354,7 @@ jobs:
           NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.resolve-skip-downloads.outputs.skip_downloads }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
+          tauriScript: pnpm tauri
           args: ${{ matrix.args }}
 
   # ========== 生成 Changelog ==========

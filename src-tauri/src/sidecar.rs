@@ -134,7 +134,6 @@ pub fn register_sidecar_pid(name: &str, pid: u32) {
 }
 
 /// 获取 sidecar PID
-#[allow(dead_code)]
 pub fn get_sidecar_pid(name: &str) -> Option<u32> {
     let children = SIDECAR_CHILDREN.lock().unwrap();
     children.get(name).copied()

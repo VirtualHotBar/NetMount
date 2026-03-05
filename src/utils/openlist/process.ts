@@ -8,6 +8,7 @@ import { addParams, openlistDataDir } from "./paths";
 import { openlistLogFile } from "../netmountPaths";
 import { restartSidecar, startSidecarAndWait, stopSidecarGracefully } from "../sidecarService";
 import { invoke } from "@tauri-apps/api/core";
+import { parseExtraCliArgs } from "../cliArgs";
 
 async function startOpenlist() {
     //设置默认临时(缓存)目录
@@ -59,7 +60,8 @@ async function startOpenlist() {
 
     const args: string[] = [
         'server',
-        ...addParams()
+        ...addParams(),
+        ...parseExtraCliArgs(nmConfig.framework.openlist.extraArgs)
     ];
     console.log('OpenList start args:', args)
 

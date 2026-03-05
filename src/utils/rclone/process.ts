@@ -8,6 +8,7 @@ import { delStorage } from "../../controller/storage/storage";
 import { nmConfig, osInfo } from "../../services/config";
 import { netmountLogDir, rcloneConfigFile, rcloneLogFile } from "../netmountPaths";
 import { restartSidecar, startSidecarAndWait, stopSidecarGracefully } from "../sidecarService";
+import { parseExtraCliArgs } from "../cliArgs";
 
 async function startRclone() {
     if (rcloneInfo.process.child) {
@@ -47,6 +48,7 @@ async function startRclone() {
     if (nmConfig.framework.rclone.user === '') {
         args.push('--rc-no-auth')
     }
+    args.push(...parseExtraCliArgs(nmConfig.framework.rclone.extraArgs))
 
     // 使用 Rust 端启动 sidecar，确保由主进程创建
     const pid = await startSidecarAndWait({

@@ -274,6 +274,7 @@ export const NMConfigSchema = z.object({
   settings: z.object({
     themeMode: z.enum(['dark', 'light', 'auto']).or(z.string()),
     startHide: z.boolean(),
+    autoRecoverComponents: z.boolean(),
     language: z.string().optional(),
     path: z.object({
       cacheDir: z.string().optional(),
@@ -283,10 +284,12 @@ export const NMConfigSchema = z.object({
     rclone: z.object({
       user: z.string(),
       password: z.string(),
+      extraArgs: z.string().optional(),
     }),
     openlist: z.object({
       user: z.string(),
       password: z.string(),
+      extraArgs: z.string().optional(),
     }),
   }),
 });

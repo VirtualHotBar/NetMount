@@ -75,10 +75,12 @@ let nmConfig: NMConfig = {
         rclone: {
             user: randomString(32),
             password: randomString(128),
+            extraArgs: '',
         },
         openlist: {
             user: 'admin',
             password: randomString(16),//process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),!!!!!密码长度为32时rclone会报错
+            extraArgs: '',
         }
     }
 }

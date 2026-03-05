@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from 'react'
 
-import { Alert, Button, Card, Descriptions, Grid, Link, Modal, Notification, Space, Typography } from "@arco-design/web-react"
+import { Alert, Button, Card, Descriptions, Grid, Link, Modal, Notification, Space, Spin, Typography } from "@arco-design/web-react"
 import { rcloneInfo } from '../../services/rclone'
 import { hooks } from '../../services/hook';
 import { checkUpdate } from '../../controller/update/update';
@@ -22,23 +22,27 @@ function Home_page() {
   const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
   const [modal, contextHolder] = Modal.useModal();
   const [notification, noticeContextHolder] = Notification.useNotification();
-  const storageList=filterHideStorage(rcloneInfo.storageList)
+  const storageList = filterHideStorage(rcloneInfo.storageList)
 
   useEffect(() => {
-    hooks.upStats = forceUpdate;
-    console.log(nmConfig.notice);
-
-    if (nmConfig.notice && !nmConfig.notice.displayed && nmConfig.notice.data.content) {
-      notification.info!({
-        ...(nmConfig.notice.data.title && { title: nmConfig.notice.data.title }),
-        content: nmConfig.notice.data.content,
-        ...{ duration: nmConfig.notice.manual_close ? 1000*60*60*24*365 : 3000 },
-      })
-      nmConfig.notice.displayed = true
+    const showNotice = () => {
+      if (nmConfig.notice && !nmConfig.notice.displayed && nmConfig.notice.data.content) {
+        notification.info!({
+          ...(nmConfig.notice.data.title && { title: nmConfig.notice.data.title }),
+          content: nmConfig.notice.data.content,
+          ...{ duration: nmConfig.notice.manual_close ? 1000 * 60 * 60 * 24 * 365 : 3000 },
+        })
+        nmConfig.notice.displayed = true
+      }
     }
 
+    hooks.upStats = forceUpdate;
+    hooks.upNotice = showNotice
+    hooks.upStartup = forceUpdate
+    showNotice()
+
     if (!checkedUpdate) {
-      checkUpdate(async (info,localVersions) => {
+      checkUpdate(async (info, localVersions) => {
         modal.confirm!({
           title: t('update_available'),
           content: <>
@@ -54,7 +58,15 @@ function Home_page() {
       checkedUpdate = true;
     }
 
+    return () => {
+      hooks.upNotice = () => { }
+      hooks.upStartup = () => { }
+    }
   }, [])
+
+  const isStorageInitFailed = hooks.startup.storageInitFailed
+  const isStorageInitPending = !isStorageInitFailed && (!hooks.startup.storageInitDone || hooks.startup.storageSyncing)
+  const storageCount = storageList.length
 
   return (
     <div>
@@ -78,7 +90,39 @@ function Home_page() {
         </Card> */}
 
         <div style={{ height: '1.5rem' }} />
-        {storageList && !(storageList.length > 0) &&
+        {isStorageInitPending &&
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Alert
+              style={{ maxWidth: '24rem', marginBottom: '1.0rem' }}
+              type='info'
+              content={
+                <Space>
+                  <Spin />
+                  {t('startup_storage_mount_syncing')}
+                </Space>
+              }
+            />
+          </div>
+        }
+        {isStorageInitFailed &&
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Alert
+              style={{ maxWidth: '24rem', marginBottom: '1.0rem' }}
+              type='error'
+              content={
+                <Row>
+                  <Col flex={'auto'}>
+                    <Typography.Ellipsis>{t('startup_storage_mount_sync_failed')}</Typography.Ellipsis>
+                  </Col>
+                  <Col flex={'4rem'} style={{ textAlign: 'right' }}>
+                    <Link type='text' onClick={() => { hooks.retryStartupStorageSync() }}>{t('refresh')}</Link>
+                  </Col>
+                </Row>
+              }
+            />
+          </div>
+        }
+        {!isStorageInitPending && !isStorageInitFailed && storageList && !(storageList.length > 0) &&
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Alert style={{ maxWidth: '20rem', marginBottom: '1.0rem' }} type='info' content={
               <Row >
@@ -95,7 +139,7 @@ function Home_page() {
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Space style={{ height: '100%' }}>
             <Card style={{ width: '10rem', height: '6rem' }} hoverable >
-              <strong ><IconCloud /> {t('storage')}</strong>({filterHideStorage(storageList).length})<br />
+              <strong ><IconCloud /> {t('storage')}</strong>({isStorageInitPending ? '_' : (isStorageInitFailed ? '-' : storageCount)})<br />
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
                   <Button type='text' onClick={() => { hooks.navigate('/storage/manage/add') }}> {t('add')} </Button>
@@ -104,7 +148,7 @@ function Home_page() {
               </div>
             </Card>
             <Card style={{ width: '10rem', height: '6rem' }} hoverable>
-              <strong ><IconStorage /> {t('mount')}</strong>({rcloneInfo.mountList.length})
+              <strong ><IconStorage /> {t('mount')}</strong>({isStorageInitPending ? '_' : (isStorageInitFailed ? '-' : rcloneInfo.mountList.length)})
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
                   <Button type='text' onClick={() => { hooks.navigate('/mount/add') }} > {t('add')} </Button>

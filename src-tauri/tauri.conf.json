@@ -68,7 +68,8 @@
         "minHeight": 450,
         "minWidth": 700,
         "transparent": true,
-        "decorations": false
+        "decorations": false,
+        "visible": false
       }
     ],
     "trayIcon": {

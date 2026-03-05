@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useState } from 'react'
-import { Button, Card, Form, Grid, Input, Link, Message, Modal, Select, Space, Switch } from '@arco-design/web-react'
+import { Button, Card, Collapse, Form, Grid, Input, Link, Message, Modal, Select, Space, Switch, Tooltip } from '@arco-design/web-react'
 import { nmConfig, osInfo, roConfig, saveNmConfig } from '../../services/config';
 import { getAutostartState, setAutostartState, setThemeMode } from '../../controller/setting/setting';
 import { useTranslation } from 'react-i18next';
@@ -154,6 +154,139 @@ export default function Setting_page() {
           </Form>
 
 
+        </Card>
+        <Card title={t('data_management')} style={{}} size='small'>
+
+          <Space style={{ width: '100%', justifyContent: 'space-between' }} align='center'>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ fontWeight: 500 }}>{t('export_import_config_description')}</span>
+            </div>
+            <Space >
+              <Tooltip content={t('export_config_description')}>
+                <Button type='text'  status='success' onClick={async () => {
+                  try {
+                    const ts = new Date().toISOString().replace(/[:.]/g, '-')
+                    const path = await dialog.save({
+                      title: t('export_config'),
+                      defaultPath: `netmount-config-${ts}.zip`,
+                      filters: [{ name: 'Zip', extensions: ['zip'] }],
+                    })
+                    if (!path) return
+                    const out = await invoke<string>('export_config', { outPath: path })
+                    Message.success(`${t('config_exported')}: ${out}`)
+                  } catch (e) {
+                    const msg = (() => {
+                      if (typeof e === 'string') return e
+                      if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
+                        return (e as { message: string }).message
+                      }
+                      try {
+                        return JSON.stringify(e)
+                      } catch {
+                        return String(e)
+                      }
+                    })()
+                    Message.error(msg)
+                  }
+                }}>{t('export')}</Button>
+              </Tooltip>
+              <Tooltip content={t('import_config_description')}>
+                <Button type='text' status='warning' onClick={async () => {
+                  try {
+                    const path = await dialog.open({
+                      title: t('import_config'),
+                      multiple: false,
+                      filters: [{ name: 'Zip', extensions: ['zip'] }],
+                    })
+                    if (!path) return
+
+                    Modal.confirm({
+                      title: t('confirm_import'),
+                      content: t('confirm_import_description'),
+                      okButtonProps: { status: 'warning' },
+                      onOk: async () => {
+                        try {
+                          await invoke('stop_components')
+                          await new Promise(resolve => setTimeout(resolve, 500))
+                          const result = await invoke<string>('import_config', { zipPath: path })
+                          Message.success(result)
+                          setTimeout(() => {
+                            invoke('restart_self')
+                          }, 1000)
+                        } catch (e) {
+                          const msg = (() => {
+                            if (typeof e === 'string') return e
+                            if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
+                              return (e as { message: string }).message
+                            }
+                            try {
+                              return JSON.stringify(e)
+                            } catch {
+                              return String(e)
+                            }
+                          })()
+                          Message.error(msg)
+                        }
+                      },
+                    })
+                  } catch (e) {
+                    const msg = (() => {
+                      if (typeof e === 'string') return e
+                      if (e && typeof e === 'object' && 'message' in e && typeof (e as { message?: unknown }).message === 'string') {
+                        return (e as { message: string }).message
+                      }
+                      try {
+                        return JSON.stringify(e)
+                      } catch {
+                        return String(e)
+                      }
+                    })()
+                    Message.error(msg)
+                  }
+                }}>{t('import')}</Button>
+              </Tooltip>
+            </Space>
+
+          </Space>
+        </Card>
+        <Card title={t('advanced_settings')} style={{}} size='small'>
+          <Form autoComplete='off' style={{ paddingRight: '0.8rem' }}>
+            <Collapse  bordered={false} style={{ marginBottom: '0.75rem' }}>
+              <Collapse.Item name='extra_startup_args' header={t('extra_startup_args')}>
+                <FormItem label={'Rclone'}>
+                  <Input
+                    value={nmConfig.framework.rclone.extraArgs || ''}
+                    placeholder='e.g. --log-level=DEBUG --rc-enable-metrics'
+                    onChange={(value) => {
+                      nmConfig.framework.rclone.extraArgs = value
+                      forceUpdate()
+                    }}
+                  />
+                </FormItem>
+                <FormItem label={'OpenList'}>
+                  <Input
+                    value={nmConfig.framework.openlist.extraArgs || ''}
+                    placeholder='e.g. --log.level=debug'
+                    onChange={(value) => {
+                      nmConfig.framework.openlist.extraArgs = value
+                      forceUpdate()
+                    }}
+                  />
+                </FormItem>
+              </Collapse.Item>
+            </Collapse>
+            <div style={{ width: '100%', textAlign: 'right' }}>
+              <Button
+                type='primary'
+                onClick={async () => {
+                  await saveNmConfig()
+                  Message.success(t('saved'))
+                }}
+              >
+                {t('save')}
+              </Button>
+            </div>
+          </Form>
         </Card>
         <Card title={t('components')} style={{}} size='small'>
           <Link onClick={() => { shell.open(roConfig.url.rclone) }}>Rclone</Link>(<Link onClick={() => {

@@ -44,7 +44,13 @@ async function appStart(setStartStr: SetStartStrFn) {
   if (appStarting) { return }//避免重新执行
   appStarting = true
 
-  await init(setStartStr)//初始化功能
+  try {
+    await init(setStartStr)//初始化功能
+  } catch (e) {
+    appStarting = false
+    console.error('App init failed:', e)
+    return
+  }
   
   reactRoot.render(<React.StrictMode>
     <BrowserRouter future={{ v7_relativeSplatPath: true }}>

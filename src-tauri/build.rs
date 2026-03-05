@@ -3,9 +3,6 @@ use std::os::unix::fs::PermissionsExt;
 use std::process::exit;
 use std::{env, path::Path};
 
-// 获取操作系统类型（编译时）
-const OS_TYPE: &str = env::consts::OS;
-
 /// 获取目标操作系统类型（支持交叉编译）
 fn get_target_os() -> String {
     // 优先使用 Cargo 提供的目标 OS（支持交叉编译）
@@ -25,7 +22,7 @@ const DEFAULT_OPENLIST_VERSION: &str = "v4.1.10";
 // - NETMOUNT_SKIP_TAURI_BUILD: skip tauri_build::try_build to avoid transient Windows file lock issues
 
 // 版本标记文件
-const OPENLIST_VERSION_FILE: &str = "binaries/openlist/.version";
+const OPENLIST_VERSION_FILE: &str = "binaries/openlist.version";
 
 struct ResBinUrls {
     rclone: &'static str,
@@ -369,7 +366,7 @@ fn check_res_bin() {
     if target_os == "windows" {
         //下载winfsp
         let winfsp_url =
-            "https://github.com/winfsp/winfsp/releases/download/v2.0/winfsp-2.0.23075.msi";
+            "https://github.com/winfsp/winfsp/releases/download/v2.1/winfsp-2.1.25156.msi";
         let winfsp_path = &format!("{}winfsp.msi", bin_path);
         if !Path::new(winfsp_path).exists() && !skip_downloads && !env_truthy("NETMOUNT_SKIP_WINFSP_DOWNLOAD") {
             download_with_progress(winfsp_url, winfsp_path, |total_size, downloaded| {

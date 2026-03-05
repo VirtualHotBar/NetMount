@@ -43,6 +43,7 @@ function AddStorage_page() {
     const isEditMode = (getURLSearchParam('edit') == 'true')
     const [formHook, setFormHook] = useState<FormInstance>();//表单实例
     const [searchStr, setSearchStr] = useState('')//搜索存储
+    const [submitting, setSubmitting] = useState(false)//提交中状态
 
 
     const [storageParams, setStorageParams] = useState<ParametersType>()//编辑模式下，覆盖默认参数
@@ -175,7 +176,7 @@ function AddStorage_page() {
                     header={<FormItem label={'*' + t('storage_name')} hidden={isEditMode}>
                         <Input value={storageName || ''} onChange={(value) => {
                             setStorageName(value)
-                        }} />
+                        }} disabled={submitting} />
                     </FormItem>} data={[...storageInfo.defaultParams.parameters/* ,...storageInfo.defaultParams.exParameters?.openlist?.additional||[] */]}
                     showAdvanced={showAdvanced} overwriteValues={storageParams || {}} setFormHook={(hook) => { setFormHook(hook) }} />
                 <br />
@@ -199,6 +200,12 @@ function AddStorage_page() {
                             <Button onClick={() => { getURLSearchParam('edit') ? navigate('/storage/manage') : setStep('selectType') }}>{t('step_back')}</Button>
                             <Button onClick={async () => {
                                 if (!formHook) return;
+                                
+                                // 防止重复提交
+                                if (submitting) return;
+                                
+                                setSubmitting(true);
+                                
                                 try {
                                     await formHook.validate()
                                 } catch (error) {
@@ -209,6 +216,7 @@ function AddStorage_page() {
                                             Message.error(t(err.key) + t(errorValue.message.replace(err.key, '')))
                                         }
                                     })
+                                    setSubmitting(false);
                                     return
                                 }
 
@@ -216,12 +224,14 @@ function AddStorage_page() {
                                 if (!isEditMode) {
                                     if (searchStorage(storageName)?.name) {
                                         Message.error(t('storage_name_already_exists'))
+                                        setSubmitting(false);
                                         return
                                     }
                                 }
 
                                 if (!storageName) {
                                     Message.error(t('storage_name_cannot_be_empty'))
+                                    setSubmitting(false);
                                     return
                                 }
 
@@ -236,14 +246,16 @@ function AddStorage_page() {
                                         content: t('Storage_added_successfully'),
                                     })
                                     navigate('/storage/manage')
+                                    // 成功后不需要恢复状态，因为会跳转
                                 } else {
                                     Notification.error({
                                         title: t('error'),
                                         content: t('Storage_added_failed'),
                                     })
+                                    setSubmitting(false);
                                 }
                             }
-                            } type='primary'>{t('save')}</Button>
+                            } type='primary' loading={submitting} disabled={submitting}>{submitting ? t('saving') : t('save')}</Button>
                         </Space>
                     </Col>
                 </Row>
