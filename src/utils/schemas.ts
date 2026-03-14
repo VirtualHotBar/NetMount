@@ -3,7 +3,7 @@
  * 增强数据完整性和运行时安全性
  */
 
-import { z } from 'zod';
+import { z } from 'zod'
 
 // ============================================
 // Rclone API Schemas
@@ -19,9 +19,9 @@ export const RcloneFileInfoSchema = z.object({
   MimeType: z.string().optional(),
   ModTime: z.string().datetime().or(z.string()), // 某些情况下可能不是标准ISO格式
   IsDir: z.boolean(),
-});
+})
 
-export type RcloneFileInfo = z.infer<typeof RcloneFileInfoSchema>;
+export type RcloneFileInfo = z.infer<typeof RcloneFileInfoSchema>
 
 /**
  * Rclone 存储空间信息 Schema
@@ -31,9 +31,9 @@ export const RcloneStorageSpaceSchema = z.object({
   used: z.number().nonnegative(),
   free: z.number().nonnegative(),
   trashed: z.number().nonnegative().optional(),
-});
+})
 
-export type RcloneStorageSpace = z.infer<typeof RcloneStorageSpaceSchema>;
+export type RcloneStorageSpace = z.infer<typeof RcloneStorageSpaceSchema>
 
 /**
  * Rclone 版本信息 Schema
@@ -48,9 +48,9 @@ export const RcloneVersionSchema = z.object({
   linking: z.string(),
   os: z.string(),
   version: z.string(),
-});
+})
 
-export type RcloneVersion = z.infer<typeof RcloneVersionSchema>;
+export type RcloneVersion = z.infer<typeof RcloneVersionSchema>
 
 /**
  * Rclone 统计信息 Schema
@@ -77,9 +77,9 @@ export const RcloneStatsSchema = z.object({
   transferTime: z.number().nonnegative(),
   lastError: z.string().optional(),
   transferring: z.array(z.record(z.unknown())).optional(),
-});
+})
 
-export type RcloneStats = z.infer<typeof RcloneStatsSchema>;
+export type RcloneStats = z.infer<typeof RcloneStatsSchema>
 
 /**
  * Rclone 配置提供者选项 Schema
@@ -96,15 +96,17 @@ export const RcloneProviderOptionSchema = z.object({
   IsPassword: z.boolean().optional(),
   Provider: z.string().optional(),
   ShortOpt: z.string().optional(),
-  Examples: z.array(
-    z.object({
-      Value: z.string(),
-      Help: z.string(),
-    })
-  ).optional(),
-});
+  Examples: z
+    .array(
+      z.object({
+        Value: z.string(),
+        Help: z.string(),
+      })
+    )
+    .optional(),
+})
 
-export type RcloneProviderOption = z.infer<typeof RcloneProviderOptionSchema>;
+export type RcloneProviderOption = z.infer<typeof RcloneProviderOptionSchema>
 
 /**
  * Rclone 配置提供者 Schema
@@ -114,18 +116,18 @@ export const RcloneProviderSchema = z.object({
   Description: z.string(),
   Prefix: z.string(),
   Options: z.array(RcloneProviderOptionSchema),
-});
+})
 
-export type RcloneProvider = z.infer<typeof RcloneProviderSchema>;
+export type RcloneProvider = z.infer<typeof RcloneProviderSchema>
 
 /**
  * Rclone API 列表响应 Schema
  */
 export const RcloneListResponseSchema = z.object({
   list: z.array(RcloneFileInfoSchema).optional(),
-});
+})
 
-export type RcloneListResponse = z.infer<typeof RcloneListResponseSchema>;
+export type RcloneListResponse = z.infer<typeof RcloneListResponseSchema>
 
 // ============================================
 // OpenList API Schemas
@@ -138,9 +140,9 @@ export const OpenListApiResponseSchema = z.object({
   code: z.number(),
   message: z.string().optional(),
   data: z.unknown().optional(),
-});
+})
 
-export type OpenListApiResponse = z.infer<typeof OpenListApiResponseSchema>;
+export type OpenListApiResponse = z.infer<typeof OpenListApiResponseSchema>
 
 /**
  * OpenList 存储项 Schema
@@ -151,46 +153,52 @@ export const OpenListStorageItemSchema = z.object({
   driver: z.string(),
   status: z.enum(['work', 'error', 'disabled']).or(z.string()),
   addition: z.union([z.string(), z.record(z.unknown())]).optional(),
-});
+})
 
-export type OpenListStorageItem = z.infer<typeof OpenListStorageItemSchema>;
+export type OpenListStorageItem = z.infer<typeof OpenListStorageItemSchema>
 
 /**
  * OpenList 存储列表响应 Schema
  */
 export const OpenListStorageListResponseSchema = OpenListApiResponseSchema.extend({
-  data: z.object({
-    content: z.array(OpenListStorageItemSchema).optional(),
-  }).optional(),
-});
+  data: z
+    .object({
+      content: z.array(OpenListStorageItemSchema).optional(),
+    })
+    .optional(),
+})
 
-export type OpenListStorageListResponse = z.infer<typeof OpenListStorageListResponseSchema>;
+export type OpenListStorageListResponse = z.infer<typeof OpenListStorageListResponseSchema>
 
 /**
  * OpenList 设置响应 Schema
  */
 export const OpenListSettingResponseSchema = OpenListApiResponseSchema.extend({
-  data: z.object({
-    value: z.string().optional(),
-    version: z.string().optional(),
-  }).optional(),
-});
+  data: z
+    .object({
+      value: z.string().optional(),
+      version: z.string().optional(),
+    })
+    .optional(),
+})
 
-export type OpenListSettingResponse = z.infer<typeof OpenListSettingResponseSchema>;
+export type OpenListSettingResponse = z.infer<typeof OpenListSettingResponseSchema>
 
 /**
  * OpenList 存储详情响应 Schema
  */
 export const OpenListStorageDetailResponseSchema = OpenListApiResponseSchema.extend({
-  data: z.object({
-    id: z.number().optional(),
-    mount_path: z.string().optional(),
-    driver: z.string().optional(),
-    addition: z.union([z.string(), z.record(z.unknown())]).optional(),
-  }).optional(),
-});
+  data: z
+    .object({
+      id: z.number().optional(),
+      mount_path: z.string().optional(),
+      driver: z.string().optional(),
+      addition: z.union([z.string(), z.record(z.unknown())]).optional(),
+    })
+    .optional(),
+})
 
-export type OpenListStorageDetailResponse = z.infer<typeof OpenListStorageDetailResponseSchema>;
+export type OpenListStorageDetailResponse = z.infer<typeof OpenListStorageDetailResponseSchema>
 
 // ============================================
 // Application Config Schemas
@@ -207,9 +215,9 @@ export const MountListItemSchema = z.object({
     mountOpt: z.record(z.unknown()),
   }),
   autoMount: z.boolean(),
-});
+})
 
-export type MountListItem = z.infer<typeof MountListItemSchema>;
+export type MountListItem = z.infer<typeof MountListItemSchema>
 
 /**
  * 任务运行时间配置 Schema
@@ -219,9 +227,9 @@ export const TaskTimeConfigSchema = z.object({
   h: z.number().min(0).max(23),
   m: z.number().min(0).max(59),
   s: z.number().min(0).max(59),
-});
+})
 
-export type TaskTimeConfig = z.infer<typeof TaskTimeConfigSchema>;
+export type TaskTimeConfig = z.infer<typeof TaskTimeConfigSchema>
 
 /**
  * 任务运行配置 Schema
@@ -231,9 +239,9 @@ export const TaskRunConfigSchema = z.object({
   mode: z.enum(['start', 'time', 'interval', 'disposable']),
   time: TaskTimeConfigSchema,
   interval: z.number().nonnegative().optional(),
-});
+})
 
-export type TaskRunConfig = z.infer<typeof TaskRunConfigSchema>;
+export type TaskRunConfig = z.infer<typeof TaskRunConfigSchema>
 
 /**
  * 任务列表项 Schema
@@ -252,13 +260,15 @@ export const TaskListItemSchema = z.object({
   parameters: z.record(z.unknown()).optional(),
   enable: z.boolean(),
   run: TaskRunConfigSchema,
-  runInfo: z.object({
-    error: z.boolean().optional(),
-    msg: z.string().optional(),
-  }).optional(),
-});
+  runInfo: z
+    .object({
+      error: z.boolean().optional(),
+      msg: z.string().optional(),
+    })
+    .optional(),
+})
 
-export type TaskListItem = z.infer<typeof TaskListItemSchema>;
+export type TaskListItem = z.infer<typeof TaskListItemSchema>
 
 /**
  * NMConfig Schema
@@ -292,9 +302,9 @@ export const NMConfigSchema = z.object({
       extraArgs: z.string().optional(),
     }),
   }),
-});
+})
 
-export type NMConfigValidated = z.infer<typeof NMConfigSchema>;
+export type NMConfigValidated = z.infer<typeof NMConfigSchema>
 
 // ============================================
 // Validation Helpers
@@ -304,56 +314,56 @@ export type NMConfigValidated = z.infer<typeof NMConfigSchema>;
  * 安全解析函数 - 捕获验证错误并返回默认值
  */
 export function safeParse<T>(schema: z.ZodType<T>, data: unknown, defaultValue: T): T {
-  const result = schema.safeParse(data);
+  const result = schema.safeParse(data)
   if (result.success) {
-    return result.data;
+    return result.data
   }
-  console.warn('Schema validation failed:', result.error.errors);
-  return defaultValue;
+  console.warn('Schema validation failed:', result.error.errors)
+  return defaultValue
 }
 
 /**
  * 部分解析函数 - 允许部分数据通过
  */
 export function partialParse<T>(_schema: z.ZodType<T>, _data: unknown): Partial<T> | undefined {
-  void _schema;
-  void _data;
+  void _schema
+  void _data
   // 由于 ZodType.partial() 不可用，我们直接返回原始数据的部分属性
   // 实际使用时可以通过 schema.shape 来获取可选字段
   // 这里提供一个安全的回退实现
-  return {} as Partial<T>;
+  return {} as Partial<T>
 }
 
 /**
  * 数组解析函数 - 过滤无效项
  */
 export function parseArray<T>(schema: z.ZodType<T>, data: unknown[]): T[] {
-  const results: T[] = [];
+  const results: T[] = []
   for (const item of data) {
-    const result = schema.safeParse(item);
+    const result = schema.safeParse(item)
     if (result.success) {
-      results.push(result.data);
+      results.push(result.data)
     } else {
-      console.warn('Array item validation failed:', result.error.errors);
+      console.warn('Array item validation failed:', result.error.errors)
     }
   }
-  return results;
+  return results
 }
 
 /**
  * 验证结果类型
  */
-export type ValidationResult<T> = 
+export type ValidationResult<T> =
   | { success: true; data: T }
-  | { success: false; errors: z.ZodError['errors'] };
+  | { success: false; errors: z.ZodError['errors'] }
 
 /**
  * 带详细错误信息的验证函数
  */
 export function validateWithDetails<T>(schema: z.ZodType<T>, data: unknown): ValidationResult<T> {
-  const result = schema.safeParse(data);
+  const result = schema.safeParse(data)
   if (result.success) {
-    return { success: true, data: result.data };
+    return { success: true, data: result.data }
   }
-  return { success: false, errors: result.error.errors };
+  return { success: false, errors: result.error.errors }
 }

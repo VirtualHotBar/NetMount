@@ -1,27 +1,39 @@
 import { useEffect, useReducer } from 'react'
 
-import { Alert, Button, Card, Descriptions, Grid, Link, Modal, Notification, Space, Spin, Typography } from "@arco-design/web-react"
+import {
+  Alert,
+  Button,
+  Card,
+  Descriptions,
+  Grid,
+  Link,
+  Modal,
+  Notification,
+  Space,
+  Spin,
+  Typography,
+} from '@arco-design/web-react'
 import { rcloneInfo } from '../../services/rclone'
-import { hooks } from '../../services/hook';
-import { checkUpdate } from '../../controller/update/update';
-import * as shell from '@tauri-apps/plugin-shell';
-import { formatETA, formatSize } from '../../utils/utils';
-import { useTranslation } from 'react-i18next';
-import { nmConfig } from '../../services/config';
-import { IconCloud, IconList, IconStorage, IconSwap } from '@arco-design/web-react/icon';
-import { filterHideStorage } from '../../controller/storage/storage';
-const Row = Grid.Row;
-const Col = Grid.Col;
+import { hooks } from '../../services/hook'
+import { checkUpdate } from '../../controller/update/update'
+import * as shell from '@tauri-apps/plugin-shell'
+import { formatETA, formatSize } from '../../utils/utils'
+import { useTranslation } from 'react-i18next'
+import { nmConfig } from '../../services/config'
+import { IconCloud, IconList, IconStorage, IconSwap } from '@arco-design/web-react/icon'
+import { filterHideStorage } from '../../controller/storage/storage'
+const Row = Grid.Row
+const Col = Grid.Col
 
-let checkedUpdate: boolean = false;
+let checkedUpdate: boolean = false
 
 //checkedUpdate = true;
 
 function Home_page() {
   const { t } = useTranslation()
-  const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
-  const [modal, contextHolder] = Modal.useModal();
-  const [notification, noticeContextHolder] = Notification.useNotification();
+  const [, forceUpdate] = useReducer(x => x + 1, 0) //刷新组件
+  const [modal, contextHolder] = Modal.useModal()
+  const [notification, noticeContextHolder] = Notification.useNotification()
   const storageList = filterHideStorage(rcloneInfo.storageList)
 
   useEffect(() => {
@@ -36,7 +48,7 @@ function Home_page() {
       }
     }
 
-    hooks.upStats = forceUpdate;
+    hooks.upStats = forceUpdate
     hooks.upNotice = showNotice
     hooks.upStartup = forceUpdate
     showNotice()
@@ -45,37 +57,52 @@ function Home_page() {
       checkUpdate(async (info, localVersions) => {
         modal.confirm!({
           title: t('update_available'),
-          content: <>
-            {`${t('current_version')}:${localVersions} , ${t('latest_version')}:${info.name}`}
-            <br />
-            {t('goto_the_website_get_latest_version_ask')}
-          </>,
+          content: (
+            <>
+              {`${t('current_version')}:${localVersions} , ${t('latest_version')}:${info.name}`}
+              <br />
+              {t('goto_the_website_get_latest_version_ask')}
+            </>
+          ),
           onOk: () => {
             shell.open(info.website!)
           },
         })
       })
-      checkedUpdate = true;
+      checkedUpdate = true
     }
 
     return () => {
-      hooks.upNotice = () => { }
-      hooks.upStartup = () => { }
+      hooks.upNotice = () => {}
+      hooks.upStartup = () => {}
     }
   }, [])
 
   const isStorageInitFailed = hooks.startup.storageInitFailed
-  const isStorageInitPending = !isStorageInitFailed && (!hooks.startup.storageInitDone || hooks.startup.storageSyncing)
+  const isStorageInitPending =
+    !isStorageInitFailed && (!hooks.startup.storageInitDone || hooks.startup.storageSyncing)
   const storageCount = storageList.length
 
   return (
     <div>
-      {contextHolder}{noticeContextHolder}
-      <Space direction='vertical' style={{ width: '100%' }}>
+      {contextHolder}
+      {noticeContextHolder}
+      <Space direction="vertical" style={{ width: '100%' }}>
         {/* <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>欢迎使用,统一管理和挂载云存储设施。</h1> */}
         <div style={{ textAlign: 'center', width: '100%' }}>
-          <h1 style={{ fontSize: '2.0rem', fontWeight: 'bold', marginBottom: '1.0rem', marginTop: '0.8rem' }}>NetMount</h1>
-          <span style={{ color: 'var(--color-text-2)', fontSize: '1.1rem' }}>{t('netmount_slogan')}</span>
+          <h1
+            style={{
+              fontSize: '2.0rem',
+              fontWeight: 'bold',
+              marginBottom: '1.0rem',
+              marginTop: '0.8rem',
+            }}
+          >
+            NetMount
+          </h1>
+          <span style={{ color: 'var(--color-text-2)', fontSize: '1.1rem' }}>
+            {t('netmount_slogan')}
+          </span>
         </div>
         {/*<Row >
                     <Col flex={'auto'}style={{ paddingLeft: '0rem', paddingRight: '0rem' }} >
@@ -90,11 +117,18 @@ function Home_page() {
         </Card> */}
 
         <div style={{ height: '1.5rem' }} />
-        {isStorageInitPending &&
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        {isStorageInitPending && (
+          <div
+            style={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             <Alert
               style={{ maxWidth: '24rem', marginBottom: '1.0rem' }}
-              type='info'
+              type="info"
               content={
                 <Space>
                   <Spin />
@@ -103,71 +137,170 @@ function Home_page() {
               }
             />
           </div>
-        }
-        {isStorageInitFailed &&
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        )}
+        {isStorageInitFailed && (
+          <div
+            style={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             <Alert
               style={{ maxWidth: '24rem', marginBottom: '1.0rem' }}
-              type='error'
+              type="error"
               content={
                 <Row>
                   <Col flex={'auto'}>
-                    <Typography.Ellipsis>{t('startup_storage_mount_sync_failed')}</Typography.Ellipsis>
+                    <Typography.Ellipsis>
+                      {t('startup_storage_mount_sync_failed')}
+                    </Typography.Ellipsis>
                   </Col>
                   <Col flex={'4rem'} style={{ textAlign: 'right' }}>
-                    <Link type='text' onClick={() => { hooks.retryStartupStorageSync() }}>{t('refresh')}</Link>
+                    <Link
+                      type="text"
+                      onClick={() => {
+                        hooks.retryStartupStorageSync()
+                      }}
+                    >
+                      {t('refresh')}
+                    </Link>
                   </Col>
                 </Row>
               }
             />
           </div>
-        }
-        {!isStorageInitPending && !isStorageInitFailed && storageList && !(storageList.length > 0) &&
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <Alert style={{ maxWidth: '20rem', marginBottom: '1.0rem' }} type='info' content={
-              <Row >
-                <Col flex={'auto'} >
-                  <Typography.Ellipsis>{t('please_add_storage_tip')}</Typography.Ellipsis>
-                </Col>
-                <Col flex={'4rem'} style={{ textAlign: 'right' }}>
-                  <Link type='text' onClick={() => { hooks.navigate('/storage/manage/add') }}> {t('add')} </Link>
-                </Col>
-              </Row>
-            } />
-          </div>
-        }
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        )}
+        {!isStorageInitPending &&
+          !isStorageInitFailed &&
+          storageList &&
+          !(storageList.length > 0) && (
+            <div
+              style={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Alert
+                style={{ maxWidth: '20rem', marginBottom: '1.0rem' }}
+                type="info"
+                content={
+                  <Row>
+                    <Col flex={'auto'}>
+                      <Typography.Ellipsis>{t('please_add_storage_tip')}</Typography.Ellipsis>
+                    </Col>
+                    <Col flex={'4rem'} style={{ textAlign: 'right' }}>
+                      <Link
+                        type="text"
+                        onClick={() => {
+                          hooks.navigate('/storage/manage/add')
+                        }}
+                      >
+                        {' '}
+                        {t('add')}{' '}
+                      </Link>
+                    </Col>
+                  </Row>
+                }
+              />
+            </div>
+          )}
+        <div
+          style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+        >
           <Space style={{ height: '100%' }}>
-            <Card style={{ width: '10rem', height: '6rem' }} hoverable >
-              <strong ><IconCloud /> {t('storage')}</strong>({isStorageInitPending ? '_' : (isStorageInitFailed ? '-' : storageCount)})<br />
+            <Card style={{ width: '10rem', height: '6rem' }} hoverable>
+              <strong>
+                <IconCloud /> {t('storage')}
+              </strong>
+              ({isStorageInitPending ? '_' : isStorageInitFailed ? '-' : storageCount})<br />
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
-                  <Button type='text' onClick={() => { hooks.navigate('/storage/manage/add') }}> {t('add')} </Button>
-                  <Button type='text' onClick={() => { hooks.navigate('/storage/manage') }}> {t('manage')} </Button>
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      hooks.navigate('/storage/manage/add')
+                    }}
+                  >
+                    {' '}
+                    {t('add')}{' '}
+                  </Button>
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      hooks.navigate('/storage/manage')
+                    }}
+                  >
+                    {' '}
+                    {t('manage')}{' '}
+                  </Button>
                 </Space>
               </div>
             </Card>
             <Card style={{ width: '10rem', height: '6rem' }} hoverable>
-              <strong ><IconStorage /> {t('mount')}</strong>({isStorageInitPending ? '_' : (isStorageInitFailed ? '-' : rcloneInfo.mountList.length)})
+              <strong>
+                <IconStorage /> {t('mount')}
+              </strong>
+              (
+              {isStorageInitPending ? '_' : isStorageInitFailed ? '-' : rcloneInfo.mountList.length}
+              )
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
-                  <Button type='text' onClick={() => { hooks.navigate('/mount/add') }} > {t('add')} </Button>
-                  <Button type='text' onClick={() => { hooks.navigate('/mount') }} >  {t('manage')} </Button>
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      hooks.navigate('/mount/add')
+                    }}
+                  >
+                    {' '}
+                    {t('add')}{' '}
+                  </Button>
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      hooks.navigate('/mount')
+                    }}
+                  >
+                    {' '}
+                    {t('manage')}{' '}
+                  </Button>
                 </Space>
               </div>
             </Card>
             <Card style={{ width: '10rem', height: '6rem' }} hoverable>
-              <strong ><IconList /> {t('task')}</strong>({nmConfig.task.length})
+              <strong>
+                <IconList /> {t('task')}
+              </strong>
+              ({nmConfig.task.length})
               <div style={{ paddingTop: '1.3rem', width: '100%', textAlign: 'center' }}>
                 <Space>
-                  <Button type='text' onClick={() => { hooks.navigate('/task/add') }} >{t('add')} </Button>
-                  <Button type='text' onClick={() => { hooks.navigate('/task') }}> {t('manage')}  </Button>
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      hooks.navigate('/task/add')
+                    }}
+                  >
+                    {t('add')}{' '}
+                  </Button>
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      hooks.navigate('/task')
+                    }}
+                  >
+                    {' '}
+                    {t('manage')}{' '}
+                  </Button>
                 </Space>
               </div>
             </Card>
           </Space>
         </div>
-        <br /><br />
+        <br />
+        <br />
         {/*         <Card>
           存储和挂载概览
           <br />
@@ -177,65 +310,88 @@ function Home_page() {
           <br />
           已挂载：{rcloneInfo.mountList.length}
         </Card> */}
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Card hoverable style={{ maxWidth: '40rem', width: '100%', marginLeft: '1rem', marginRight: '1rem', marginTop: '1rem' }}>
-
-
-
-            <Row >
-              <Col flex={'1'} >
+        <div
+          style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Card
+            hoverable
+            style={{
+              maxWidth: '40rem',
+              width: '100%',
+              marginLeft: '1rem',
+              marginRight: '1rem',
+              marginTop: '1rem',
+            }}
+          >
+            <Row>
+              <Col flex={'1'}>
                 <IconSwap style={{ transform: 'rotate(90deg)' }} /> {t('transmission_overview')}
               </Col>
               <Col flex={'1'} style={{ textAlign: 'right' }}>
-                <Button type='text' onClick={() => { hooks.navigate('/transmit') }} >{t('view_more')}</Button>
+                <Button
+                  type="text"
+                  onClick={() => {
+                    hooks.navigate('/transmit')
+                  }}
+                >
+                  {t('view_more')}
+                </Button>
               </Col>
             </Row>
 
-
-
-
-            <Descriptions style={{ marginTop: '0.8rem' }} colon=' :' data={[
-              {
-                label: t('speed'),
-                value: `${formatSize(rcloneInfo.stats.realSpeed!)}/s`
-              },
-
-              {
-                label: t('size'),
-                value: `${formatSize(rcloneInfo.stats.bytes)}/${formatSize(rcloneInfo.stats.totalBytes)}`
-              },
-
-              ...(rcloneInfo.stats.transferTime > 0 ? [
+            <Descriptions
+              style={{ marginTop: '0.8rem' }}
+              colon=" :"
+              data={[
                 {
-                  label: t('used_time'),
-                  value: formatETA(rcloneInfo.stats.transferTime)
-                }
-              ] : []),
-              ...(Number(rcloneInfo.stats.eta) > 0 ? [
-                {
-                  label: t('eta'),
-                  value: formatETA(rcloneInfo.stats.eta!)
-                }
-              ] : []),
-              ...(rcloneInfo.stats.transferring && Number(rcloneInfo.stats.transferring.length) > 0 ? [
-                {
-                  label: t('transferring'),
-                  value: rcloneInfo.stats.transferring.length
-                }
-              ] : []),
-              ...(Number(rcloneInfo.stats.totalTransfers) > 0 ? [
-                {
-                  label: t('transferred'),
-                  value: rcloneInfo.stats.totalTransfers
-                }
-              ] : []),
+                  label: t('speed'),
+                  value: `${formatSize(rcloneInfo.stats.realSpeed!)}/s`,
+                },
 
-            ]} />
+                {
+                  label: t('size'),
+                  value: `${formatSize(rcloneInfo.stats.bytes)}/${formatSize(rcloneInfo.stats.totalBytes)}`,
+                },
+
+                ...(rcloneInfo.stats.transferTime > 0
+                  ? [
+                      {
+                        label: t('used_time'),
+                        value: formatETA(rcloneInfo.stats.transferTime),
+                      },
+                    ]
+                  : []),
+                ...(Number(rcloneInfo.stats.eta) > 0
+                  ? [
+                      {
+                        label: t('eta'),
+                        value: formatETA(rcloneInfo.stats.eta!),
+                      },
+                    ]
+                  : []),
+                ...(rcloneInfo.stats.transferring &&
+                Number(rcloneInfo.stats.transferring.length) > 0
+                  ? [
+                      {
+                        label: t('transferring'),
+                        value: rcloneInfo.stats.transferring.length,
+                      },
+                    ]
+                  : []),
+                ...(Number(rcloneInfo.stats.totalTransfers) > 0
+                  ? [
+                      {
+                        label: t('transferred'),
+                        value: rcloneInfo.stats.totalTransfers,
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           </Card>
         </div>
       </Space>
     </div>
-
   )
 }
 

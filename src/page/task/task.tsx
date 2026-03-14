@@ -1,6 +1,15 @@
 import { useReducer } from 'react'
 // import { DevTips_module } from '../other/devTips'
-import { Button, Grid, Link, Modal, Space, Table, TableColumnProps, Typography } from '@arco-design/web-react'
+import {
+  Button,
+  Grid,
+  Link,
+  Modal,
+  Space,
+  Table,
+  TableColumnProps,
+  Typography,
+} from '@arco-design/web-react'
 import { useTranslation } from 'react-i18next'
 import { nmConfig, roConfig } from '../../services/config'
 import { useNavigate } from 'react-router-dom'
@@ -10,15 +19,14 @@ import { IconQuestionCircle } from '@arco-design/web-react/icon'
 import { openUrlInBrowser } from '../../utils/utils'
 import { showLog } from '../other/modal'
 
-const Row = Grid.Row;
-const Col = Grid.Col;
-
+const Row = Grid.Row
+const Col = Grid.Col
 
 function Task_page() {
   const { t } = useTranslation()
-  const navigate = useNavigate();
-  const [, forceUpdate] = useReducer(x => x + 1, 0);//刷新组件
-  const [modal, contextHolder] = Modal.useModal();
+  const navigate = useNavigate()
+  const [, forceUpdate] = useReducer(x => x + 1, 0) //刷新组件
+  const [modal, contextHolder] = Modal.useModal()
 
   const columns: TableColumnProps[] = [
     {
@@ -30,13 +38,14 @@ function Task_page() {
     {
       title: t('state'),
       dataIndex: 'state',
-      width: '5rem'
-    }, {
+      width: '5rem',
+    },
+    {
       title: t('cycle'),
       dataIndex: 'cycle',
-      width: '5rem'
-    }
-    , {
+      width: '5rem',
+    },
+    {
       title: t('run_info'),
       dataIndex: 'runInfo',
       ellipsis: true,
@@ -45,10 +54,10 @@ function Task_page() {
       title: t('actions'),
       dataIndex: 'actions',
       align: 'right',
-      width: '14rem'
-    }
-  ];
-  console.log(nmConfig.task);
+      width: '14rem',
+    },
+  ]
+  console.log(nmConfig.task)
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
@@ -56,62 +65,120 @@ function Task_page() {
       <Row style={{ width: '100%', height: '2rem' }}>
         <Col flex={'auto'}>
           <Space>
-            <Button type='primary' onClick={() => { navigate('/task/add') }}>{t('add')}</Button>
-            <Button onClick={() => { forceUpdate() }}>{t('refresh')}</Button>
+            <Button
+              type="primary"
+              onClick={() => {
+                navigate('/task/add')
+              }}
+            >
+              {t('add')}
+            </Button>
+            <Button
+              onClick={() => {
+                forceUpdate()
+              }}
+            >
+              {t('refresh')}
+            </Button>
           </Space>
         </Col>
         <Col flex={'4rem'} style={{ textAlign: 'right' }}>
-          <Button title={t('help')} icon={<IconQuestionCircle />} onClick={() => { openUrlInBrowser(roConfig.url.docs + '/docs/task') }} />
+          <Button
+            title={t('help')}
+            icon={<IconQuestionCircle />}
+            onClick={() => {
+              openUrlInBrowser(roConfig.url.docs + '/docs/task')
+            }}
+          />
         </Col>
       </Row>
-      <div style={{ height: "calc(100% - 3rem)", marginTop: "1rem" }}>
-        <Table columns={columns} noDataElement={<NoData_module />} data={nmConfig.task.map((taskItem) => {
-          return {
-            ...taskItem,
-            state: taskItem.enable ? t('enabled') : t('disabled'),
-            cycle: t('task_run_mode_' + taskItem.run.mode),
-            runInfo: <Link style={{ width: '100%' }}
-              onClick={() => { showLog(modal, taskItem.runInfo?.msg || t('none')) }}>
-              <Typography.Ellipsis>  {(taskItem.runInfo?.msg || t('none')).split('\n').pop()}</Typography.Ellipsis>
+      <div style={{ height: 'calc(100% - 3rem)', marginTop: '1rem' }}>
+        <Table
+          columns={columns}
+          noDataElement={<NoData_module />}
+          data={nmConfig.task.map(taskItem => {
+            return {
+              ...taskItem,
+              state: taskItem.enable ? t('enabled') : t('disabled'),
+              cycle: t('task_run_mode_' + taskItem.run.mode),
+              runInfo: (
+                <Link
+                  style={{ width: '100%' }}
+                  onClick={() => {
+                    showLog(modal, taskItem.runInfo?.msg || t('none'))
+                  }}
+                >
+                  <Typography.Ellipsis>
+                    {' '}
+                    {(taskItem.runInfo?.msg || t('none')).split('\n').pop()}
+                  </Typography.Ellipsis>
+                </Link>
+              ),
+              actions: (
+                <Space>
+                  {taskItem.enable ? (
+                    <>
+                      <Button
+                        onClick={() => {
+                          taskScheduler.cancelTask(taskItem.name)
+                          taskItem.enable = false
+                          setTimeout(() => {
+                            forceUpdate()
+                          }, 200)
+                        }}
+                        status="danger"
+                      >
+                        {t('disable')}
+                      </Button>
 
-            </Link>,
-            actions: <Space>
-
-              {
-                taskItem.enable ? <>
-                  <Button onClick={() => {
-                    taskScheduler.cancelTask(taskItem.name)
-                    taskItem.enable = false
-                    setTimeout(() => {
-                      forceUpdate()
-                    }, 200)
-                  }} status='danger'>{t('disable')}</Button>
-
-                  <Button onClick={() => {
-                    taskScheduler.executeTask(taskItem)
-                    setTimeout(() => {
-                      forceUpdate()
-                    }, 200)
-                  }}>{t('trigger')}</Button>
-                </>
-                  :
-                  <>
-                    <Button onClick={() => { delTask(taskItem.name); forceUpdate() }} status='danger'>{t('delete')}</Button>
-                    <Button onClick={() => { navigate('./add/?edit=true&taskName=' + taskItem.name) }}>{t('edit')}</Button>
-                    <Button onClick={() => {
-                      taskItem.enable = true;
-                      taskScheduler.addTask(taskItem);
-                      setTimeout(() => {
-                        forceUpdate()
-                      }, 200)
-                    }} type='primary'>{t('enable')}</Button>
-                  </>
-              }
-
-
-            </Space>
-          }
-        })} />
+                      <Button
+                        onClick={() => {
+                          taskScheduler.executeTask(taskItem)
+                          setTimeout(() => {
+                            forceUpdate()
+                          }, 200)
+                        }}
+                      >
+                        {t('trigger')}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={() => {
+                          delTask(taskItem.name)
+                          forceUpdate()
+                        }}
+                        status="danger"
+                      >
+                        {t('delete')}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          navigate('./add/?edit=true&taskName=' + taskItem.name)
+                        }}
+                      >
+                        {t('edit')}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          taskItem.enable = true
+                          taskScheduler.addTask(taskItem)
+                          setTimeout(() => {
+                            forceUpdate()
+                          }, 200)
+                        }}
+                        type="primary"
+                      >
+                        {t('enable')}
+                      </Button>
+                    </>
+                  )}
+                </Space>
+              ),
+            }
+          })}
+        />
       </div>
     </div>
   )

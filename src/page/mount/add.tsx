@@ -1,390 +1,509 @@
-import { Alert, Button, Checkbox, Form, FormInstance, Input, Notification, Radio, Select, Space } from '@arco-design/web-react'
+import {
+  Alert,
+  Button,
+  Checkbox,
+  Form,
+  FormInstance,
+  Input,
+  Notification,
+  Radio,
+  Select,
+  Space,
+} from '@arco-design/web-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom';
-import { formatPath, getURLSearchParam, getWinFspInstallState, showPathInExplorer } from '../../utils/utils';
-import { defaultMountConfig, defaultVfsConfig, vfsCacheModeParam } from '../../controller/storage/mount/parameters/defaults';
-import { rcloneInfo } from '../../services/rclone';
-import { addMountStorage, editMountStorage, getAvailableDriveLetter, getMountStorage, mountStorage } from '../../controller/storage/mount/mount';
-import { osInfo } from '../../services/config';
-import { homeDir } from '@tauri-apps/api/path';
-import { InputForm_module, paramsType2FormItems } from '../other/InputForm';
-import { filterHideStorage } from '../../controller/storage/storage';
-import { MountOptions, VfsOptions } from '../../type/rclone/storage/mount/parameters';
-import { searchStorageInfo } from '../../controller/storage/allList';
-import { ParametersType } from '../../type/defaults';
+import { useNavigate } from 'react-router-dom'
+import {
+  formatPath,
+  getURLSearchParam,
+  getWinFspInstallState,
+  showPathInExplorer,
+} from '../../utils/utils'
+import {
+  defaultMountConfig,
+  defaultVfsConfig,
+  vfsCacheModeParam,
+} from '../../controller/storage/mount/parameters/defaults'
+import { rcloneInfo } from '../../services/rclone'
+import {
+  addMountStorage,
+  editMountStorage,
+  getAvailableDriveLetter,
+  getMountStorage,
+  mountStorage,
+} from '../../controller/storage/mount/mount'
+import { osInfo } from '../../services/config'
+import { homeDir } from '@tauri-apps/api/path'
+import { InputForm_module, paramsType2FormItems } from '../other/InputForm'
+import { filterHideStorage } from '../../controller/storage/storage'
+import { MountOptions, VfsOptions } from '../../type/rclone/storage/mount/parameters'
+import { searchStorageInfo } from '../../controller/storage/allList'
+import { ParametersType } from '../../type/defaults'
 
-const FormItem = Form.Item;
-
+const FormItem = Form.Item
 
 export default function AddMount_page() {
-    const { t } = useTranslation()
-    const navigate = useNavigate();
-    const [storageName, setStorageName] = useState<string>()
-    const [showAllOptions, setShowAllOptions] = useState(false)
-    const [mountPath, setMountPath] = useState<string>('')
-    const [autoMount, setAutoMount] = useState(true)
-    //const [autoMountPath, setAutoMountPath] = useState(true)//自动分配盘符
-    //const [notification, contextHolder] = Notification.useNotification();
-    const [parameters, setParameters] = useState<{ vfsOpt: VfsOptions, mountOpt: MountOptions }>({ mountOpt: defaultMountConfig, vfsOpt: defaultVfsConfig })
-    const [vfsOptFormHook, setVfsOptFormHook] = useState<FormInstance>();//表单实例
-    const [mountOptFormHook, setMountOptFormHook] = useState<FormInstance>();//表单实例
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [storageName, setStorageName] = useState<string>()
+  const [showAllOptions, setShowAllOptions] = useState(false)
+  const [mountPath, setMountPath] = useState<string>('')
+  const [autoMount, setAutoMount] = useState(true)
+  //const [autoMountPath, setAutoMountPath] = useState(true)//自动分配盘符
+  //const [notification, contextHolder] = Notification.useNotification();
+  const [parameters, setParameters] = useState<{ vfsOpt: VfsOptions; mountOpt: MountOptions }>({
+    mountOpt: defaultMountConfig,
+    vfsOpt: defaultVfsConfig,
+  })
+  const [vfsOptFormHook, setVfsOptFormHook] = useState<FormInstance>() //表单实例
+  const [mountOptFormHook, setMountOptFormHook] = useState<FormInstance>() //表单实例
 
-    const RadioGroup = Radio.Group;
-    const storageList = filterHideStorage(rcloneInfo.storageList)
-    const isEditMode = (getURLSearchParam('edit') === 'true')
-    const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows');
-    const isMacOS = rcloneInfo.version.os.toLowerCase().includes('darwin');
+  const RadioGroup = Radio.Group
+  const storageList = filterHideStorage(rcloneInfo.storageList)
+  const isEditMode = getURLSearchParam('edit') === 'true'
+  const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows')
+  const isMacOS = rcloneInfo.version.os.toLowerCase().includes('darwin')
 
-    // 判断是否为预定义路径：自动盘符、桌面路径
-    const isPredefinedPath = mountPath === '*' || mountPath.startsWith('~/Desktop/');
-    // 自定义路径：既不是自动盘符也不是桌面路径
-    const isMountPathCustom = !isPredefinedPath;
-    // 是否为盘符路径（Windows）：自动盘符或盘符格式
-    const mountPathuIsDriveLetter = isWindows && (mountPath === '*' || mountPath.endsWith(':') || mountPath.endsWith(':/'));
-    const cacheMode = String(parameters.vfsOpt.CacheMode || 'writes').toLowerCase();
+  // 判断是否为预定义路径：自动盘符、桌面路径
+  const isPredefinedPath = mountPath === '*' || mountPath.startsWith('~/Desktop/')
+  // 自定义路径：既不是自动盘符也不是桌面路径
+  const isMountPathCustom = !isPredefinedPath
+  // 是否为盘符路径（Windows）：自动盘符或盘符格式
+  const mountPathuIsDriveLetter =
+    isWindows && (mountPath === '*' || mountPath.endsWith(':') || mountPath.endsWith(':/'))
+  const cacheMode = String(parameters.vfsOpt.CacheMode || 'writes').toLowerCase()
 
-    const checkWinFspState = async () => {
-        if (osInfo.osType === "windows" && rcloneInfo.endpoint.isLocal) {
-            const winFspInstallState = await getWinFspInstallState();
-            if (!winFspInstallState) {
-                navigate('/mount')
-                Notification.warning({
-                    id: 'winfsp_not_installed',
-                    title: t('warning'),
-                    content: t('winfsp_not_installed'),
-                })
-            }
+  const checkWinFspState = async () => {
+    if (osInfo.osType === 'windows' && rcloneInfo.endpoint.isLocal) {
+      const winFspInstallState = await getWinFspInstallState()
+      if (!winFspInstallState) {
+        navigate('/mount')
+        Notification.warning({
+          id: 'winfsp_not_installed',
+          title: t('warning'),
+          content: t('winfsp_not_installed'),
+        })
+      }
+    }
+  }
+
+  const editMode = async () => {
+    let mountPathTemp = getURLSearchParam('mountPath')
+    // 规范化路径以便查找
+    const normalizeMountPath = (path: string): string => {
+      if (!path) return path
+      let normalized = path.replace(/\\/g, '/')
+      // 移除尾随斜杠（除了盘符后的冒号）
+      if (normalized.length > 2 && normalized.endsWith('/') && !normalized.endsWith(':/')) {
+        normalized = normalized.slice(0, -1)
+      }
+      return normalized
+    }
+    mountPathTemp = normalizeMountPath(mountPathTemp)
+    const mount = getMountStorage(mountPathTemp)
+    if (mount) {
+      // 尝试将绝对路径转换回 ~/Desktop/ 形式（如果适用）
+      let displayMountPath = mount.mountPath
+      try {
+        const homeDirStr = await homeDir()
+        const desktopPath = homeDirStr.replace(/\\/g, '/') + '/Desktop/'
+        if (displayMountPath.replace(/\\/g, '/').startsWith(desktopPath)) {
+          displayMountPath =
+            '~/Desktop/' + displayMountPath.replace(/\\/g, '/').substring(desktopPath.length)
         }
+      } catch (e) {
+        // 忽略错误，使用原始路径
+      }
+      setStorageName(mount.storageName)
+      setMountPath(displayMountPath)
+      setAutoMount(mount.autoMount)
+      setParameters(mount.parameters as { vfsOpt: VfsOptions; mountOpt: MountOptions })
+    }
+  }
+
+  useEffect(() => {
+    checkWinFspState()
+
+    if (storageList.length === 0) {
+      navigate('/mount')
+      Notification.warning({
+        id: 'no_storage',
+        title: t('warning'),
+        content: t('not_add_storage'),
+      })
+      return
+    } else if (getURLSearchParam('name')) {
+      setStorageName(getURLSearchParam('name'))
+    } else if (!storageName) {
+      setStorageName(storageList[0]?.name || '')
     }
 
-    const editMode = async () => {
-        let mountPathTemp = getURLSearchParam('mountPath')
-        // 规范化路径以便查找
-        const normalizeMountPath = (path: string): string => {
-            if (!path) return path;
-            let normalized = path.replace(/\\/g, '/');
-            // 移除尾随斜杠（除了盘符后的冒号）
-            if (normalized.length > 2 && normalized.endsWith('/') && !normalized.endsWith(':/')) {
-                normalized = normalized.slice(0, -1);
-            }
-            return normalized;
-        };
-        mountPathTemp = normalizeMountPath(mountPathTemp);
-        const mount = getMountStorage(mountPathTemp)
-        if (mount) {
-            // 尝试将绝对路径转换回 ~/Desktop/ 形式（如果适用）
-            let displayMountPath = mount.mountPath;
-            try {
-                const homeDirStr = await homeDir();
-                const desktopPath = homeDirStr.replace(/\\/g, '/') + '/Desktop/';
-                if (displayMountPath.replace(/\\/g, '/').startsWith(desktopPath)) {
-                    displayMountPath = '~/Desktop/' + displayMountPath.replace(/\\/g, '/').substring(desktopPath.length);
-                }
-            } catch (e) {
-                // 忽略错误，使用原始路径
-            }
-            setStorageName(mount.storageName)
-            setMountPath(displayMountPath)
-            setAutoMount(mount.autoMount)
-            setParameters(mount.parameters as { vfsOpt: VfsOptions, mountOpt: MountOptions })
-        }
+    if (isEditMode) {
+      editMode()
     }
+  }, [])
 
-    useEffect(() => {
-        checkWinFspState()
-
-        if (storageList.length === 0) {
-            navigate('/mount')
-            Notification.warning({
-                id: 'no_storage',
-                title: t('warning'),
-                content: t('not_add_storage'),
-            })
-            return
-        } else if (getURLSearchParam('name')) {
-            setStorageName(getURLSearchParam('name'))
-        } else if (!storageName) {
-            setStorageName(storageList[0]?.name || '')
-        }
-
-        if (isEditMode) {
-            editMode();
-        }
-    }, [])
-
-    useEffect(() => {
-        setMountPath(mountPath.replace(/\\/g, '/').replace(/\/+/g, '/'))
-        //默认卷标
-        if (mountPathuIsDriveLetter && parameters.mountOpt.VolumeName === '') {
-            setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, VolumeName: storageName ? storageName : '' } })
-            mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
-        }
-    }, [mountPath])
-
-    useEffect(() => {
-        if (!isEditMode) {
-            //默认挂载路径
-            if (isWindows) {
-                //setMountPath('*')
-                setMountPath('~/Desktop/' + storageName)
-            } else {
-                if (storageName) {
-                    if (rcloneInfo.version.os.toLowerCase().includes('darwin')) {
-                        setMountPath('~/Desktop/' + storageName)
-                    } else {
-                        setMountPath('/mnt/' + storageName)
-                    }
-                }
-            }
-
-            //默认卷标
-            if (mountPathuIsDriveLetter) {
-                mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
-            }
-        }
-    }, [storageName])
-
-    useEffect(() => {
-        if (isMacOS && !parameters.mountOpt.MountType) {
-            setParameters((prev) => ({
-                ...prev,
-                mountOpt: {
-                    ...prev.mountOpt,
-                    MountType: 'nfsmount'
-                }
-            }));
-            mountOptFormHook?.setFieldsValue({ MountType: 'nfsmount' });
-        }
-    }, [isMacOS, mountOptFormHook, parameters.mountOpt.MountType])
-
-    useEffect(() => {
-        vfsOptFormHook && vfsOptFormHook.setFieldsValue(parameters.vfsOpt);
-        mountOptFormHook && mountOptFormHook.setFieldsValue(parameters.mountOpt)
-    }, [vfsOptFormHook, mountOptFormHook])
-
-    const applyCachePreset = (mode: 'off' | 'minimal' | 'writes' | 'full') => {
-        const next = { ...parameters.vfsOpt, CacheMode: mode };
-        if (mode === 'off' || mode === 'minimal') {
-            next.CacheMaxSize = 1073741824; // 1GB
-            next.WriteBack = 1000000000; // 1s
-        } else if (mode === 'writes') {
-            next.CacheMaxSize = 10737418240; // 10GB
-            next.WriteBack = 5000000000; // 5s
-        } else {
-            next.CacheMaxSize = 21474836480; // 20GB
-            next.WriteBack = 15000000000; // 15s
-            next.ReadAhead = 67108864; // 64MB
-        }
-        setParameters({ ...parameters, vfsOpt: next });
-        vfsOptFormHook?.setFieldsValue(next);
+  useEffect(() => {
+    setMountPath(mountPath.replace(/\\/g, '/').replace(/\/+/g, '/'))
+    //默认卷标
+    if (mountPathuIsDriveLetter && parameters.mountOpt.VolumeName === '') {
+      setParameters({
+        ...parameters,
+        mountOpt: { ...parameters.mountOpt, VolumeName: storageName ? storageName : '' },
+      })
+      mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
     }
+  }, [mountPath])
 
+  useEffect(() => {
+    if (!isEditMode) {
+      //默认挂载路径
+      if (isWindows) {
+        //setMountPath('*')
+        setMountPath('~/Desktop/' + storageName)
+      } else {
+        if (storageName) {
+          if (rcloneInfo.version.os.toLowerCase().includes('darwin')) {
+            setMountPath('~/Desktop/' + storageName)
+          } else {
+            setMountPath('/mnt/' + storageName)
+          }
+        }
+      }
 
+      //默认卷标
+      if (mountPathuIsDriveLetter) {
+        mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
+      }
+    }
+  }, [storageName])
 
+  useEffect(() => {
+    if (isMacOS && !parameters.mountOpt.MountType) {
+      setParameters(prev => ({
+        ...prev,
+        mountOpt: {
+          ...prev.mountOpt,
+          MountType: 'nfsmount',
+        },
+      }))
+      mountOptFormHook?.setFieldsValue({ MountType: 'nfsmount' })
+    }
+  }, [isMacOS, mountOptFormHook, parameters.mountOpt.MountType])
 
+  useEffect(() => {
+    vfsOptFormHook && vfsOptFormHook.setFieldsValue(parameters.vfsOpt)
+    mountOptFormHook && mountOptFormHook.setFieldsValue(parameters.mountOpt)
+  }, [vfsOptFormHook, mountOptFormHook])
 
+  const applyCachePreset = (mode: 'off' | 'minimal' | 'writes' | 'full') => {
+    const next = { ...parameters.vfsOpt, CacheMode: mode }
+    if (mode === 'off' || mode === 'minimal') {
+      next.CacheMaxSize = 1073741824 // 1GB
+      next.WriteBack = 1000000000 // 1s
+    } else if (mode === 'writes') {
+      next.CacheMaxSize = 10737418240 // 10GB
+      next.WriteBack = 5000000000 // 5s
+    } else {
+      next.CacheMaxSize = 21474836480 // 20GB
+      next.WriteBack = 15000000000 // 15s
+      next.ReadAhead = 67108864 // 64MB
+    }
+    setParameters({ ...parameters, vfsOpt: next })
+    vfsOptFormHook?.setFieldsValue(next)
+  }
 
-    return (
-        <div>
+  return (
+    <div>
+      <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>
+        {!isEditMode ? t('add_mount') : t('edit_mount')}
+      </h2>
 
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{!isEditMode ? t('add_mount') : t('edit_mount')}</h2>
+      {/* 基础选项 - 始终显示 */}
+      <div style={{ marginBottom: showAllOptions ? '1rem' : '0' }}>
+        <FormItem label={t('storage')}>
+          <Select
+            /* bordered={false} */ value={storageName || ''}
+            placeholder={t('please_select')}
+            onChange={value => setStorageName(value)}
+          >
+            {storageList.map(item => {
+              return (
+                <Select.Option key={item.name} value={item.name}>
+                  {item.name}({t(searchStorageInfo(item.type).label)})
+                </Select.Option>
+              )
+            })}
+          </Select>
+        </FormItem>
 
-            {/* 基础选项 - 始终显示 */}
-            <div style={{ marginBottom: showAllOptions ? '1rem' : '0' }}>
-                <FormItem label={t('storage')}>
-                    <Select /* bordered={false} */ value={storageName || ''} placeholder={t('please_select')} onChange={(value) =>
-                        setStorageName(value)
-                    }>
-                        {
-                            storageList.map((item) => {
-                                return (
-                                    <Select.Option key={item.name} value={item.name}>{item.name}({t(searchStorageInfo(item.type).label)})</Select.Option>
-                                )
-                            })
-                        }
-                    </Select>
-                </FormItem>
+        <FormItem label={t('mount_path')}>
+          {isMountPathCustom && (
+            <>
+              <Input
+                value={mountPath}
+                onChange={value => setMountPath(value)}
+                placeholder={t('please_input')}
+              />
+              <br />
+              <br />
+            </>
+          )}
+          <RadioGroup
+            value={!isMountPathCustom ? mountPath : ''}
+            onChange={value => setMountPath(value)}
+          >
+            <Radio value={`~/Desktop/${storageName}`}>
+              {t('desktop')}({t('recommend')})
+            </Radio>
+            {isWindows && <Radio value="*">{t('auto_drive_letter')}</Radio>}
+            <Radio value="">{t('custom')}</Radio>
+          </RadioGroup>
+        </FormItem>
 
-                <FormItem label={t('mount_path')}>
-                    {isMountPathCustom && (
-                        <>
-                            <Input
-                                value={mountPath}
-                                onChange={(value) => setMountPath(value)}
-                                placeholder={t('please_input')}
-                            />
-                            <br />
-                            <br />
-                        </>
-                    )}
-                    <RadioGroup
-                        value={!isMountPathCustom ? mountPath : ''}
-                        onChange={(value) => setMountPath(value)}
-                    >
-                        <Radio value={`~/Desktop/${storageName}`}>{t('desktop')}({t('recommend')})</Radio>
-                        {isWindows && (
-                            <Radio value="*">{t('auto_drive_letter')}</Radio>
-                        )}
-                        <Radio value="">{t('custom')}</Radio>
-                    </RadioGroup>
+        <FormItem
+          label={t('VolumeName') + '(' + t('optional') + ')'}
+          hidden={!mountPathuIsDriveLetter || showAllOptions}
+        >
+          <Input
+            /* bordered={false} */ value={parameters.mountOpt.VolumeName}
+            placeholder={t('please_input')}
+            onChange={value =>
+              setParameters({
+                ...parameters,
+                mountOpt: { ...parameters.mountOpt, VolumeName: value },
+              })
+            }
+          />
+        </FormItem>
 
-                </FormItem>
-
-                <FormItem label={t('VolumeName') + '(' + t('optional') + ')'} hidden={!mountPathuIsDriveLetter || showAllOptions}>
-                    <Input /* bordered={false} */ value={parameters.mountOpt.VolumeName} placeholder={t('please_input')} onChange={(value) =>
-                        setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, VolumeName: value } })
-                    } />
-                </FormItem>
-
-                {!showAllOptions &&
-                    <>
-                        <FormItem label={t('mount_options')}>
-                            <Space>
-                                <Checkbox checked={parameters.vfsOpt.ReadOnly} onChange={(checked) => {
-                                    vfsOptFormHook?.setFieldValue('ReadOnly', checked)
-                                }} >{t('read_only')}</Checkbox>
-                                {mountPathuIsDriveLetter && <Checkbox checked={!parameters.mountOpt.NetworkMode} onChange={(checked) => {
-                                    mountOptFormHook?.setFieldValue('NetworkMode', !checked)
-                                }} >{t('simulate_hard_drive')}</Checkbox>}
-                            </Space>
-                        </FormItem>
-                        {isMacOS && (
-                            <FormItem label={t('mount_backend')}>
-                                <Select
-                                    value={parameters.mountOpt.MountType || 'nfsmount'}
-                                    onChange={(value) => {
-                                        setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, MountType: value } })
-                                        mountOptFormHook?.setFieldValue('MountType', value)
-                                    }}
-                                >
-                                    <Select.Option value="nfsmount">nfsmount ({t('recommend')})</Select.Option>
-                                    <Select.Option value="fuse-t">fuse-t</Select.Option>
-                                    <Select.Option value="macfuse">macfuse</Select.Option>
-                                </Select>
-                            </FormItem>
-                        )}
-                        <FormItem label={t('cache_strategy')}>
-                            <Space wrap>
-                                <Button type={cacheMode === 'writes' ? 'primary' : 'secondary'} onClick={() => applyCachePreset('writes')}>{t('preset_balanced')}</Button>
-                                <Button type={cacheMode === 'full' ? 'primary' : 'secondary'} onClick={() => applyCachePreset('full')}>{t('preset_performance')}</Button>
-                                <Button type={cacheMode === 'minimal' ? 'primary' : 'secondary'} onClick={() => applyCachePreset('minimal')}>{t('preset_low_disk')}</Button>
-                                <Button type={cacheMode === 'off' ? 'primary' : 'secondary'} onClick={() => applyCachePreset('off')}>{t('preset_compatibility')}</Button>
-                            </Space>
-                            <Alert
-                                style={{ marginTop: '0.5rem' }}
-                                type={cacheMode === 'full' ? 'warning' : 'info'}
-                                content={
-                                    cacheMode === 'full'
-                                        ? t('cache_mode_tip_full')
-                                        : cacheMode === 'off'
-                                            ? t('cache_mode_tip_off')
-                                            : cacheMode === 'minimal'
-                                                ? t('cache_mode_tip_minimal')
-                                                : t('cache_mode_tip_writes')
-                                }
-                            />
-                        </FormItem>
-
-                    </>
-                }
-                {showAllOptions && isMacOS && (
-                    <FormItem label={t('mount_backend')}>
-                        <Select
-                            value={parameters.mountOpt.MountType || 'nfsmount'}
-                            onChange={(value) => {
-                                setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, MountType: value } })
-                                mountOptFormHook?.setFieldValue('MountType', value)
-                            }}
-                        >
-                            <Select.Option value="nfsmount">nfsmount ({t('recommend')})</Select.Option>
-                            <Select.Option value="fuse-t">fuse-t</Select.Option>
-                            <Select.Option value="macfuse">macfuse</Select.Option>
-                        </Select>
-                    </FormItem>
+        {!showAllOptions && (
+          <>
+            <FormItem label={t('mount_options')}>
+              <Space>
+                <Checkbox
+                  checked={parameters.vfsOpt.ReadOnly}
+                  onChange={checked => {
+                    vfsOptFormHook?.setFieldValue('ReadOnly', checked)
+                  }}
+                >
+                  {t('read_only')}
+                </Checkbox>
+                {mountPathuIsDriveLetter && (
+                  <Checkbox
+                    checked={!parameters.mountOpt.NetworkMode}
+                    onChange={checked => {
+                      mountOptFormHook?.setFieldValue('NetworkMode', !checked)
+                    }}
+                  >
+                    {t('simulate_hard_drive')}
+                  </Checkbox>
                 )}
-            </div>
+              </Space>
+            </FormItem>
+            {isMacOS && (
+              <FormItem label={t('mount_backend')}>
+                <Select
+                  value={parameters.mountOpt.MountType || 'nfsmount'}
+                  onChange={value => {
+                    setParameters({
+                      ...parameters,
+                      mountOpt: { ...parameters.mountOpt, MountType: value },
+                    })
+                    mountOptFormHook?.setFieldValue('MountType', value)
+                  }}
+                >
+                  <Select.Option value="nfsmount">nfsmount ({t('recommend')})</Select.Option>
+                  <Select.Option value="fuse-t">fuse-t</Select.Option>
+                  <Select.Option value="macfuse">macfuse</Select.Option>
+                </Select>
+              </FormItem>
+            )}
+            <FormItem label={t('cache_strategy')}>
+              <Space wrap>
+                <Button
+                  type={cacheMode === 'writes' ? 'primary' : 'secondary'}
+                  onClick={() => applyCachePreset('writes')}
+                >
+                  {t('preset_balanced')}
+                </Button>
+                <Button
+                  type={cacheMode === 'full' ? 'primary' : 'secondary'}
+                  onClick={() => applyCachePreset('full')}
+                >
+                  {t('preset_performance')}
+                </Button>
+                <Button
+                  type={cacheMode === 'minimal' ? 'primary' : 'secondary'}
+                  onClick={() => applyCachePreset('minimal')}
+                >
+                  {t('preset_low_disk')}
+                </Button>
+                <Button
+                  type={cacheMode === 'off' ? 'primary' : 'secondary'}
+                  onClick={() => applyCachePreset('off')}
+                >
+                  {t('preset_compatibility')}
+                </Button>
+              </Space>
+              <Alert
+                style={{ marginTop: '0.5rem' }}
+                type={cacheMode === 'full' ? 'warning' : 'info'}
+                content={
+                  cacheMode === 'full'
+                    ? t('cache_mode_tip_full')
+                    : cacheMode === 'off'
+                      ? t('cache_mode_tip_off')
+                      : cacheMode === 'minimal'
+                        ? t('cache_mode_tip_minimal')
+                        : t('cache_mode_tip_writes')
+                }
+              />
+            </FormItem>
+          </>
+        )}
+        {showAllOptions && isMacOS && (
+          <FormItem label={t('mount_backend')}>
+            <Select
+              value={parameters.mountOpt.MountType || 'nfsmount'}
+              onChange={value => {
+                setParameters({
+                  ...parameters,
+                  mountOpt: { ...parameters.mountOpt, MountType: value },
+                })
+                mountOptFormHook?.setFieldValue('MountType', value)
+              }}
+            >
+              <Select.Option value="nfsmount">nfsmount ({t('recommend')})</Select.Option>
+              <Select.Option value="fuse-t">fuse-t</Select.Option>
+              <Select.Option value="macfuse">macfuse</Select.Option>
+            </Select>
+          </FormItem>
+        )}
+      </div>
 
-            {/* 高级选项 - 仅在展开时显示 */}
-            {
-                <div style={{ display: showAllOptions ? 'block' : 'none' }}>
-                    <InputForm_module data={paramsType2FormItems(defaultMountConfig, undefined, ['MountType'])} onChange={(data) => {
-                        setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, ...data } })
-                    }} overwriteValues={parameters.mountOpt as unknown as ParametersType} setFormHook={(form) => {
-                        //form.setFieldsValue(parameters.mountOpt)
-                        setMountOptFormHook(form)
-                    }} />
-                    <InputForm_module data={[vfsCacheModeParam, ...paramsType2FormItems(defaultVfsConfig, undefined, ['CacheMode'])]} onChange={(data) => {
-                        setParameters({ ...parameters, vfsOpt: { ...parameters.vfsOpt, ...data } })
-                    }} overwriteValues={parameters.vfsOpt as unknown as ParametersType} setFormHook={(form) => {
-                        //form.setFieldsValue(parameters.vfsOpt);
-                        setVfsOptFormHook(form)
-                    }} />
-                </div>
-            }
-
-            {/* 按钮 */}
-            <div style={{ width: '100%', textAlign: 'right', marginTop: '1rem' }}>
-                <Space>
-                    <Checkbox checked={autoMount} onChange={(checked) => { setAutoMount(checked) }} >{t('auto_mount')}</Checkbox>
-                    {!showAllOptions && <Button onClick={() => { setShowAllOptions(!showAllOptions) }} type='text'>{t('show_all_options')}</Button>}
-                    <Button onClick={() => { navigate('/mount') }} >{t('step_back')}</Button>
-                    <Button disabled={!storageName || !mountPath} onClick={async () => {
-                        // 编辑模式下获取原始路径
-                        const originalMountPath = isEditMode ? getURLSearchParam('mountPath') : '';
-
-                        if (!isEditMode && getMountStorage(mountPath)) {
-                            Notification.error({
-                                title: t('error'),
-                                content: t('mount_path_already_exists'),
-                            })
-                            return;
-                        }
-
-                        let mountPathTemp = mountPath
-                        if (mountPath === "*") {
-                            mountPathTemp = await getAvailableDriveLetter()
-                        } else if (/* !isWindows &&  */mountPath.startsWith('~/')) {
-                            let homeDirStr = await homeDir()
-                            if (!homeDirStr.endsWith('/')) {
-                                homeDirStr = homeDirStr + '/'
-                            }
-                            mountPathTemp = mountPath.replace('~/', homeDirStr)
-                        }
-
-                        mountPathTemp = formatPath(mountPathTemp, isWindows)
-
-                        if (isEditMode) {
-                            await editMountStorage({
-                                storageName: storageName!,
-                                mountPath: mountPathTemp,
-                                parameters: parameters,
-                                autoMount: autoMount
-                            }, originalMountPath)
-                        } else {
-                            await addMountStorage(storageName!, mountPathTemp, parameters, autoMount)
-                        }
-
-                        if (isEditMode) {
-                            Notification.success({
-                                title: t('success'),
-                                content: t('save_successfully'),
-                            })
-                        } else if (await mountStorage(getMountStorage(mountPathTemp)!)) {
-                            Notification.success({
-                                title: t('success'),
-                                content: t('mount_storage_successfully'),
-                            })
-                            if (isWindows && rcloneInfo.endpoint.isLocal) {
-                                showPathInExplorer(mountPathTemp, true)
-                            }
-                        }
-                        navigate('/mount')
-                    }} type='primary'>
-                        {isEditMode ? t('save') : t('mount')}
-                    </Button>
-                </Space>
-            </div>
+      {/* 高级选项 - 仅在展开时显示 */}
+      {
+        <div style={{ display: showAllOptions ? 'block' : 'none' }}>
+          <InputForm_module
+            data={paramsType2FormItems(defaultMountConfig, undefined, ['MountType'])}
+            onChange={data => {
+              setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, ...data } })
+            }}
+            overwriteValues={parameters.mountOpt as unknown as ParametersType}
+            setFormHook={form => {
+              //form.setFieldsValue(parameters.mountOpt)
+              setMountOptFormHook(form)
+            }}
+          />
+          <InputForm_module
+            data={[
+              vfsCacheModeParam,
+              ...paramsType2FormItems(defaultVfsConfig, undefined, ['CacheMode']),
+            ]}
+            onChange={data => {
+              setParameters({ ...parameters, vfsOpt: { ...parameters.vfsOpt, ...data } })
+            }}
+            overwriteValues={parameters.vfsOpt as unknown as ParametersType}
+            setFormHook={form => {
+              //form.setFieldsValue(parameters.vfsOpt);
+              setVfsOptFormHook(form)
+            }}
+          />
         </div>
-    )
+      }
+
+      {/* 按钮 */}
+      <div style={{ width: '100%', textAlign: 'right', marginTop: '1rem' }}>
+        <Space>
+          <Checkbox
+            checked={autoMount}
+            onChange={checked => {
+              setAutoMount(checked)
+            }}
+          >
+            {t('auto_mount')}
+          </Checkbox>
+          {!showAllOptions && (
+            <Button
+              onClick={() => {
+                setShowAllOptions(!showAllOptions)
+              }}
+              type="text"
+            >
+              {t('show_all_options')}
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              navigate('/mount')
+            }}
+          >
+            {t('step_back')}
+          </Button>
+          <Button
+            disabled={!storageName || !mountPath}
+            onClick={async () => {
+              // 编辑模式下获取原始路径
+              const originalMountPath = isEditMode ? getURLSearchParam('mountPath') : ''
+
+              if (!isEditMode && getMountStorage(mountPath)) {
+                Notification.error({
+                  title: t('error'),
+                  content: t('mount_path_already_exists'),
+                })
+                return
+              }
+
+              let mountPathTemp = mountPath
+              if (mountPath === '*') {
+                mountPathTemp = await getAvailableDriveLetter()
+              } else if (/* !isWindows &&  */ mountPath.startsWith('~/')) {
+                let homeDirStr = await homeDir()
+                if (!homeDirStr.endsWith('/')) {
+                  homeDirStr = homeDirStr + '/'
+                }
+                mountPathTemp = mountPath.replace('~/', homeDirStr)
+              }
+
+              mountPathTemp = formatPath(mountPathTemp, isWindows)
+
+              if (isEditMode) {
+                await editMountStorage(
+                  {
+                    storageName: storageName!,
+                    mountPath: mountPathTemp,
+                    parameters: parameters,
+                    autoMount: autoMount,
+                  },
+                  originalMountPath
+                )
+              } else {
+                await addMountStorage(storageName!, mountPathTemp, parameters, autoMount)
+              }
+
+              if (isEditMode) {
+                Notification.success({
+                  title: t('success'),
+                  content: t('save_successfully'),
+                })
+              } else if (await mountStorage(getMountStorage(mountPathTemp)!)) {
+                Notification.success({
+                  title: t('success'),
+                  content: t('mount_storage_successfully'),
+                })
+                if (isWindows && rcloneInfo.endpoint.isLocal) {
+                  showPathInExplorer(mountPathTemp, true)
+                }
+              }
+              navigate('/mount')
+            }}
+            type="primary"
+          >
+            {isEditMode ? t('save') : t('mount')}
+          </Button>
+        </Space>
+      </div>
+    </div>
+  )
 }

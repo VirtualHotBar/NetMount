@@ -1,139 +1,167 @@
-import { Button, Card, Form, FormInstance, Grid, Input, Message, Notification, Radio, Space, Typography } from "@arco-design/web-react";
-import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
-import { createStorage } from "../../controller/storage/create";
-import { useNavigate } from "react-router-dom";
-import { getProperties, getURLSearchParam, openUrlInBrowser } from "../../utils/utils";
-import { getStorageParams, searchStorage } from "../../controller/storage/storage";
+import {
+  Button,
+  Card,
+  Form,
+  FormInstance,
+  Grid,
+  Input,
+  Message,
+  Notification,
+  Radio,
+  Space,
+  Typography,
+} from '@arco-design/web-react'
+import { useTranslation } from 'react-i18next'
+import { useEffect, useState } from 'react'
+import { createStorage } from '../../controller/storage/create'
+import { useNavigate } from 'react-router-dom'
+import { getProperties, getURLSearchParam, openUrlInBrowser } from '../../utils/utils'
+import { getStorageParams, searchStorage } from '../../controller/storage/storage'
 // import { rcloneInfo } from "../../services/rclone";
-import { IconQuestionCircle } from "@arco-design/web-react/icon";
-import { nmConfig, roConfig } from "../../services/config";
-import { searchStorageInfo, storageInfoList } from "../../controller/storage/allList";
-import { ParametersType } from "../../type/defaults";
-import { StorageInfoType } from "../../type/controller/storage/info";
-import { InputForm_module } from "../other/InputForm";
-const FormItem = Form.Item;
-const { Col, Row } = Grid;
-const RadioGroup = Radio.Group;
-const InputSearch = Input.Search;
+import { IconQuestionCircle } from '@arco-design/web-react/icon'
+import { nmConfig, roConfig } from '../../services/config'
+import { searchStorageInfo, storageInfoList } from '../../controller/storage/allList'
+import { ParametersType } from '../../type/defaults'
+import { StorageInfoType } from '../../type/controller/storage/info'
+import { InputForm_module } from '../other/InputForm'
+const FormItem = Form.Item
+const { Col, Row } = Grid
+const RadioGroup = Radio.Group
+const InputSearch = Input.Search
 
-const filterDuplicates = (storageInfo: StorageInfoType[], t: (key: string) => string): StorageInfoType[] => {
-    const newStorageList: StorageInfoType[] = [];
-    const labels: string[] = [];
-    for (let i = 0; i < storageInfo.length; i++) {
-        const item = storageInfo[i]!;
-        const label = t(item.label);
-        if (!labels.includes(label)) {
-
-            labels.push(label);
-            newStorageList.push(item);
-        }
+const filterDuplicates = (
+  storageInfo: StorageInfoType[],
+  t: (key: string) => string
+): StorageInfoType[] => {
+  const newStorageList: StorageInfoType[] = []
+  const labels: string[] = []
+  for (let i = 0; i < storageInfo.length; i++) {
+    const item = storageInfo[i]!
+    const label = t(item.label)
+    if (!labels.includes(label)) {
+      labels.push(label)
+      newStorageList.push(item)
     }
-    return newStorageList
+  }
+  return newStorageList
 }
 
 function AddStorage_page() {
-    const { t } = useTranslation()
-    const navigate = useNavigate();
+  const { t } = useTranslation()
+  const navigate = useNavigate()
 
-    const [storageTypeName, setStorageTypeName] = useState<string>()
-    const [step, setStep] = useState<'selectType' | 'setParams'>('selectType')//选择类型，填写参数
-    const [showAdvanced, setShowAdvanced] = useState(false)
-    const [storageName, setStorageName] = useState('')//存储名称
-    const isEditMode = (getURLSearchParam('edit') == 'true')
-    const [formHook, setFormHook] = useState<FormInstance>();//表单实例
-    const [searchStr, setSearchStr] = useState('')//搜索存储
-    const [submitting, setSubmitting] = useState(false)//提交中状态
+  const [storageTypeName, setStorageTypeName] = useState<string>()
+  const [step, setStep] = useState<'selectType' | 'setParams'>('selectType') //选择类型，填写参数
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [storageName, setStorageName] = useState('') //存储名称
+  const isEditMode = getURLSearchParam('edit') == 'true'
+  const [formHook, setFormHook] = useState<FormInstance>() //表单实例
+  const [searchStr, setSearchStr] = useState('') //搜索存储
+  const [submitting, setSubmitting] = useState(false) //提交中状态
 
+  const [storageParams, setStorageParams] = useState<ParametersType>() //编辑模式下，覆盖默认参数
 
-    const [storageParams, setStorageParams] = useState<ParametersType>()//编辑模式下，覆盖默认参数
+  //let parameters: ParametersType = {};
 
-    //let parameters: ParametersType = {};
-
-    /*     const setParams = (key: string, value: any) => {
+  /*     const setParams = (key: string, value: any) => {
             parameters[key] = value;
         }; */
+  const storageInfo = searchStorageInfo(storageTypeName)
+  console.log(storageInfo)
+
+  const editMode = async () => {
+    const name = getURLSearchParam('name')
+    setStorageTypeName(searchStorageInfo(getURLSearchParam('type')).label)
+    setStorageParams(await getStorageParams(name))
+    setStorageName(name)
+    setStep('setParams')
+  }
+
+  useEffect(() => {
+    if (isEditMode) editMode()
+  }, [])
+
+  useEffect(() => {
     const storageInfo = searchStorageInfo(storageTypeName)
-    console.log(storageInfo);
+    setStorageName(storageInfo.defaultParams.name)
+  }, [storageTypeName])
 
-    const editMode = async () => {
-        const name = getURLSearchParam('name')
-        setStorageTypeName(searchStorageInfo(getURLSearchParam('type')).label)
-        setStorageParams(await getStorageParams(name))
-        setStorageName(name)
-        setStep('setParams')
+  // 安全地设置 mount_path，避免在渲染阶段更新状态
+  useEffect(() => {
+    if (storageInfo.framework === 'openlist' && formHook) {
+      formHook.setFieldValue('mount_path', '/' + storageName)
     }
+  }, [storageInfo.framework, formHook, storageName])
 
-    useEffect(() => {
-        if (isEditMode) editMode();
-    }, [])
+  let content: JSX.Element
 
-    useEffect(() => {
-        const storageInfo = searchStorageInfo(storageTypeName)
-        setStorageName(storageInfo.defaultParams.name)
-    }, [storageTypeName])
+  switch (step) {
+    case 'selectType':
+      content = (
+        <div style={{ width: '100%' }}>
+          {/* 移除外层 Form 以避免与 InputForm_module 嵌套 */}
+          <div>
+            <FormItem style={{ width: '100%' }} label={t('storage_type')}>
+              <InputSearch
+                value={searchStr}
+                onChange={value => setSearchStr(value)}
+                allowClear
+                placeholder={t('enter_keyword_to_search')}
+                style={{}}
+              />
 
-    // 安全地设置 mount_path，避免在渲染阶段更新状态
-    useEffect(() => {
-        if (storageInfo.framework === 'openlist' && formHook) {
-            formHook.setFieldValue('mount_path', '/' + storageName);
-        }
-    }, [storageInfo.framework, formHook, storageName]);
+              <Card style={{ height: '15rem', overflow: 'auto' /* marginTop: '1rem' */ }} hoverable>
+                <RadioGroup value={storageTypeName} onChange={value => setStorageTypeName(value)}>
+                  {(showAdvanced ? storageInfoList : filterDuplicates(storageInfoList, t)).map(
+                    (storageItem, index) => {
+                      //搜索
+                      if (
+                        searchStr &&
+                        !(storageItem.label + storageItem.type + t(storageItem.label))
+                          .toLocaleLowerCase()
+                          .includes(searchStr.toLocaleLowerCase())
+                      )
+                        return
 
-    let content: JSX.Element
+                      return (
+                        <Radio value={storageItem.type} key={index} style={{ margin: 0 }}>
+                          {({ checked }) => {
+                            return (
+                              <div
+                                style={{
+                                  minWidth: '7rem',
+                                  marginBlock: '0.2rem',
+                                  padding: '4px',
+                                  border: '1px solid var(--color-border-2)',
+                                  borderRadius: '4px',
+                                  boxSizing: 'border-box',
+                                  ...(checked
+                                    ? { backgroundColor: 'var(--color-primary-light-1)' }
+                                    : {}),
+                                }}
+                              >
+                                <div style={{ display: 'flex', color: 'var(--color-text-1)' }}>
+                                  {/* <img style={{ width: '1.2rem', height: '1.2rem' }} src={storageItem.framework === 'rclone' ?'/public/img/framework/rclone.png' : '/public/img/framework/openlist.svg'} /> */}
+                                  {t(storageItem.label)}
+                                </div>
+                              </div>
+                            )
+                          }}
+                        </Radio>
+                      )
+                    }
+                  )}
+                </RadioGroup>
+              </Card>
+              {!showAdvanced && (
+                <div style={{ width: '100%', textAlign: 'right' }}>
+                  <Button onClick={() => setShowAdvanced(true)} type="text">
+                    {t('show_all')}{' '}
+                  </Button>
+                </div>
+              )}
 
-    switch (step) {
-        case 'selectType':
-            content = (<div style={{ width: '100%' }}>
-
-                {/* 移除外层 Form 以避免与 InputForm_module 嵌套 */}
-                <div>
-                    <FormItem style={{ width: '100%', }} label={t('storage_type')} >
-                        <InputSearch value={searchStr} onChange={(value) => setSearchStr(value)} allowClear placeholder={t('enter_keyword_to_search')} style={{}} />
-
-                        <Card style={{ height: '15rem', overflow: 'auto', /* marginTop: '1rem' */ }} hoverable>
-                            <RadioGroup
-                                value={storageTypeName}
-                                onChange={(value) => setStorageTypeName(value)}>
-                                {(showAdvanced ? storageInfoList : filterDuplicates(storageInfoList, t)).map((storageItem, index) => {
-                                    //搜索
-                                    if (searchStr && !(storageItem.label + storageItem.type + t(storageItem.label)).toLocaleLowerCase().includes(searchStr.toLocaleLowerCase())) return;
-
-                                    return (
-                                        <Radio
-                                            value={storageItem.type}
-                                            key={index}
-                                            style={{ margin: 0 }}>
-                                            {({ checked }) => {
-                                                return (
-                                                    <div
-                                                        style={{
-                                                            minWidth: '7rem',
-                                                            marginBlock: '0.2rem',
-                                                            padding: '4px',
-                                                            border: '1px solid var(--color-border-2)',
-                                                            borderRadius: '4px',
-                                                            boxSizing: 'border-box',
-                                                            ...(checked ? { backgroundColor: 'var(--color-primary-light-1)' } : {})
-                                                        }}>
-                                                        <div style={{ display: 'flex', color: 'var(--color-text-1)' }}>
-                                                            {/* <img style={{ width: '1.2rem', height: '1.2rem' }} src={storageItem.framework === 'rclone' ?'/public/img/framework/rclone.png' : '/public/img/framework/openlist.svg'} /> */}
-                                                            {t(storageItem.label)}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            }}
-                                        </Radio>
-                                    )
-                                })}
-
-                            </RadioGroup>
-                        </Card>
-                        {!showAdvanced &&
-                            <div style={{ width: '100%', textAlign: 'right' }}><Button onClick={() => setShowAdvanced(true)} type='text'>{t('show_all')} </Button></div>
-                        }
-
-                        {/*<Select
+              {/*<Select
                             placeholder={t('please_select')}
                             style={{ width: '15rem' }}
                             value={storageTypeName && storageInfo.label}
@@ -149,127 +177,196 @@ function AddStorage_page() {
                                 </Select.Option>
                             ))}
                         </Select> */}
-                    </FormItem>
+            </FormItem>
 
+            {/* 存储介绍 */}
+            {storageTypeName ? (
+              <FormItem label={t('storage_introduce')}>
+                <Typography.Text>{t(storageInfo.description)}</Typography.Text>
+              </FormItem>
+            ) : (
+              ''
+            )}
 
-                    {/* 存储介绍 */}
-                    {storageTypeName ? <FormItem label={t('storage_introduce')}>
-                        <Typography.Text>{t(storageInfo.description)}</Typography.Text>
-                    </FormItem> : ''}
+            <br />
 
-                    <br />
+            {/* 按钮 */}
+            <div style={{ width: '100%', textAlign: 'right' }}>
+              <Space>
+                <Button
+                  onClick={() => {
+                    navigate('/storage/manage')
+                  }}
+                >
+                  {t('step_back')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setStep('setParams')
+                    setShowAdvanced(false)
+                  }}
+                  disabled={!storageTypeName}
+                  type="primary"
+                >
+                  {t('step_next')}
+                </Button>
+              </Space>
+            </div>
+          </div>
+        </div>
+      )
+      break
+    case 'setParams':
+      content = (
+        <div style={{ width: '100%' }}>
+          <InputForm_module
+            header={
+              <FormItem label={'*' + t('storage_name')} hidden={isEditMode}>
+                <Input
+                  value={storageName || ''}
+                  onChange={value => {
+                    setStorageName(value)
+                  }}
+                  disabled={submitting}
+                />
+              </FormItem>
+            }
+            data={[
+              ...storageInfo.defaultParams
+                .parameters /* ,...storageInfo.defaultParams.exParameters?.openlist?.additional||[] */,
+            ]}
+            showAdvanced={showAdvanced}
+            overwriteValues={storageParams || {}}
+            setFormHook={hook => {
+              setFormHook(hook)
+            }}
+          />
+          <br />
 
-                    {/* 按钮 */}
-                    <div style={{ width: '100%', textAlign: 'right' }}>
-                        <Space>
-                            <Button onClick={() => { navigate('/storage/manage') }} >{t('step_back')}</Button>
-                            <Button onClick={() => { setStep('setParams'); setShowAdvanced(false) }} disabled={!storageTypeName} type='primary'>{t('step_next')}</Button>
-                        </Space>
-                    </div>
-                </div>
-            </div >)
-            break;
-        case 'setParams':
-            content = (<div style={{ width: '100%' }}>
+          <Row style={{ width: '100%' }}>
+            <Col flex={'4rem'}>
+              <Button
+                onClick={() => {
+                  openUrlInBrowser(
+                    roConfig.url.to(
+                      'docs-storage',
+                      '/' +
+                        (storageInfo.displayType || storageInfo.type)
+                          .toLocaleLowerCase()
+                          .split(' ')
+                          .join('-') +
+                        '&framework=' +
+                        storageInfo.framework +
+                        '&lang=' +
+                        nmConfig.settings.language
+                    )
+                  )
+                }}
+                type="text"
+                icon={<IconQuestionCircle />}
+              >
+                {t('help_for_this_storage')}({t(storageInfo.label)}){' '}
+              </Button>
+            </Col>
+            <Col flex={'auto'} style={{ textAlign: 'right' }}>
+              <Space>
+                {
+                  //高级选项
+                  !showAdvanced && (
+                    <Button onClick={() => setShowAdvanced(true)} type="text">
+                      {t('show_advanced_options')}{' '}
+                    </Button>
+                  )
+                }
+                <Button
+                  onClick={() => {
+                    getURLSearchParam('edit') ? navigate('/storage/manage') : setStep('selectType')
+                  }}
+                >
+                  {t('step_back')}
+                </Button>
+                <Button
+                  onClick={async () => {
+                    if (!formHook) return
 
-                <InputForm_module
-                    header={<FormItem label={'*' + t('storage_name')} hidden={isEditMode}>
-                        <Input value={storageName || ''} onChange={(value) => {
-                            setStorageName(value)
-                        }} disabled={submitting} />
-                    </FormItem>} data={[...storageInfo.defaultParams.parameters/* ,...storageInfo.defaultParams.exParameters?.openlist?.additional||[] */]}
-                    showAdvanced={showAdvanced} overwriteValues={storageParams || {}} setFormHook={(hook) => { setFormHook(hook) }} />
-                <br />
+                    // 防止重复提交
+                    if (submitting) return
 
-                <Row style={{ width: '100%' }}>
-                    <Col flex={'4rem'}>
-                        <Button onClick={() => {
-                            openUrlInBrowser(
-                                roConfig.url.to('docs-storage', '/' + (storageInfo.displayType || storageInfo.type).toLocaleLowerCase().split(' ').join('-') + '&framework=' + storageInfo.framework + '&lang=' + nmConfig.settings.language)
-                            )
-                        }}
-                            type='text' icon={<IconQuestionCircle />}>{t('help_for_this_storage')}({t(storageInfo.label)}) </Button>
-                    </Col>
-                    <Col flex={'auto'} style={{ textAlign: 'right' }}>
-                        <Space>
-                            {
-                                //高级选项
-                                !showAdvanced &&
-                                <Button onClick={() => setShowAdvanced(true)} type='text'>{t('show_advanced_options')} </Button>
-                            }
-                            <Button onClick={() => { getURLSearchParam('edit') ? navigate('/storage/manage') : setStep('selectType') }}>{t('step_back')}</Button>
-                            <Button onClick={async () => {
-                                if (!formHook) return;
-                                
-                                // 防止重复提交
-                                if (submitting) return;
-                                
-                                setSubmitting(true);
-                                
-                                try {
-                                    await formHook.validate()
-                                } catch (error) {
-                                    getProperties(formHook.getFieldsError()).forEach((err) => {
+                    setSubmitting(true)
 
-                                        const errorValue = err.value as { message?: string };
-                                        if (errorValue?.message) {
-                                            Message.error(t(err.key) + t(errorValue.message.replace(err.key, '')))
-                                        }
-                                    })
-                                    setSubmitting(false);
-                                    return
-                                }
+                    try {
+                      await formHook.validate()
+                    } catch (error) {
+                      getProperties(formHook.getFieldsError()).forEach(err => {
+                        const errorValue = err.value as { message?: string }
+                        if (errorValue?.message) {
+                          Message.error(t(err.key) + t(errorValue.message.replace(err.key, '')))
+                        }
+                      })
+                      setSubmitting(false)
+                      return
+                    }
 
+                    if (!isEditMode) {
+                      if (searchStorage(storageName)?.name) {
+                        Message.error(t('storage_name_already_exists'))
+                        setSubmitting(false)
+                        return
+                      }
+                    }
 
-                                if (!isEditMode) {
-                                    if (searchStorage(storageName)?.name) {
-                                        Message.error(t('storage_name_already_exists'))
-                                        setSubmitting(false);
-                                        return
-                                    }
-                                }
+                    if (!storageName) {
+                      Message.error(t('storage_name_cannot_be_empty'))
+                      setSubmitting(false)
+                      return
+                    }
 
-                                if (!storageName) {
-                                    Message.error(t('storage_name_cannot_be_empty'))
-                                    setSubmitting(false);
-                                    return
-                                }
+                    const parameters: ParametersType =
+                      storageInfo.framework === 'rclone'
+                        ? formHook.getFieldsValue(formHook.getTouchedFields())
+                        : formHook.getFieldsValue()
+                    console.log(parameters)
 
-                                const parameters: ParametersType = storageInfo.framework === 'rclone' ? formHook.getFieldsValue(formHook.getTouchedFields()) : formHook.getFieldsValue()
-                                console.log(parameters);
+                    //return
 
-                                //return
+                    if (await createStorage(storageName, storageInfo.type, parameters)) {
+                      Notification.success({
+                        title: t('success'),
+                        content: t('Storage_added_successfully'),
+                      })
+                      navigate('/storage/manage')
+                      // 成功后不需要恢复状态，因为会跳转
+                    } else {
+                      Notification.error({
+                        title: t('error'),
+                        content: t('Storage_added_failed'),
+                      })
+                      setSubmitting(false)
+                    }
+                  }}
+                  type="primary"
+                  loading={submitting}
+                  disabled={submitting}
+                >
+                  {submitting ? t('saving') : t('save')}
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+          <br />
+          <br />
+        </div>
+      )
+  }
 
-                                if (await createStorage(storageName, storageInfo.type, parameters)) {
-                                    Notification.success({
-                                        title: t('success'),
-                                        content: t('Storage_added_successfully'),
-                                    })
-                                    navigate('/storage/manage')
-                                    // 成功后不需要恢复状态，因为会跳转
-                                } else {
-                                    Notification.error({
-                                        title: t('error'),
-                                        content: t('Storage_added_failed'),
-                                    })
-                                    setSubmitting(false);
-                                }
-                            }
-                            } type='primary' loading={submitting} disabled={submitting}>{submitting ? t('saving') : t('save')}</Button>
-                        </Space>
-                    </Col>
-                </Row>
-                <br /><br />
-            </div>)
-    }
-
-    return (
-        <div className=" w-full h-full">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>{!isEditMode ? t('add_storage') : t('edit_storage')}</h2>
-            {content}
-        </div>)
+  return (
+    <div className=" w-full h-full">
+      <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', marginLeft: '1.8rem' }}>
+        {!isEditMode ? t('add_storage') : t('edit_storage')}
+      </h2>
+      {content}
+    </div>
+  )
 }
-
-
 
 export { AddStorage_page }

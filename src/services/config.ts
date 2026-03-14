@@ -1,124 +1,130 @@
-import { invoke } from "@tauri-apps/api/core"
-import { NMConfig, OSInfo } from "../type/config"
-import { mergeObjects, randomString } from "../utils/utils"
+import { invoke } from '@tauri-apps/api/core'
+import { NMConfig, OSInfo } from '../type/config'
+import { mergeObjects, randomString } from '../utils/utils'
 
 const roConfig = {
-    url: {
-        website: 'https://www.netmount.cn',
-        docs: 'https://api.hotpe.top/API/NetMount/GoLink?id=docs&path=',
-        rclone: 'https://github.com/rclone/rclone',
-        openlist: 'https://github.com/OpenListTeam/OpenList',
-        to: (id: string, path: string = '') => { return 'https://api.hotpe.top/API/NetMount/GoLink?id=' + id + '&path=' + path },
-        vhbBlog: 'https://blog.hotpe.top'
-
+  url: {
+    website: 'https://www.netmount.cn',
+    docs: 'https://api.hotpe.top/API/NetMount/GoLink?id=docs&path=',
+    rclone: 'https://github.com/rclone/rclone',
+    openlist: 'https://github.com/OpenListTeam/OpenList',
+    to: (id: string, path: string = '') => {
+      return 'https://api.hotpe.top/API/NetMount/GoLink?id=' + id + '&path=' + path
     },
-    env: {
-        path: {
-            homeDir: '~'
-        }
+    vhbBlog: 'https://blog.hotpe.top',
+  },
+  env: {
+    path: {
+      homeDir: '~',
     },
-    options: {
-        task: {
-            runMode: {
-                defIndex: 0,
-                select: ['start', 'time', 'interval', 'disposable']
-            },
-            taskType: {
-                defIndex: 3,
-                select: ['copy', 'move', 'delete', 'sync', 'bisync']
-            },
-            dateMultiplier: {
-                defIndex: 0,
-                select: [{ name: 'day', value: 1 }, { name: 'week', value: 7 }, { name: 'month', value: 30 }]
-            },
-            intervalMultiplier: {
-                defIndex: 0,
-                select: [{ name: 'hour', value: 60 * 60 }, { name: 'minute', value: 60 }, { name: 'second', value: 1 }]
-            },
-        },
-        setting: {
-            themeMode: {
-                defIndex: 0,
-                select: ['auto', 'light', 'dark']
-            }, language: {
-                defIndex: 0,
-                select: [
-                    { name: '简体中文', value: 'cn', langCode: 'zh-cn' },
-                    { name: '繁體中文', value: 'ct', langCode: 'zh-tw' },
-                    { name: 'English', value: 'en', langCode: 'en-us' },
-                    /*{ name: '繁體中文(香港)', value: 'cht', langCode: 'zh-hk' },
+  },
+  options: {
+    task: {
+      runMode: {
+        defIndex: 0,
+        select: ['start', 'time', 'interval', 'disposable'],
+      },
+      taskType: {
+        defIndex: 3,
+        select: ['copy', 'move', 'delete', 'sync', 'bisync'],
+      },
+      dateMultiplier: {
+        defIndex: 0,
+        select: [
+          { name: 'day', value: 1 },
+          { name: 'week', value: 7 },
+          { name: 'month', value: 30 },
+        ],
+      },
+      intervalMultiplier: {
+        defIndex: 0,
+        select: [
+          { name: 'hour', value: 60 * 60 },
+          { name: 'minute', value: 60 },
+          { name: 'second', value: 1 },
+        ],
+      },
+    },
+    setting: {
+      themeMode: {
+        defIndex: 0,
+        select: ['auto', 'light', 'dark'],
+      },
+      language: {
+        defIndex: 0,
+        select: [
+          { name: '简体中文', value: 'cn', langCode: 'zh-cn' },
+          { name: '繁體中文', value: 'ct', langCode: 'zh-tw' },
+          { name: 'English', value: 'en', langCode: 'en-us' },
+          /*{ name: '繁體中文(香港)', value: 'cht', langCode: 'zh-hk' },
                     { name: 'Русский язык', value: 'ru', langCode: 'ru-RU' }, */
-                ]
-            }
-        }
-    }
+        ],
+      },
+    },
+  },
 }
 
 let nmConfig: NMConfig = {
-    mount: {
-        lists: [],
+  mount: {
+    lists: [],
+  },
+  task: [],
+  api: {
+    url: 'https://api.hotpe.top/API/NetMount',
+  },
+  settings: {
+    themeMode:
+      roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex]!,
+    startHide: false,
+    autoRecoverComponents: true,
+    language: undefined,
+    path: {
+      cacheDir: undefined as string | undefined,
     },
-    task: [],
-    api: {
-        url: 'https://api.hotpe.top/API/NetMount',
+  },
+  framework: {
+    rclone: {
+      user: randomString(32),
+      password: randomString(128),
+      extraArgs: '',
     },
-    settings: {
-        themeMode: roConfig.options.setting.themeMode.select[roConfig.options.setting.themeMode.defIndex]!,
-        startHide: false,
-        autoRecoverComponents: true,
-        language: undefined,
-        path: {
-            cacheDir: undefined as string | undefined
-        }
+    openlist: {
+      user: 'admin',
+      password: randomString(16), //process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),!!!!!密码长度为32时rclone会报错
+      extraArgs: '',
     },
-    framework: {
-        rclone: {
-            user: randomString(32),
-            password: randomString(128),
-            extraArgs: '',
-        },
-        openlist: {
-            user: 'admin',
-            password: randomString(16),//process.env.NODE_ENV === 'development' ? 'admin' : randomString(32),!!!!!密码长度为32时rclone会报错
-            extraArgs: '',
-        }
-    }
+  },
 }
 
 const setNmConfig = (config: NMConfig) => {
-    nmConfig = config
+  nmConfig = config
 }
 
 const readNmConfig = async () => {
-
-    await invoke('get_config').then(configData => {
-
-        setNmConfig(mergeObjects(nmConfig, configData as NMConfig))
-    }).catch(err => {
-        console.log(err);
+  await invoke('get_config')
+    .then(configData => {
+      setNmConfig(mergeObjects(nmConfig, configData as NMConfig))
+    })
+    .catch(err => {
+      console.log(err)
     })
 }
 const saveNmConfig = async () => {
-    await invoke('update_config', {
-        data: nmConfig
-    });
+  await invoke('update_config', {
+    data: nmConfig,
+  })
 }
 
-
-
 let osInfo: OSInfo = {
-    arch: 'unknown',
-    osType: 'unknown',
-    platform: 'unknown',
-    tempDir: '',
-    osVersion: ''
+  arch: 'unknown',
+  osType: 'unknown',
+  platform: 'unknown',
+  tempDir: '',
+  osVersion: '',
 }
 
 const setOsInfo = (osinfo: OSInfo) => {
-    osInfo = osinfo
+  osInfo = osinfo
 }
-
-
-
 
 export { nmConfig, setNmConfig, osInfo, setOsInfo, roConfig, readNmConfig, saveNmConfig }

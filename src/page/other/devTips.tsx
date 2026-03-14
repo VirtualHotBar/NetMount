@@ -5,12 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 function DevTips_module() {
   const { t } = useTranslation()
-  
-    return (
-        <Result
-        icon={<IconCodeBlock />}
-        title={t('dev_tips')}
-      ></Result>
-    )
+
+  return <Result icon={<IconCodeBlock />} title={t('dev_tips')}></Result>
 }
 export { DevTips_module }

@@ -7,77 +7,74 @@
 //https://rclone.org/commands/rclone_mount/#options-opt
 
 interface VfsOptions {
-    [key: string]: unknown;
-    CacheMaxAge: number;
-    CacheMaxSize: number;
-    CacheMode: string;
-    CachePollInterval: number;
-    CaseInsensitive: boolean;
-    ChunkSize: number;
-    ChunkSizeLimit: number;
-    DirCacheTime: number;
-    DirPerms: number;
-    FilePerms: number;
-    GID: number;
-    NoChecksum: boolean;
-    NoModTime: boolean;
-    NoSeek: boolean;
-    PollInterval: number;
-    ReadAhead: number;
-    ReadOnly: boolean;
-    ReadWait: number;
-    UID: number;
-    Umask: number;
-    WriteBack: number;
-    WriteWait: number;
-    Refresh?: boolean;
-    BlockNormDupes?: boolean;
-    UsedIsSize?: boolean;
-    FastFingerprint?: boolean;
-    DiskSpaceTotalSize?: number;
-    UID?: number;
-    GID?: number;
-    Umask?: number;
+  [key: string]: unknown
+  CacheMaxAge: number
+  CacheMaxSize: number
+  CacheMode: string
+  CachePollInterval: number
+  CaseInsensitive: boolean
+  ChunkSize: number
+  ChunkSizeLimit: number
+  DirCacheTime: number
+  DirPerms: number
+  FilePerms: number
+  GID: number
+  NoChecksum: boolean
+  NoModTime: boolean
+  NoSeek: boolean
+  PollInterval: number
+  ReadAhead: number
+  ReadOnly: boolean
+  ReadWait: number
+  UID: number
+  Umask: number
+  WriteBack: number
+  WriteWait: number
+  Refresh?: boolean
+  BlockNormDupes?: boolean
+  UsedIsSize?: boolean
+  FastFingerprint?: boolean
+  DiskSpaceTotalSize?: number
+  UID?: number
+  GID?: number
+  Umask?: number
 }
 
 interface MountOptions {
-    [key: string]: unknown;
-    AllowNonEmpty: boolean;
-    AllowOther: boolean;
-    AllowRoot: boolean;
-    AsyncRead: boolean;
-    AttrTimeout: number;
-    Daemon: boolean;
-    DaemonTimeout: number;
-    DebugFUSE: boolean;
-    DefaultPermissions: boolean;
-    ExtraFlags: string[]; 
-    ExtraOptions: string[]; 
-    MaxReadAhead: number;
-    NoAppleDouble: boolean;
-    NoAppleXattr: boolean;
-    VolumeName: string;
-    WritebackCache: boolean;
-    DaemonWait?: number; 
-    DeviceName?: string; 
-    MountType?: string;
-    NetworkMode?: boolean;
-    CaseInsensitive?: boolean | null; 
+  [key: string]: unknown
+  AllowNonEmpty: boolean
+  AllowOther: boolean
+  AllowRoot: boolean
+  AsyncRead: boolean
+  AttrTimeout: number
+  Daemon: boolean
+  DaemonTimeout: number
+  DebugFUSE: boolean
+  DefaultPermissions: boolean
+  ExtraFlags: string[]
+  ExtraOptions: string[]
+  MaxReadAhead: number
+  NoAppleDouble: boolean
+  NoAppleXattr: boolean
+  VolumeName: string
+  WritebackCache: boolean
+  DaemonWait?: number
+  DeviceName?: string
+  MountType?: string
+  NetworkMode?: boolean
+  CaseInsensitive?: boolean | null
 }
-
-
 
 // Rclone mount point 接口
 interface RcloneMountPoint {
-    Fs: string;
-    MountPoint: string;
-    MountedOn: string;
+  Fs: string
+  MountPoint: string
+  MountedOn: string
 }
 
 // Rclone mount list 响应接口
 interface RcloneMountListResponse {
-    mountPoints: RcloneMountPoint[];
+  mountPoints: RcloneMountPoint[]
 }
 
 export { VfsOptions, MountOptions, RcloneMountPoint, RcloneMountListResponse }
-

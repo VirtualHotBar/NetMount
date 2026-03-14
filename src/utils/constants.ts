@@ -12,37 +12,37 @@ export const TIME_MS = {
   MINUTE: 60_000,
   HOUR: 3_600_000,
   DAY: 86_400_000,
-} as const;
+} as const
 
 export const TIME_S = {
   MINUTE: 60,
   HOUR: 3600,
   DAY: 86400,
-} as const;
+} as const
 
 // ============================================
 // API 超时配置
 // ============================================
 
 export const API_TIMEOUT = {
-  DEFAULT: 10_000,           // 默认超时 10秒
-  PING: 5_000,              // Ping 超时 5秒
-  LONG: 30_000,             // 长请求超时 30秒
-  VERSION_CHECK: 5_000,     // 版本检查超时 5秒
+  DEFAULT: 10_000, // 默认超时 10秒
+  PING: 5_000, // Ping 超时 5秒
+  LONG: 30_000, // 长请求超时 30秒
+  VERSION_CHECK: 5_000, // 版本检查超时 5秒
   OPENLIST_VERSION: 10_000, // OpenList 版本检查 10秒
-} as const;
+} as const
 
 // ============================================
 // 重试配置
 // ============================================
 
 export const RETRY_CONFIG = {
-  MAX_ATTEMPTS: 3,              // 最大重试次数
-  INITIAL_DELAY: 1_000,          // 初始延迟 1秒
-  MAX_DELAY: 10_000,            // 最大延迟 10秒
-  BACKOFF_MULTIPLIER: 2,       // 退避倍数
-  JITTER_RANGE: 500,            // 抖动范围 (±ms)
-} as const;
+  MAX_ATTEMPTS: 3, // 最大重试次数
+  INITIAL_DELAY: 1_000, // 初始延迟 1秒
+  MAX_DELAY: 10_000, // 最大延迟 10秒
+  BACKOFF_MULTIPLIER: 2, // 退避倍数
+  JITTER_RANGE: 500, // 抖动范围 (±ms)
+} as const
 
 // ============================================
 // 存储配置
@@ -53,7 +53,7 @@ export const STORAGE_CONFIG = {
   INVALID_CHARS: ['<', '>', ':', '"', '|', '?', '*', '/', '\\'] as const,
   CACHE_DIR_SUFFIX: '.cache/netmount',
   DEFAULT_PAGE_SIZE: 50,
-} as const;
+} as const
 
 // ============================================
 // 任务配置
@@ -74,7 +74,7 @@ export const TASK_CONFIG = {
   ] as const,
   DEFAULT_WORKERS: 5,
   DEFAULT_MAX_RETRY: 2,
-} as const;
+} as const
 
 // ============================================
 // OpenList 配置
@@ -93,7 +93,7 @@ export const OPENLIST_CONFIG = {
   TRANSFER_WORKERS: 5,
   UPLOAD_WORKERS: 5,
   COPY_WORKERS: 5,
-} as const;
+} as const
 
 // ============================================
 // Rclone 配置
@@ -102,19 +102,19 @@ export const OPENLIST_CONFIG = {
 export const RCLONE_CONFIG = {
   DEFAULT_PORT: 6434,
   DEFAULT_TEMP_DIR: 'rclone-temp',
-} as const;
+} as const
 
 // ============================================
 // 主题和语言配置
 // ============================================
 
-export const THEME_MODES = ['auto', 'light', 'dark'] as const;
+export const THEME_MODES = ['auto', 'light', 'dark'] as const
 
 export const LANGUAGE_OPTIONS = [
   { name: '简体中文', value: 'cn', langCode: 'zh-cn' },
   { name: '繁體中文', value: 'ct', langCode: 'zh-tw' },
   { name: 'English', value: 'en', langCode: 'en-us' },
-] as const;
+] as const
 
 // ============================================
 // 错误码配置
@@ -151,7 +151,7 @@ export const ERROR_CODES = {
   RCLONE_START_FAILED: 'RCLONE_START_FAILED',
   OPENLIST_START_FAILED: 'OPENLIST_START_FAILED',
   FRAMEWORK_VERSION_FAILED: 'FRAMEWORK_VERSION_FAILED',
-} as const;
+} as const
 
 // ============================================
 // 消息配置
@@ -176,7 +176,7 @@ export const MESSAGES = {
   // 挂载消息
   MOUNT_SUCCESS: '挂载成功',
   UNMOUNT_SUCCESS: '卸载成功',
-} as const;
+} as const
 
 // ============================================
 // 路径配置
@@ -190,7 +190,7 @@ export const PATHS = {
   DB_FILE: 'data/data.db',
   LOG_FILE: 'log/log.log',
   BLEVE_DIR: 'bleve',
-} as const;
+} as const
 
 // ============================================
 // 日志配置
@@ -202,7 +202,7 @@ export const LOG_CONFIG = {
   LEVEL_WARN: 'warn',
   LEVEL_ERROR: 'error',
   DEFAULT_LEVEL: 'info',
-} as const;
+} as const
 
 // ============================================
 // 窗口配置
@@ -213,7 +213,7 @@ export const WINDOW_CONFIG = {
   DEFAULT_HEIGHT: 800,
   MIN_WIDTH: 800,
   MIN_HEIGHT: 600,
-} as const;
+} as const
 
 // ============================================
 // 国际化键名
@@ -227,4 +227,4 @@ export const I18N_KEYS = {
   ERROR: 'error',
   SUCCESS: 'success',
   ERROR_TIPS: 'error_tips',
-} as const;
+} as const

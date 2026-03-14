@@ -34,4 +34,13 @@ function sidecarLogFile(name: string): string {
   return formatPath(netmountLogDir() + `/sidecar-${safe}.log`, osInfo.platform === 'windows')
 }
 
-export { defaultCacheDir, netmountDataDir, netmountLogDir, rcloneConfigFile, rcloneLogFile, openlistDataDir, openlistLogFile, sidecarLogFile }
+export {
+  defaultCacheDir,
+  netmountDataDir,
+  netmountLogDir,
+  rcloneConfigFile,
+  rcloneLogFile,
+  openlistDataDir,
+  openlistLogFile,
+  sidecarLogFile,
+}

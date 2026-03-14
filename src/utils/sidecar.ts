@@ -15,7 +15,7 @@ type RunSidecarOnceResult = {
 }
 
 function shortSidecarName(nameOrBinary: string): string {
-  return nameOrBinary.includes('/') ? (nameOrBinary.split('/').pop() || nameOrBinary) : nameOrBinary
+  return nameOrBinary.includes('/') ? nameOrBinary.split('/').pop() || nameOrBinary : nameOrBinary
 }
 
 async function spawnSidecar(binary: string, args: string[]): Promise<number> {

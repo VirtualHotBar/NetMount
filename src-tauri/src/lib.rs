@@ -245,25 +245,6 @@ pub fn init() -> anyhow::Result<()> {
             };
             app.update_app_config()?;
 
-            // 主窗口默认从 tauri.conf 设置为 visible=false，避免前端再隐藏造成闪屏。
-            // 在后端读取配置后再决定是否显示窗口。
-            let start_hide = app.with_app_state::<Config, _>(|config| {
-                config
-                    .0
-                    .get("settings")
-                    .and_then(|s| s.get("startHide"))
-                    .and_then(|v| v.as_bool())
-                    .unwrap_or(false)
-            });
-            if let Some(window) = app.app_main_window() {
-                if start_hide {
-                    let _ = window.hide();
-                } else {
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
-            }
-
             //开发者工具
             #[cfg(debug_assertions)]
             if let Some(window) = app.app_main_window() {

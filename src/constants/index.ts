@@ -13,7 +13,7 @@ export const HTTP_STATUS = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   INTERNAL_ERROR: 500,
-} as const;
+} as const
 
 // ============================================
 // 时间常量（毫秒）
@@ -23,7 +23,7 @@ export const TIME = {
   MINUTE: 60 * 1000,
   HOUR: 60 * 60 * 1000,
   DAY: 24 * 60 * 60 * 1000,
-} as const;
+} as const
 
 // ============================================
 // 文件大小常量
@@ -33,7 +33,7 @@ export const FILE_SIZE = {
   MB: 1024 * 1024,
   GB: 1024 * 1024 * 1024,
   TB: 1024 * 1024 * 1024 * 1024,
-} as const;
+} as const
 
 // ============================================
 // Rclone 相关常量
@@ -63,7 +63,7 @@ export const RCLONE = {
     MOUNT_MOUNT: '/mount/mount',
     MOUNT_UNMOUNT: '/mount/unmount',
   },
-} as const;
+} as const
 
 // ============================================
 // OpenList 相关常量
@@ -84,7 +84,7 @@ export const OPENLIST = {
     SETTING_GET: '/api/admin/setting/get',
   },
   MARK_IN_RCLONE: 'openlist',
-} as const;
+} as const
 
 // ============================================
 // 存储相关常量
@@ -93,7 +93,7 @@ export const STORAGE = {
   MAX_NAME_LENGTH: 128,
   FORBIDDEN_CHARS: /[<>:"|?*/\\]/,
   DEFAULT_MOUNT_PATH: '/',
-} as const;
+} as const
 
 // ============================================
 // 任务相关常量
@@ -101,7 +101,7 @@ export const STORAGE = {
 export const TASK = {
   MAX_RETRY_COUNT: 3,
   DEFAULT_TIMEOUT: 30000, // 30秒
-} as const;
+} as const
 
 // ============================================
 // UI 相关常量
@@ -110,4 +110,4 @@ export const UI = {
   DEBOUNCE_DELAY: 300,
   TOAST_DURATION: 3000,
   MODAL_ANIMATION_DURATION: 200,
-} as const;
+} as const

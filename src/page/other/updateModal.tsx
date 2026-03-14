@@ -1,5 +1,5 @@
-import { t } from 'i18next';
-import type { ReactNode } from 'react';
+import { t } from 'i18next'
+import type { ReactNode } from 'react'
 
 export function createUpdateAvailableContent(version: string, body?: string): ReactNode {
   return (
@@ -25,7 +25,7 @@ export function createUpdateAvailableContent(version: string, body?: string): Re
         </div>
       )}
     </div>
-  );
+  )
 }
 
 export function createDownloadingContent(downloaded: number, total: number): ReactNode {
@@ -38,7 +38,7 @@ export function createDownloadingContent(downloaded: number, total: number): Rea
           : formatBytes(downloaded)}
       </p>
     </div>
-  );
+  )
 }
 
 export function createDownloadedAndRestartingContent(): ReactNode {
@@ -47,7 +47,7 @@ export function createDownloadedAndRestartingContent(): ReactNode {
       <p>{t('download_complete')}</p>
       <p style={{ color: 'var(--color-text-3)', fontSize: 13 }}>{t('restarting_app')}</p>
     </div>
-  );
+  )
 }
 
 function formatReleaseNotes(body: string): string {
@@ -55,14 +55,13 @@ function formatReleaseNotes(body: string): string {
     .replace(/^#+\s*/gm, '')
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/\*(.*?)\*/g, '$1')
-    .trim();
+    .trim()
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
-

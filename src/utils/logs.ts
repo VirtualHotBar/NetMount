@@ -35,4 +35,3 @@ async function readTextFileTail(path: string, opts: ReadTailOptions = {}): Promi
 }
 
 export { readTextFileTail }
-

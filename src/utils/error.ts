@@ -3,21 +3,21 @@
  * 增强应用的健壮性和可维护性
  */
 
-import { Message, Notification } from "@arco-design/web-react";
-import { t } from "i18next";
+import { Message, Notification } from '@arco-design/web-react'
+import { t } from 'i18next'
 
 /**
  * 错误类型枚举
  */
 export enum ErrorType {
-  VALIDATION = 'VALIDATION',      // 输入验证错误
-  API = 'API',                    // API调用错误
-  NETWORK = 'NETWORK',            // 网络错误
-  TIMEOUT = 'TIMEOUT',            // 超时错误
-  NOT_FOUND = 'NOT_FOUND',        // 资源未找到
-  PERMISSION = 'PERMISSION',      // 权限错误
-  CONFIG = 'CONFIG',              // 配置错误
-  UNKNOWN = 'UNKNOWN',            // 未知错误
+  VALIDATION = 'VALIDATION', // 输入验证错误
+  API = 'API', // API调用错误
+  NETWORK = 'NETWORK', // 网络错误
+  TIMEOUT = 'TIMEOUT', // 超时错误
+  NOT_FOUND = 'NOT_FOUND', // 资源未找到
+  PERMISSION = 'PERMISSION', // 权限错误
+  CONFIG = 'CONFIG', // 配置错误
+  UNKNOWN = 'UNKNOWN', // 未知错误
 }
 
 /**
@@ -34,48 +34,45 @@ export enum ErrorSeverity {
  * 应用错误类 - 提供结构化的错误信息
  */
 export class AppError extends Error {
-  public readonly type: ErrorType;
-  public readonly severity: ErrorSeverity;
-  public readonly code: string;
-  public readonly details: Record<string, unknown> | undefined;
-  public readonly timestamp: Date;
-  public readonly recoverable: boolean;
-  public readonly originalCause: Error | undefined;
+  public readonly type: ErrorType
+  public readonly severity: ErrorSeverity
+  public readonly code: string
+  public readonly details: Record<string, unknown> | undefined
+  public readonly timestamp: Date
+  public readonly recoverable: boolean
+  public readonly originalCause: Error | undefined
 
   constructor(options: {
-    message: string;
-    type?: ErrorType | undefined;
-    severity?: ErrorSeverity | undefined;
-    code?: string | undefined;
-    details?: Record<string, unknown> | undefined;
-    recoverable?: boolean | undefined;
-    cause?: Error | undefined;
+    message: string
+    type?: ErrorType | undefined
+    severity?: ErrorSeverity | undefined
+    code?: string | undefined
+    details?: Record<string, unknown> | undefined
+    recoverable?: boolean | undefined
+    cause?: Error | undefined
   }) {
-    super(options.message);
-    this.name = 'AppError';
-    this.type = options.type ?? ErrorType.UNKNOWN;
-    this.severity = options.severity ?? ErrorSeverity.ERROR;
-    this.code = options.code ?? 'UNKNOWN_ERROR';
-    this.details = options.details;
-    this.timestamp = new Date();
-    this.recoverable = options.recoverable ?? false;
+    super(options.message)
+    this.name = 'AppError'
+    this.type = options.type ?? ErrorType.UNKNOWN
+    this.severity = options.severity ?? ErrorSeverity.ERROR
+    this.code = options.code ?? 'UNKNOWN_ERROR'
+    this.details = options.details
+    this.timestamp = new Date()
+    this.recoverable = options.recoverable ?? false
 
     // 保留原始错误
     if (options.cause) {
-      this.originalCause = options.cause;
+      this.originalCause = options.cause
     }
 
     // 确保 instanceof 正确工作
-    Object.setPrototypeOf(this, AppError.prototype);
+    Object.setPrototypeOf(this, AppError.prototype)
   }
 
   /**
    * 创建验证错误
    */
-  static validation(
-    message: string,
-    details?: Record<string, unknown>
-  ): AppError {
+  static validation(message: string, details?: Record<string, unknown>): AppError {
     return new AppError({
       message,
       type: ErrorType.VALIDATION,
@@ -83,7 +80,7 @@ export class AppError extends Error {
       code: 'VALIDATION_ERROR',
       details,
       recoverable: true,
-    });
+    })
   }
 
   /**
@@ -103,7 +100,7 @@ export class AppError extends Error {
       details,
       recoverable: true,
       cause,
-    });
+    })
   }
 
   /**
@@ -117,7 +114,7 @@ export class AppError extends Error {
       code: 'NETWORK_ERROR',
       recoverable: true,
       cause,
-    });
+    })
   }
 
   /**
@@ -131,7 +128,7 @@ export class AppError extends Error {
       code: 'TIMEOUT_ERROR',
       details: { operation, timeoutMs },
       recoverable: true,
-    });
+    })
   }
 
   /**
@@ -139,15 +136,13 @@ export class AppError extends Error {
    */
   static notFound(resource: string, identifier?: string): AppError {
     return new AppError({
-      message: identifier
-        ? `未找到 ${resource}: ${identifier}`
-        : `未找到 ${resource}`,
+      message: identifier ? `未找到 ${resource}: ${identifier}` : `未找到 ${resource}`,
       type: ErrorType.NOT_FOUND,
       severity: ErrorSeverity.WARNING,
       code: 'NOT_FOUND',
       details: { resource, identifier },
       recoverable: true,
-    });
+    })
   }
 
   /**
@@ -161,7 +156,7 @@ export class AppError extends Error {
       code: 'CONFIG_ERROR',
       details,
       recoverable: false,
-    });
+    })
   }
 
   /**
@@ -179,7 +174,7 @@ export class AppError extends Error {
       recoverable: this.recoverable,
       stack: this.stack,
       cause: this.originalCause?.message,
-    };
+    }
   }
 
   /**
@@ -187,15 +182,15 @@ export class AppError extends Error {
    */
   getUserMessage(): string {
     // 如果有国际化键，使用国际化消息
-    const i18nKey = `errors.${this.code}`;
-    const i18nMessage = t(i18nKey, { defaultValue: '' });
-    
+    const i18nKey = `errors.${this.code}`
+    const i18nMessage = t(i18nKey, { defaultValue: '' })
+
     if (i18nMessage) {
-      return i18nMessage;
+      return i18nMessage
     }
 
     // 否则返回原始消息
-    return this.message;
+    return this.message
   }
 }
 
@@ -203,10 +198,10 @@ export class AppError extends Error {
  * 错误处理器配置
  */
 interface ErrorHandlerConfig {
-  showNotification: boolean;
-  showMessage: boolean;
-  logToConsole: boolean;
-  rethrow: boolean;
+  showNotification: boolean
+  showMessage: boolean
+  logToConsole: boolean
+  rethrow: boolean
 }
 
 const DEFAULT_CONFIG: ErrorHandlerConfig = {
@@ -214,46 +209,43 @@ const DEFAULT_CONFIG: ErrorHandlerConfig = {
   showMessage: true,
   logToConsole: true,
   rethrow: false,
-};
+}
 
 /**
  * 错误处理器 - 统一处理错误的中心点
  */
 export class ErrorHandler {
-  private static errorLog: AppError[] = [];
-  private static maxLogSize = 100;
+  private static errorLog: AppError[] = []
+  private static maxLogSize = 100
 
   /**
    * 处理错误
    */
-  static handle(
-    error: unknown,
-    config: Partial<ErrorHandlerConfig> = {}
-  ): AppError {
-    const mergedConfig = { ...DEFAULT_CONFIG, ...config };
-    
+  static handle(error: unknown, config: Partial<ErrorHandlerConfig> = {}): AppError {
+    const mergedConfig = { ...DEFAULT_CONFIG, ...config }
+
     // 转换为 AppError
-    const appError = this.normalizeError(error);
+    const appError = this.normalizeError(error)
 
     // 记录错误
-    this.logError(appError, mergedConfig.logToConsole);
+    this.logError(appError, mergedConfig.logToConsole)
 
     // 显示通知
     if (mergedConfig.showNotification && appError.severity === ErrorSeverity.CRITICAL) {
-      this.showNotification(appError);
+      this.showNotification(appError)
     }
 
     // 显示消息
     if (mergedConfig.showMessage) {
-      this.showMessage(appError);
+      this.showMessage(appError)
     }
 
     // 是否重新抛出
     if (mergedConfig.rethrow) {
-      throw appError;
+      throw appError
     }
 
-    return appError;
+    return appError
   }
 
   /**
@@ -261,7 +253,7 @@ export class ErrorHandler {
    */
   private static normalizeError(error: unknown): AppError {
     if (error instanceof AppError) {
-      return error;
+      return error
     }
 
     if (error instanceof Error) {
@@ -271,7 +263,7 @@ export class ErrorHandler {
         severity: ErrorSeverity.ERROR,
         code: 'UNKNOWN_ERROR',
         cause: error,
-      });
+      })
     }
 
     if (typeof error === 'string') {
@@ -280,7 +272,7 @@ export class ErrorHandler {
         type: ErrorType.UNKNOWN,
         severity: ErrorSeverity.ERROR,
         code: 'UNKNOWN_ERROR',
-      });
+      })
     }
 
     return new AppError({
@@ -289,7 +281,7 @@ export class ErrorHandler {
       severity: ErrorSeverity.ERROR,
       code: 'UNKNOWN_ERROR',
       details: { originalError: error },
-    });
+    })
   }
 
   /**
@@ -297,20 +289,21 @@ export class ErrorHandler {
    */
   private static logError(error: AppError, logToConsole: boolean): void {
     // 添加到内存日志
-    this.errorLog.unshift(error);
+    this.errorLog.unshift(error)
     if (this.errorLog.length > this.maxLogSize) {
-      this.errorLog.pop();
+      this.errorLog.pop()
     }
 
     // 控制台输出
     if (logToConsole) {
-      const logMethod = error.severity === ErrorSeverity.CRITICAL 
-        ? console.error 
-        : error.severity === ErrorSeverity.WARNING 
-          ? console.warn 
-          : console.log;
+      const logMethod =
+        error.severity === ErrorSeverity.CRITICAL
+          ? console.error
+          : error.severity === ErrorSeverity.WARNING
+            ? console.warn
+            : console.log
 
-      logMethod(`[${error.type}] ${error.code}:`, error.message, error.details);
+      logMethod(`[${error.type}] ${error.code}:`, error.message, error.details)
     }
   }
 
@@ -322,7 +315,7 @@ export class ErrorHandler {
       title: t('error'),
       content: error.getUserMessage(),
       duration: 5000,
-    });
+    })
   }
 
   /**
@@ -330,9 +323,9 @@ export class ErrorHandler {
    */
   private static showMessage(error: AppError): void {
     if (error.severity === ErrorSeverity.CRITICAL || error.severity === ErrorSeverity.ERROR) {
-      Message.error(error.getUserMessage());
+      Message.error(error.getUserMessage())
     } else if (error.severity === ErrorSeverity.WARNING) {
-      Message.warning(error.getUserMessage());
+      Message.warning(error.getUserMessage())
     }
   }
 
@@ -340,14 +333,14 @@ export class ErrorHandler {
    * 获取错误日志
    */
   static getErrorLog(): AppError[] {
-    return [...this.errorLog];
+    return [...this.errorLog]
   }
 
   /**
    * 清除错误日志
    */
   static clearErrorLog(): void {
-    this.errorLog = [];
+    this.errorLog = []
   }
 
   /**
@@ -360,21 +353,18 @@ export class ErrorHandler {
   ): Promise<T | undefined> {
     return Promise.resolve()
       .then(() => fn())
-      .catch((error) => {
-        this.handle(error, config);
-        return fallback;
-      });
+      .catch(error => {
+        this.handle(error, config)
+        return fallback
+      })
   }
 }
 
 /**
  * 便捷函数 - 快速处理错误
  */
-export function handleError(
-  error: unknown,
-  config?: Partial<ErrorHandlerConfig>
-): AppError {
-  return ErrorHandler.handle(error, config);
+export function handleError(error: unknown, config?: Partial<ErrorHandlerConfig>): AppError {
+  return ErrorHandler.handle(error, config)
 }
 
 /**
@@ -385,7 +375,7 @@ export function safeExecute<T>(
   fallback?: T,
   config?: Partial<ErrorHandlerConfig>
 ): Promise<T | undefined> {
-  return ErrorHandler.safe(fn, fallback, config);
+  return ErrorHandler.safe(fn, fallback, config)
 }
 
 /**
@@ -393,27 +383,27 @@ export function safeExecute<T>(
  */
 export function setupGlobalErrorHandlers(): void {
   // 处理未捕获的 Promise 错误
-  window.addEventListener('unhandledrejection', (event) => {
-    event.preventDefault();
-    
+  window.addEventListener('unhandledrejection', event => {
+    event.preventDefault()
+
     // 排除 ResizeObserver 错误 (已知的 Chrome bug)
     if (event.reason?.message?.includes('ResizeObserver')) {
-      return;
+      return
     }
 
     ErrorHandler.handle(event.reason, {
       showNotification: true,
       showMessage: true,
-    });
-  });
+    })
+  })
 
   // 处理全局错误
-  window.addEventListener('error', (event) => {
-    event.preventDefault();
-    
+  window.addEventListener('error', event => {
+    event.preventDefault()
+
     // 排除 ResizeObserver 错误
     if (event.message?.includes('ResizeObserver')) {
-      return;
+      return
     }
 
     ErrorHandler.handle(
@@ -422,6 +412,6 @@ export function setupGlobalErrorHandlers(): void {
         showNotification: true,
         showMessage: true,
       }
-    );
-  });
+    )
+  })
 }

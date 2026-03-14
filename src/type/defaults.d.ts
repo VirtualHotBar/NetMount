@@ -1,6 +1,5 @@
-
 interface ParametersType {
-    [key: string]: unknown
+  [key: string]: unknown
 }
 
-export {  ParametersType}
+export { ParametersType }
