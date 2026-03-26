@@ -212,7 +212,7 @@ async function getStorageParams(name: string): Promise<ParametersType> {
 const convertStoragePath = (
   storageName: string,
   path?: string,
-  isDir?: boolean,
+  _isDir?: boolean,
   noStorageName: boolean = false,
   onlyStorageName: boolean = false
 ): string => {
