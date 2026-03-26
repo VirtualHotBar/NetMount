@@ -5,7 +5,7 @@ import { copyDir, copyFile, delDir, delFile, moveDir, moveFile, sync } from '../
 async function runTask(task: TaskListItem): Promise<TaskListItem> {
   let taskMsg: string = task.runInfo.msg || ''
 
-  const executeTask = (task: TaskListItem) => {
+  const executeTask = async (task: TaskListItem) => {
     console.log(`Executing ${task.taskType} task: ${task.name}`)
 
     const srcIsDir = task.source.path.endsWith('/')
@@ -30,7 +30,7 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
         //复制
         if (srcIsDir && targetIsDir) {
           //复制目录
-          copyDir(
+          await copyDir(
             task.source.storageName,
             task.source.path,
             task.target.storageName,
@@ -38,7 +38,7 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
           )
         } else if (!srcIsDir && !targetIsDir) {
           //复制文件
-          copyFile(
+          await copyFile(
             task.source.storageName,
             task.source.path,
             task.target.storageName,
@@ -47,7 +47,7 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
           )
         } else if (!srcIsDir && targetIsDir) {
           //复制文件到目录
-          copyFile(
+          await copyFile(
             task.source.storageName,
             task.source.path,
             task.target.storageName,
@@ -62,7 +62,7 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
         //移动
         if (srcIsDir && targetIsDir) {
           //移动目录
-          moveDir(
+          await moveDir(
             task.source.storageName,
             task.source.path,
             task.target.storageName,
@@ -70,7 +70,7 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
           )
         } else if (!srcIsDir && targetIsDir) {
           //移动文件到目录
-          moveFile(
+          await moveFile(
             task.source.storageName,
             task.source.path,
             task.target.storageName,
@@ -78,7 +78,7 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
           )
         } else if (!srcIsDir && !targetIsDir) {
           //移动文件
-          moveFile(
+          await moveFile(
             task.source.storageName,
             task.source.path,
             task.target.storageName,
@@ -95,21 +95,21 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
         //删除
         if (srcIsDir) {
           //删除目录
-          delDir(task.source.storageName, task.source.path)
+          await delDir(task.source.storageName, task.source.path)
         } else {
           //删除文件
-          delFile(task.source.storageName, task.source.path)
+          await delFile(task.source.storageName, task.source.path)
         }
         break
       }
       case 'sync': {
         //同步
-        sync(task.source.storageName, task.source.path, task.target.storageName, task.target.path)
+        await sync(task.source.storageName, task.source.path, task.target.storageName, task.target.path)
         break
       }
       case 'bisync': {
         //双向同步
-        sync(
+        await sync(
           task.source.storageName,
           task.source.path,
           task.target.storageName,
@@ -131,7 +131,7 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
 
   try {
     if (task.enable) {
-      executeTask(task)
+      await executeTask(task)
       task.runInfo = { ...task.runInfo, error: false, msg: taskMsg }
     }
   } catch (error) {

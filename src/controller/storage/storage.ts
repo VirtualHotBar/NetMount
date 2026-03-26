@@ -2,7 +2,11 @@ import { hooks } from '../../services/hook'
 import { rcloneInfo } from '../../services/rclone'
 import { FileInfo, StorageList, StorageSpace } from '../../type/rclone/rcloneInfo'
 import { ParametersType } from '../../type/defaults'
-import { getRcloneApiHeaders, rclone_api_post } from '../../utils/rclone/request'
+import {
+  getRcloneApiHeaders,
+  rclone_api_post,
+  rclone_api_exec_async,
+} from '../../utils/rclone/request'
 import { openlist_api_get, openlist_api_post } from '../../utils/openlist/request'
 import { formatPath } from '../../utils/utils'
 import { openlistInfo } from '../../services/openlist'
@@ -417,14 +421,28 @@ async function copyDir(
   destStoragename: string,
   destPath: string
 ) {
-  await rclone_api_post(
-    '/sync/copy',
-    {
-      srcFs: convertStoragePath(storageName, path, true),
-      dstFs: convertStoragePath(destStoragename, destPath, true) + getFileName(path),
-    },
-    true
-  )
+  // 参数验证
+  if (!storageName || !destStoragename) {
+    throw new Error('Source or destination storage name is empty')
+  }
+  if (!path) {
+    throw new Error('Source path is empty')
+  }
+
+  const srcFs = convertStoragePath(storageName, path, true)
+  const dstFs = convertStoragePath(destStoragename, destPath, true) + getFileName(path)
+
+  if (!srcFs || !dstFs) {
+    throw new Error('Invalid source or destination path')
+  }
+
+  const success = await rclone_api_exec_async('/sync/copy', {
+    srcFs,
+    dstFs,
+  })
+  if (!success) {
+    throw new Error(`Copy directory failed: ${srcFs} -> ${dstFs}`)
+  }
 }
 
 async function moveDir(
@@ -434,16 +452,29 @@ async function moveDir(
   destPath: string,
   newNmae?: string
 ) {
-  await rclone_api_post(
-    '/sync/move',
-    {
-      srcFs: convertStoragePath(storageName, path, true),
-      dstFs:
-        convertStoragePath(destStoragename, destPath, true) +
-        (newNmae ? newNmae : getFileName(path)),
-    },
-    true
-  )
+  // 参数验证
+  if (!storageName || !destStoragename) {
+    throw new Error('Source or destination storage name is empty')
+  }
+  if (!path) {
+    throw new Error('Source path is empty')
+  }
+
+  const srcFs = convertStoragePath(storageName, path, true)
+  const dstFs =
+    convertStoragePath(destStoragename, destPath, true) + (newNmae ? newNmae : getFileName(path))
+
+  if (!srcFs || !dstFs) {
+    throw new Error('Invalid source or destination path')
+  }
+
+  const success = await rclone_api_exec_async('/sync/move', {
+    srcFs,
+    dstFs,
+  })
+  if (!success) {
+    throw new Error(`Move directory failed: ${srcFs} -> ${dstFs}`)
+  }
 }
 
 //sync,需完整path(pathF2f)
@@ -455,26 +486,46 @@ async function sync(
   bisync?: boolean
 ) {
   //bisync:双向同步
+
+  // 参数验证
+  if (!storageName || !destStoragename) {
+    throw new Error('Source or destination storage name is empty')
+  }
+  if (!path || !destPath) {
+    throw new Error('Source or destination path is empty')
+  }
+
+  let success: boolean
   if (!bisync) {
-    await rclone_api_post(
-      '/sync/sync',
-      {
-        //同步
-        srcFs: convertStoragePath(storageName, path, true),
-        dstFs: convertStoragePath(destStoragename, destPath, true),
-      },
-      true
-    )
+    const srcFs = convertStoragePath(storageName, path, true)
+    const dstFs = convertStoragePath(destStoragename, destPath, true)
+
+    if (!srcFs || !dstFs) {
+      throw new Error('Invalid source or destination path')
+    }
+
+    success = await rclone_api_exec_async('/sync/sync', {
+      srcFs,
+      dstFs,
+    })
+    if (!success) {
+      throw new Error(`Sync failed: ${srcFs} -> ${dstFs}`)
+    }
   } else {
-    await rclone_api_post(
-      '/sync/bisync',
-      {
-        //双向同步
-        path1: convertStoragePath(storageName, path, true),
-        path2: convertStoragePath(destStoragename, destPath, true),
-      },
-      true
-    )
+    const path1 = convertStoragePath(storageName, path, true)
+    const path2 = convertStoragePath(destStoragename, destPath, true)
+
+    if (!path1 || !path2) {
+      throw new Error('Invalid source or destination path')
+    }
+
+    success = await rclone_api_exec_async('/sync/bisync', {
+      path1,
+      path2,
+    })
+    if (!success) {
+      throw new Error(`Bidirectional sync failed: ${path1} <-> ${path2}`)
+    }
   }
 }
 

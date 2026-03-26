@@ -355,22 +355,22 @@ function ExplorerItem() {
                 droplist={
                   <Menu>
                     <Menu.Item
-                      onClick={() => {
-                        clipList.forEach(item => {
+                      onClick={async () => {
+                        for (const item of clipList) {
                           if (item.isMove) {
                             if (item.isDir) {
-                              moveDir(item.storageName, item.path, storageName!, path!)
+                              await moveDir(item.storageName, item.path, storageName!, path!)
                             } else {
-                              moveFile(item.storageName, item.path, storageName!, path!)
+                              await moveFile(item.storageName, item.path, storageName!, path!)
                             }
                           } else {
                             if (item.isDir) {
-                              copyDir(item.storageName, item.path, storageName!, path!)
+                              await copyDir(item.storageName, item.path, storageName!, path!)
                             } else {
-                              copyFile(item.storageName, item.path, storageName!, path!)
+                              await copyFile(item.storageName, item.path, storageName!, path!)
                             }
                           }
-                        })
+                        }
                         setClipList([])
                         Notification.success({
                           title: t('success'),
