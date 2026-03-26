@@ -152,12 +152,28 @@ pub fn init() -> anyhow::Result<()> {
 
     if !cfg!(debug_assertions) {
         if cfg!(target_os = "linux") {
-            let resources_dir = exe_dir
-                .parent()
-                .expect("无法获取父目录")
-                .join("lib")
-                .join(exe_flie_name);
-            env::set_current_dir(&resources_dir).expect("更改工作目录失败");
+            // 检测是否在 AppImage 环境中运行
+            let is_appimage = env::var("APPIMAGE").is_ok();
+            
+            if is_appimage {
+                // AppImage 环境下，使用 APPIMAGE 环境变量指向的实际路径
+                // 或者保持在当前目录（AppImage 挂载点）
+                println!("Running in AppImage mode, skipping directory change");
+            } else {
+                // 普通 Linux 安装环境
+                let resources_dir = exe_dir
+                    .parent()
+                    .expect("无法获取父目录")
+                    .join("lib")
+                    .join(exe_flie_name);
+                
+                if resources_dir.exists() {
+                    env::set_current_dir(&resources_dir).expect("更改工作目录失败");
+                } else {
+                    println!("Resources directory not found: {}, using exe_dir", resources_dir.display());
+                    env::set_current_dir(&exe_dir).expect("更改工作目录失败");
+                }
+            }
         }
 
         if cfg!(target_os = "windows") {
