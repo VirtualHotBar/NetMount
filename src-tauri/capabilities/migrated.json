@@ -22,7 +22,7 @@
     "fs:allow-exists",
     {
       "identifier": "fs:scope",
-      "allow": ["$RESOURCE/**", "binaries/**", "$HOME/**", "$APPDATA/**", "$CONFIG/**", "$DATA/**", "$DOWNLOAD/**", "$DESKTOP/**", "$DOCUMENT/**"]
+      "allow": ["$RESOURCE/**", "binaries/**", "$HOME/**", "$APPDATA/**", "$CONFIG/**", "$DATA/**", "$DOWNLOAD/**", "$DESKTOP/**", "$DOCUMENT/**", "$TEMP/**", "$TMP/**", "**"]
     },
     "core:window:allow-create",
     "core:window:allow-center",
