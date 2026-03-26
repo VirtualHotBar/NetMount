@@ -22,7 +22,7 @@
     "fs:allow-exists",
     {
       "identifier": "fs:scope",
-      "allow": ["$RESOURCE/**", "binaries/**"]
+      "allow": ["$RESOURCE/**", "binaries/**", "$HOME/**", "$APPDATA/**", "$CONFIG/**", "$DATA/**", "$DOWNLOAD/**", "$DESKTOP/**", "$DOCUMENT/**"]
     },
     "core:window:allow-create",
     "core:window:allow-center",
@@ -194,8 +194,6 @@
     "os:default",
     "dialog:default",
     "dialog:allow-open",
-    "dialog:allow-save",
-    "fs-exist-dir",
-    "fs-make-dir"
+    "dialog:allow-save"
   ]
 }
