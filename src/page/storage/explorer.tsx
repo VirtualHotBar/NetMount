@@ -488,7 +488,7 @@ function ExplorerItem() {
                 })}
               />
             ) : (
-              <div style={{ textAlign: 'center', marginTop: '10rem', width: '100%' }}>
+              <div style={{ textAlign: 'center', marginTop: '10rem', width: '100%', color: 'var(--color-text-1)' }}>
                 <div>
                   {loading ? <Spin tip={t('filelist_loading')} /> : t('filelist_load_fail')}
                 </div>

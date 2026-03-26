@@ -226,7 +226,7 @@ const convertStoragePath = (
     case 'rclone':
       return (
         (noStorageName ? '' : storageName + ':') +
-        (onlyStorageName ? '' : path ? formatPathRclone(path, isDir) : '')
+        (onlyStorageName ? '' : path ? formatPathRclone(path) : '')
       )
     case 'openlist': {
       // 修复双斜杠问题：确保 path 不以 / 开头再拼接
@@ -236,7 +236,7 @@ const convertStoragePath = (
         (onlyStorageName
           ? ''
           : normalizedPath
-            ? formatPathRclone(storageName + '/' + normalizedPath, isDir)
+            ? formatPathRclone(storageName + '/' + normalizedPath)
             : storageName)
       )
     }
@@ -262,19 +262,14 @@ function getFileName(path: string): string {
   return pathArr[pathArr.length - 1] ?? ''
 }
 
-function formatPathRclone(path: string, isDir?: boolean): string {
+function formatPathRclone(path: string): string {
   path = formatPath(path)
   if (path.startsWith('/')) {
     path = path.substring(1)
   }
-  if (isDir) {
-    if (!path.endsWith('/')) {
-      path = path + '/'
-    }
-  } else {
-    if (path.endsWith('/')) {
-      path = path.substring(0, path.length - 1)
-    }
+  // 始终移除末尾斜杠
+  if (path.endsWith('/')) {
+    path = path.substring(0, path.length - 1)
   }
   return path
 }
@@ -284,9 +279,10 @@ async function getFileList(storageName: string, path: string): Promise<FileInfo[
   const storage = searchStorage(storageName)
   let fileList: FileInfo[] | undefined = undefined
 
+  // 移除路径末尾的斜杠，根目录直接传空字符串
   const backData = await rclone_api_post('/operations/list', {
     fs: convertStoragePath(storageName, undefined, undefined, undefined, true),
-    remote: convertStoragePath(storageName, path, true, true),
+    remote: convertStoragePath(storageName, path, false, true),
   })
 
   if (backData && backData.list) {
@@ -295,7 +291,7 @@ async function getFileList(storageName: string, path: string): Promise<FileInfo[
       let filePath: string
 
       if (storage?.framework === 'rclone') {
-        filePath = formatPathRclone(file.Path, false)
+        filePath = formatPathRclone(file.Path)
       } else {
         // OpenList 存储：从 file.Path 中提取相对路径
         // file.Path 格式可能是: 百度网盘/视频/test.mp4 或 /百度网盘/视频/test.mp4
