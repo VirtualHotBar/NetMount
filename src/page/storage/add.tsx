@@ -338,7 +338,7 @@ function AddStorage_page() {
                       return
                     }
 
-                    let parameters: ParametersType =
+                    const parameters: ParametersType =
                       storageInfo.framework === 'rclone'
                         ? formHook.getFieldsValue(formHook.getTouchedFields())
                         : formHook.getFieldsValue()
