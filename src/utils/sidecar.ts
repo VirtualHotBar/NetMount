@@ -18,19 +18,20 @@ function shortSidecarName(nameOrBinary: string): string {
   return nameOrBinary.includes('/') ? nameOrBinary.split('/').pop() || nameOrBinary : nameOrBinary
 }
 
-async function spawnSidecar(binary: string, args: string[]): Promise<number> {
-  return await invoke<number>('spawn_sidecar', { name: binary, args })
+async function spawnSidecar(binary: string, args: string[], cwd?: string): Promise<number> {
+  return await invoke<number>('spawn_sidecar', { name: binary, args, cwd })
 }
 
 async function runSidecarOnce(
   binary: string,
   args: string[],
-  opts?: { timeoutMs?: number }
+  opts?: { timeoutMs?: number; cwd?: string }
 ): Promise<RunSidecarOnceResult> {
   return await invoke<RunSidecarOnceResult>('run_sidecar_once', {
     name: binary,
     args,
     timeout_ms: opts?.timeoutMs,
+    cwd: opts?.cwd,
   })
 }
 

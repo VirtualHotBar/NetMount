@@ -48,6 +48,8 @@ async function startOpenlist() {
   console.log('OpenList start args:', args)
 
   // 使用 Rust 端启动 sidecar，确保由主进程创建
+  // 传入数据目录作为工作目录，确保 openlist 能正确找到数据库文件
+  const dataDir = openlistDataDir()
   let pid: number
   try {
     pid = await startSidecarAndWait({
@@ -56,6 +58,7 @@ async function startOpenlist() {
       args,
       readyCheck: openlist_api_ping,
       timeoutMs: 30_000,
+      cwd: dataDir,
     })
   } catch (e) {
     console.error('Failed to spawn OpenList:', e)

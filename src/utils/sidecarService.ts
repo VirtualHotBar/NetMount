@@ -11,6 +11,7 @@ type StartAndWaitOptions = {
   timeoutMs?: number
   initialDelayMs?: number
   includeLogTailOnError?: boolean
+  cwd?: string
 }
 
 async function startSidecarAndWait(opts: StartAndWaitOptions): Promise<number> {
@@ -19,7 +20,7 @@ async function startSidecarAndWait(opts: StartAndWaitOptions): Promise<number> {
   let pid = 0
 
   try {
-    pid = await spawnSidecar(opts.binary, opts.args)
+    pid = await spawnSidecar(opts.binary, opts.args, opts.cwd)
     if (opts.initialDelayMs && opts.initialDelayMs > 0) {
       await sleep(opts.initialDelayMs)
     }

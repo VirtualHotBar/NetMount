@@ -115,9 +115,11 @@ async function setOpenlistPass(pass: string) {
   // v1.1.2 行为：每次启动都无条件写入 admin 密码，避免升级/迁移导致的"密码不一致"卡死。
   // OpenList 提供 CLI：openlist --data <dir> admin set <pass>
   // 预启动阶段可能失败（数据库不存在），服务启动后再调用此函数会成功
+  const dataDir = openlistDataDir()
   try {
-    await runSidecarOnce('binaries/openlist', ['--data', openlistDataDir(), 'admin', 'set', pass], {
+    await runSidecarOnce('binaries/openlist', ['--data', dataDir, 'admin', 'set', pass], {
       timeoutMs: 15_000,
+      cwd: dataDir,
     })
     return
   } catch (e) {

@@ -419,6 +419,7 @@ async fn spawn_sidecar(
     app: tauri::AppHandle<Runtime>,
     name: String,
     args: Vec<String>,
+    cwd: Option<String>,
 ) -> Result<u32, String> {
     use std::process::Stdio;
     use std::io::Write as _;
@@ -452,10 +453,14 @@ async fn spawn_sidecar(
         ), tauri::path::BaseDirectory::Resource)
         .map_err(|e| format!("Failed to resolve sidecar path: {}", e))?;
     
-    // 获取工作目录（用户主目录下的 .netmount）
-    let work_dir = app.path().home_dir()
-        .map_err(|e| format!("Failed to get home dir: {}", e))?
-        .join(".netmount");
+    // 获取工作目录：优先使用传入的 cwd，否则使用默认目录
+    let work_dir = if let Some(cwd_path) = cwd {
+        std::path::PathBuf::from(cwd_path)
+    } else {
+        app.path().home_dir()
+            .map_err(|e| format!("Failed to get home dir: {}", e))?
+            .join(".netmount")
+    };
     
     // 确保工作目录存在
     if !work_dir.exists() {
@@ -658,6 +663,7 @@ async fn run_sidecar_once(
     name: String,
     args: Vec<String>,
     timeout_ms: Option<u64>,
+    cwd: Option<String>,
 ) -> Result<RunSidecarOnceResult, String> {
     use std::io::Write as _;
     use std::process::Stdio;
@@ -695,11 +701,15 @@ async fn run_sidecar_once(
         )
         .map_err(|e| format!("Failed to resolve sidecar path: {}", e))?;
 
-    let work_dir = app
-        .path()
-        .home_dir()
-        .map_err(|e| format!("Failed to get home dir: {}", e))?
-        .join(".netmount");
+    // 获取工作目录：优先使用传入的 cwd，否则使用默认目录
+    let work_dir = if let Some(cwd_path) = cwd {
+        std::path::PathBuf::from(cwd_path)
+    } else {
+        app.path().home_dir()
+            .map_err(|e| format!("Failed to get home dir: {}", e))?
+            .join(".netmount")
+    };
+    
     if !work_dir.exists() {
         let _ = std::fs::create_dir_all(&work_dir);
     }
