@@ -236,34 +236,42 @@ async function modifyOpenlistConfig(
     rewriteData as OpenlistConfigPartial
   ) as unknown as OpenlistConfig
 
-  // 将相对路径转换为绝对路径（基于数据目录）
-  const toAbsolutePath = (relativePath: string) => {
-    if (!relativePath) return relativePath
-    // 如果已经是绝对路径，直接返回
-    if (isAbsolutePath(relativePath)) {
-      return relativePath
+  // 将绝对路径转换为相对路径（基于数据目录）
+  const toRelativePath = (absolutePath: string) => {
+    if (!absolutePath) return absolutePath
+    // 如果已经是相对路径，直接返回
+    if (!isAbsolutePath(absolutePath)) {
+      return absolutePath
     }
-    return joinDir(dataDir, relativePath.replace(/\\/g, '/'))
+    // 将路径标准化为使用正斜杠
+    const normalizedPath = absolutePath.replace(/\\/g, '/')
+    const normalizedDataDir = dataDir.replace(/\\/g, '/')
+    // 如果路径以数据目录开头，转换为相对路径
+    if (normalizedPath.startsWith(normalizedDataDir)) {
+      const relativePath = normalizedPath.substring(normalizedDataDir.length)
+      return relativePath.startsWith('/') ? relativePath.substring(1) : relativePath
+    }
+    return absolutePath
   }
 
-  // 转换数据库路径
+  // 转换数据库路径为相对路径
   if (newOpenlistConfig.database?.db_file) {
-    newOpenlistConfig.database.db_file = toAbsolutePath(newOpenlistConfig.database.db_file)
+    newOpenlistConfig.database.db_file = toRelativePath(newOpenlistConfig.database.db_file)
   }
 
-  // 转换日志路径
+  // 转换日志路径为相对路径
   if (newOpenlistConfig.log?.name) {
-    newOpenlistConfig.log.name = toAbsolutePath(newOpenlistConfig.log.name)
+    newOpenlistConfig.log.name = toRelativePath(newOpenlistConfig.log.name)
   }
 
-  // 转换 bleve 目录路径
+  // 转换 bleve 目录路径为相对路径
   if (newOpenlistConfig.bleve_dir) {
-    newOpenlistConfig.bleve_dir = toAbsolutePath(newOpenlistConfig.bleve_dir)
+    newOpenlistConfig.bleve_dir = toRelativePath(newOpenlistConfig.bleve_dir)
   }
 
-  // 转换 temp_dir
+  // 转换 temp_dir 为相对路径
   if (newOpenlistConfig.temp_dir) {
-    newOpenlistConfig.temp_dir = toAbsolutePath(newOpenlistConfig.temp_dir)
+    newOpenlistConfig.temp_dir = toRelativePath(newOpenlistConfig.temp_dir)
   }
 
   await invoke('write_json_file', { configData: newOpenlistConfig, path: configPath })

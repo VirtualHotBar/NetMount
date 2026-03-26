@@ -8,6 +8,87 @@ use tauri::Manager as _;
 
 use crate::Runtime;
 
+/// 检查路径是否为绝对路径
+fn is_absolute_path(path: &str) -> bool {
+    if path.is_empty() {
+        return false;
+    }
+    // Unix 绝对路径: /foo
+    // Windows 盘符路径: C:/foo 或 C:\foo
+    // Windows UNC 路径: \\server\share 或 //server/share
+    path.starts_with('/') ||
+    path.starts_with("\\\\") ||
+    path.starts_with("//") ||
+    (path.len() > 1 && path.chars().nth(1) == Some(':'))
+}
+
+/// 修复 openlist 配置文件中的绝对路径
+/// 将来自其他设备的绝对路径转换为相对路径
+fn fix_openlist_config_paths(config_path: &Path) -> anyhow::Result<()> {
+    // 读取配置文件
+    let content = fs::read_to_string(config_path)?;
+    let mut config: serde_json::Value = serde_json::from_str(&content)?;
+    
+    // 需要修复的路径字段
+    let path_fields = vec![
+        ("database", "db_file"),
+        ("log", "name"),
+        ("", "bleve_dir"),
+        ("", "temp_dir"),
+    ];
+    
+    for (parent, field) in path_fields {
+        if let Some(value) = if parent.is_empty() {
+            config.get(field).cloned()
+        } else {
+            config.get(parent).and_then(|p| p.get(field)).cloned()
+        } {
+            if let Some(path_str) = value.as_str() {
+                // 检查是否为绝对路径
+                if is_absolute_path(path_str) {
+                    // 尝试提取相对路径部分
+                    // 通常路径格式为: C:/Users/username/.netmount/openlist/xxx
+                    // 我们需要提取出相对路径: data/xxx 或 log/xxx 等
+                    let normalized = path_str.replace('\\', "/");
+                    
+                    // 尝试从路径中提取相对部分
+                    let relative_path = if normalized.contains("/.netmount/openlist/") {
+                        normalized.split("/.netmount/openlist/").nth(1).map(|s| s.to_string())
+                    } else if normalized.contains("/.netmount/") {
+                        // 处理其他可能的路径格式
+                        normalized.split("/.netmount/").nth(1).map(|s| {
+                            if s.starts_with("openlist/") {
+                                s.strip_prefix("openlist/").map(|p| p.to_string()).unwrap_or(s.to_string())
+                            } else {
+                                s.to_string()
+                            }
+                        })
+                    } else {
+                        None
+                    };
+                    
+                    if let Some(new_path) = relative_path {
+                        // 更新配置
+                        if parent.is_empty() {
+                            config[field] = serde_json::Value::String(new_path);
+                        } else {
+                            if let Some(parent_obj) = config.get_mut(parent) {
+                                parent_obj[field] = serde_json::Value::String(new_path);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // 写回配置文件
+    let file = fs::File::create(config_path)?;
+    serde_json::to_writer_pretty(file, &config)?;
+    
+    Ok(())
+}
+
 fn resolve_path(app: &tauri::AppHandle<Runtime>, path: &str) -> anyhow::Result<PathBuf> {
     if path.starts_with("~") {
         let home = app.path().home_dir()
@@ -404,6 +485,12 @@ pub fn import_config(
             }
         }
         
+        // 修复 openlist/config.json 中的绝对路径
+        let openlist_config_path = temp_dir.join("openlist/config.json");
+        if openlist_config_path.exists() {
+            fix_openlist_config_paths(&openlist_config_path)?;
+        }
+
         // 清理临时目录
         fs::remove_dir_all(&temp_dir)?;
         
