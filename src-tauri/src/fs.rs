@@ -472,21 +472,21 @@ pub fn import_config(
             }
         }
         
-        // 将新配置从临时目录移动到数据目录
+        // 复制新配置到数据目录
         for entry in fs::read_dir(&temp_dir)? {
             let entry = entry?;
             let src = entry.path();
             let dst = data_dir.join(entry.file_name());
-            
+
             if src.is_dir() {
                 copy_dir_all(&src, &dst)?;
             } else {
                 fs::copy(&src, &dst)?;
             }
         }
-        
-        // 修复 openlist/config.json 中的绝对路径
-        let openlist_config_path = temp_dir.join("openlist/config.json");
+
+        // 修复 openlist/config.json 中的绝对路径（在 data_dir 中）
+        let openlist_config_path = data_dir.join("openlist/config.json");
         if openlist_config_path.exists() {
             fix_openlist_config_paths(&openlist_config_path)?;
         }
