@@ -472,6 +472,12 @@ pub fn import_config(
             }
         }
         
+        // 先修复 openlist/config.json 中的绝对路径（在 temp_dir 中）
+        let temp_openlist_config_path = temp_dir.join("openlist/config.json");
+        if temp_openlist_config_path.exists() {
+            fix_openlist_config_paths(&temp_openlist_config_path)?;
+        }
+
         // 复制新配置到数据目录
         for entry in fs::read_dir(&temp_dir)? {
             let entry = entry?;
@@ -483,12 +489,6 @@ pub fn import_config(
             } else {
                 fs::copy(&src, &dst)?;
             }
-        }
-
-        // 修复 openlist/config.json 中的绝对路径（在 data_dir 中）
-        let openlist_config_path = data_dir.join("openlist/config.json");
-        if openlist_config_path.exists() {
-            fix_openlist_config_paths(&openlist_config_path)?;
         }
 
         // 清理临时目录
