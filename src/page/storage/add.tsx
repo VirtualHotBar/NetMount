@@ -60,6 +60,7 @@ function AddStorage_page() {
   const [submitting, setSubmitting] = useState(false) //提交中状态
 
   const [storageParams, setStorageParams] = useState<ParametersType>() //编辑模式下，覆盖默认参数
+  const [originalPasswordValues, setOriginalPasswordValues] = useState<ParametersType>({}) //保存原始密码值（混淆后的）
 
   //let parameters: ParametersType = {};
 
@@ -71,8 +72,23 @@ function AddStorage_page() {
 
   const editMode = async () => {
     const name = getURLSearchParam('name')
-    setStorageTypeName(searchStorageInfo(getURLSearchParam('type')).label)
-    setStorageParams(await getStorageParams(name))
+    const type = getURLSearchParam('type')
+    const currentStorageInfo = searchStorageInfo(type)
+    setStorageTypeName(currentStorageInfo.label)
+    const params = await getStorageParams(name)
+    setStorageParams(params)
+    
+    // 保存原始密码值（混淆后的），用于后续比较（仅rclone存储需要）
+    if (params && currentStorageInfo?.defaultParams?.parameters && currentStorageInfo.framework === 'rclone') {
+      const passwordFields: ParametersType = {}
+      for (const param of currentStorageInfo.defaultParams.parameters) {
+        if (param.isPassword && params[param.name] !== undefined) {
+          passwordFields[param.name] = params[param.name]
+        }
+      }
+      setOriginalPasswordValues(passwordFields)
+    }
+    
     setStorageName(name)
     setStep('setParams')
   }
@@ -232,14 +248,15 @@ function AddStorage_page() {
               </FormItem>
             }
             data={[
-              ...storageInfo.defaultParams
-                .parameters /* ,...storageInfo.defaultParams.exParameters?.openlist?.additional||[] */,
+              ...(storageInfo?.defaultParams?.parameters || []) /* ,...storageInfo.defaultParams.exParameters?.openlist?.additional||[] */,
             ]}
             showAdvanced={showAdvanced}
             overwriteValues={storageParams || {}}
             setFormHook={hook => {
               setFormHook(hook)
             }}
+            isEditMode={isEditMode}
+            framework={storageInfo?.framework}
           />
           <br />
 
@@ -321,10 +338,21 @@ function AddStorage_page() {
                       return
                     }
 
-                    const parameters: ParametersType =
+                    let parameters: ParametersType =
                       storageInfo.framework === 'rclone'
                         ? formHook.getFieldsValue(formHook.getTouchedFields())
                         : formHook.getFieldsValue()
+                    
+                    // 编辑模式下，过滤掉未修改的密码字段，避免用混淆值覆盖原密码
+                    if (isEditMode && storageInfo.framework === 'rclone') {
+                      for (const fieldName of Object.keys(originalPasswordValues)) {
+                        // 如果密码值与原始混淆值相同，说明用户没有修改，删除该字段
+                        if (parameters[fieldName] === originalPasswordValues[fieldName]) {
+                          delete parameters[fieldName]
+                        }
+                      }
+                    }
+                    
                     console.log(parameters)
 
                     //return

@@ -245,7 +245,11 @@ async function modifyOpenlistConfig(
     }
     // 将路径标准化为使用正斜杠
     const normalizedPath = absolutePath.replace(/\\/g, '/')
-    const normalizedDataDir = dataDir.replace(/\\/g, '/')
+    let normalizedDataDir = dataDir.replace(/\\/g, '/')
+    // 确保数据目录以斜杠结尾，避免错误匹配
+    if (!normalizedDataDir.endsWith('/')) {
+      normalizedDataDir += '/'
+    }
     // 如果路径以数据目录开头，转换为相对路径
     if (normalizedPath.startsWith(normalizedDataDir)) {
       const relativePath = normalizedPath.substring(normalizedDataDir.length)

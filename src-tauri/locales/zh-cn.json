@@ -716,5 +716,6 @@
     "forward_archive_requests": "转发归档请求",
     "proxy_range": "Proxy Range",
     "app_id": "App ID",
-    "sign_key": "Sign Key"
+    "sign_key": "Sign Key",
+    "password_obscured_hint": "密码已被rclone混淆存储，无法显示原始值，如需修改请重新输入"
 }

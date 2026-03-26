@@ -706,6 +706,7 @@
     "import": "導入",
     "confirm_import": "確認導入",
     "export_import_config_description": "導出當前配置或者從文件恢復配置",
-    "confirm_import_description": "導入配置將覆蓋當前所有配置並自動重啓軟件，是否繼續？"
+    "confirm_import_description": "導入配置將覆蓋當前所有配置並自動重啓軟件，是否繼續？",
+    "password_obscured_hint": "密碼已被rclone混淆存儲，無法顯示原始值，如需修改請重新輸入"
 }
 

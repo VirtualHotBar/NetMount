@@ -188,11 +188,14 @@ function StorageAndPathInputer({
 
 function InputFormItemContent_module({
   data,
-  formValuesResult /* style */,
+  formValuesResult,
+  isEditMode,
+  framework,
 }: {
   data: StorageParamItemType
   formValuesResult?: ParametersType
-  /* style?: CSSProperties; */
+  isEditMode?: boolean
+  framework?: 'rclone' | 'openlist'
 }) {
   const { t } = useTranslation()
 
@@ -233,8 +236,11 @@ function InputFormItemContent_module({
 
         content = <Select placeholder={t('please_select')}>{selectContent}</Select>
       } else if (data.isPassword) {
-        //密码
-        content = <Input.Password placeholder={t('please_input')} />
+        //密码 - 编辑模式下显示提示（仅rclone存储）
+        const placeholderText = isEditMode && framework === 'rclone'
+          ? t('password_obscured_hint')
+          : t('please_input')
+        content = <Input.Password placeholder={placeholderText} />
       } else {
         content = <Input placeholder={t('please_input')} />
       }
@@ -253,6 +259,8 @@ function InputForm_module({
   overwriteValues,
   setFormHook,
   header,
+  isEditMode,
+  framework,
 }: {
   data: StorageParamItemType[]
   footer?: JSX.Element
@@ -262,6 +270,8 @@ function InputForm_module({
   onChange?: (data: ParametersType) => void
   overwriteValues?: ParametersType
   setFormHook?: (form: FormInstance) => void
+  isEditMode?: boolean
+  framework?: 'rclone' | 'openlist'
 }) {
   const { t } = useTranslation()
   const [form] = Form.useForm()
@@ -320,7 +330,7 @@ function InputForm_module({
               }
               style={{ ...style }}
             >
-              {InputFormItemContent_module({ data: dataItem, formValuesResult: formValuesResult })}
+              {InputFormItemContent_module({ data: dataItem, formValuesResult: formValuesResult, isEditMode: isEditMode, framework: framework })}
             </FormItem>
           )
         }
