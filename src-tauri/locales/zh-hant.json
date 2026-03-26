@@ -205,6 +205,7 @@
     "openlist_extra_args": "OpenList 額外啟動參數",
     "quit": "退出",
     "tray_show": "顯示主視窗",
+    "tray_restart": "重啟程式",
     "open_log_dir": "打開日誌目錄",
     "export_diagnostics": "匯出診斷包",
     "diagnostics_exported": "診斷包已匯出",

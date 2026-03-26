@@ -14,6 +14,7 @@ impl Tray {
             let menu = tauri::menu::MenuBuilder::new(app)
                 .items(&[
                     &build_item("show", locale.get("tray_show"))?,
+                    &build_item("restart", locale.get("tray_restart"))?,
                     &build_item("quit", locale.get("quit"))?,
                 ])
                 .build()
@@ -44,6 +45,9 @@ impl Tray {
                     if let Some(window) = app.app_main_window() {
                         let _ = window.toggle_visibility(Some(true));
                     }
+                }
+                "restart" => {
+                    app.restart();
                 }
                 "quit" => {
                     app.app_quit();

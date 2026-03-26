@@ -205,6 +205,7 @@
     "openlist_extra_args": "OpenList Extra Startup Args",
     "quit": "Quit",
     "tray_show": "Show Main Window",
+    "tray_restart": "Restart Program",
     "open_log_dir": "Open Log Folder",
     "export_diagnostics": "Export Diagnostics",
     "diagnostics_exported": "Diagnostics exported",
