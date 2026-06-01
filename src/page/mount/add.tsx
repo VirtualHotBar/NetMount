@@ -34,7 +34,7 @@ import {
   mountStorage,
 } from '../../controller/storage/mount/mount'
 import { osInfo } from '../../services/ConfigService'
-import { homeDir } from '@tauri-apps/api/path'
+import { desktopDir, homeDir } from '@tauri-apps/api/path'
 import { InputForm_module, paramsType2FormItems } from '../other/InputForm'
 import { filterHideStorage } from '../../services/storage/StorageManager'
 import { MountOptions, VfsOptions } from '../../type/rclone/storage/mount/parameters'
@@ -107,11 +107,13 @@ export default function AddMount_page() {
       let displayMountPath = mount.mountPath
       try {
         const homeDirStr = await homeDir()
+        const desktopDirStr = await desktopDir()
         const normalizedHome = homeDirStr.replace(/\\/g, '/')
+        const normalizedDesktop = desktopDirStr ? desktopDirStr.replace(/\\/g, '/') : normalizedHome + '/Desktop'
         const normalizedMount = displayMountPath.replace(/\\/g, '/')
         
-        if (normalizedMount.startsWith(normalizedHome + '/Desktop/')) {
-          displayMountPath = '~/Desktop/' + normalizedMount.substring((normalizedHome + '/Desktop/').length)
+        if (normalizedDesktop && normalizedMount.startsWith(normalizedDesktop + '/')) {
+          displayMountPath = '~/Desktop/' + normalizedMount.substring((normalizedDesktop + '/').length)
         } else if (normalizedMount.startsWith(normalizedHome + '/Mounts/')) {
           displayMountPath = '~/Mounts/' + normalizedMount.substring((normalizedHome + '/Mounts/').length)
         }
@@ -429,7 +431,17 @@ export default function AddMount_page() {
       {
         <div style={{ display: showAllOptions ? 'block' : 'none' }}>
           <InputForm_module
-            data={paramsType2FormItems(defaultMountConfig, undefined, ['MountType'])}
+            data={paramsType2FormItems(defaultMountConfig, undefined, ['MountType']).map(item => {
+              const durationFields = ['AttrTimeout']
+              const sizeSuffixFields = ['MaxReadAhead']
+              if (durationFields.includes(item.name)) {
+                return { ...item, exType: 'Duration' as const }
+              }
+              if (sizeSuffixFields.includes(item.name)) {
+                return { ...item, exType: 'SizeSuffix' as const }
+              }
+              return item
+            })}
             onChange={data => {
               setParameters({ ...parameters, mountOpt: { ...parameters.mountOpt, ...data } })
             }}
@@ -441,7 +453,18 @@ export default function AddMount_page() {
           <InputForm_module
             data={[
               vfsCacheModeParam,
-              ...paramsType2FormItems(defaultVfsConfig, undefined, ['CacheMode']),
+              ...paramsType2FormItems(defaultVfsConfig, undefined, ['CacheMode']).map(item => {
+                // 标记字节大小和时间持续字段，使用人性化输入组件
+                const sizeSuffixFields = ['CacheMaxSize', 'ReadAhead', 'ChunkSize', 'ChunkSizeLimit', 'DiskSpaceTotalSize']
+                const durationFields = ['CacheMaxAge', 'CachePollInterval', 'DirCacheTime', 'PollInterval', 'ReadWait', 'WriteBack', 'WriteWait']
+                if (sizeSuffixFields.includes(item.name)) {
+                  return { ...item, exType: 'SizeSuffix' as const }
+                }
+                if (durationFields.includes(item.name)) {
+                  return { ...item, exType: 'Duration' as const }
+                }
+                return item
+              }),
             ]}
             onChange={data => {
               setParameters({ ...parameters, vfsOpt: { ...parameters.vfsOpt, ...data } })
@@ -516,11 +539,31 @@ export default function AddMount_page() {
                   return
                 }
               } else if (/* !isWindows &&  */ mountPath.startsWith('~/')) {
-                let homeDirStr = await homeDir()
-                if (!homeDirStr.endsWith('/')) {
-                  homeDirStr = homeDirStr + '/'
+                if (mountPath.startsWith('~/Desktop/')) {
+                  // 使用系统 API 获取真实桌面路径（兼容 OneDrive 等重定向）
+                  const desktopDirStr = await desktopDir()
+                  if (desktopDirStr) {
+                    let normalizedDesktop = desktopDirStr.replace(/\\/g, '/')
+                    if (!normalizedDesktop.endsWith('/')) {
+                      normalizedDesktop = normalizedDesktop + '/'
+                    }
+                    // ~/Desktop/ -> actual desktop path
+                    mountPathTemp = normalizedDesktop + mountPath.substring('~/Desktop/'.length)
+                  } else {
+                    // fallback: 使用 homeDir
+                    let homeDirStr = await homeDir()
+                    if (!homeDirStr.endsWith('/')) {
+                      homeDirStr = homeDirStr + '/'
+                    }
+                    mountPathTemp = mountPath.replace('~/', homeDirStr)
+                  }
+                } else {
+                  let homeDirStr = await homeDir()
+                  if (!homeDirStr.endsWith('/')) {
+                    homeDirStr = homeDirStr + '/'
+                  }
+                  mountPathTemp = mountPath.replace('~/', homeDirStr)
                 }
-                mountPathTemp = mountPath.replace('~/', homeDirStr)
               }
 
               mountPathTemp = formatPath(mountPathTemp, isWindows)
