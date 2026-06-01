@@ -44,9 +44,10 @@ pub fn find_first_available_drive_letter() -> Result<Option<String>, io::Error> 
         }
 
         // 从 Z 到 A 遍历，找第一个未被占用的盘符
-        for (i, c) in ('A'..='Z').enumerate() {
-            let idx = 25 - i; // Z=25, Y=24, ..., A=0
-            if drive_mask & (1 << idx) == 0 {
+        // 注意：位掩码中 bit 0 = A, bit 1 = B, ..., bit 25 = Z
+        for i in (0..26).rev() {
+            let c = (b'A' + i as u8) as char;
+            if drive_mask & (1 << i) == 0 {
                 return Ok(Some(format!("{}:", c)));
             }
         }
