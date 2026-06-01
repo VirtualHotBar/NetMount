@@ -6,13 +6,17 @@
  */
 
 import { invoke } from '@tauri-apps/api/core'
+import { Notification } from '@arco-design/web-react'
 import { mountRepository } from '../../../repositories/mount/MountRepository'
 import { MountListItem } from '../../../type/config'
+import { logger } from '../../../services/LoggerService'
 
 import type {
   MountOptions,
   VfsOptions,
 } from '../../../type/rclone/storage/mount/parameters'
+
+const mountLogger = logger.withContext('MountController')
 
 // ==========================================
 // 向后兼容的导出接口
@@ -22,7 +26,11 @@ import type {
  * 刷新挂载列表
  */
 async function reupMount(noRefreshUI?: boolean) {
-  await mountRepository.refreshMountList(noRefreshUI)
+  try {
+    await mountRepository.refreshMountList(noRefreshUI)
+  } catch (error) {
+    mountLogger.error('Failed to refresh mount list', error as Error)
+  }
 }
 
 /**
@@ -57,7 +65,16 @@ async function addMountStorage(
  * 删除挂载配置
  */
 async function delMountStorage(mountPath: string) {
-  await mountRepository.deleteMountConfig(mountPath)
+  try {
+    await mountRepository.deleteMountConfig(mountPath)
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    mountLogger.error('Failed to delete mount config', error as Error)
+    Notification.error({
+      title: '删除挂载配置失败',
+      content: errorMsg,
+    })
+  }
 }
 
 /**
@@ -68,17 +85,42 @@ async function editMountStorage(mountInfo: MountListItem, oldMountPath?: string)
 }
 
 /**
- * 挂载存储
+ * 挂载存储 - 包含错误处理，避免生产模式下显示"errors disabled in production"
  */
-async function mountStorage(mountInfo: MountListItem) {
-  await mountRepository.mountStorage(mountInfo)
+async function mountStorage(mountInfo: MountListItem): Promise<boolean> {
+  try {
+    await mountRepository.mountStorage(mountInfo)
+    return true
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    mountLogger.error(`Mount failed for ${mountInfo.mountPath}`, error as Error)
+    
+    // 显示友好的错误通知，而不是让错误传播到生产模式
+    Notification.error({
+      title: '挂载失败',
+      content: errorMsg,
+      duration: 10000, // 显示更长时间，方便用户阅读
+    })
+    return false
+  }
 }
 
 /**
  * 卸载存储
  */
-async function unmountStorage(mountPath: string) {
-  await mountRepository.unmountStorage(mountPath)
+async function unmountStorage(mountPath: string): Promise<boolean> {
+  try {
+    await mountRepository.unmountStorage(mountPath)
+    return true
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    mountLogger.error(`Unmount failed for ${mountPath}`, error as Error)
+    Notification.error({
+      title: '卸载失败',
+      content: errorMsg,
+    })
+    return false
+  }
 }
 
 /**

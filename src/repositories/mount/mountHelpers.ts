@@ -159,6 +159,22 @@ export async function performMount(mountInfo: MountListItem): Promise<void> {
           `原始错误: ${errorMsg}`
         )
       }
+      
+      // 通用 macOS 错误处理（M系列芯片常见问题）
+      if (errorMsg.includes('permission') || errorMsg.includes('Operation not permitted') || 
+          errorMsg.includes('Input/output error') || errorMsg.includes('no mount')) {
+        throw new Error(
+          `macOS 挂载失败。可能的原因：\n` +
+          `1. macOS 安全权限限制（特别是 M1/M2/M3/M4 芯片）\n` +
+          `2. 挂载目录权限不足\n` +
+          `3. 系统完整性保护（SIP）限制\n` +
+          `解决方案：\n` +
+          `• 使用 nfsmount 后端（推荐，无需额外驱动）\n` +
+          `• 将挂载路径改为 ~/Mounts/ 目录\n` +
+          `• 检查"系统设置 > 隐私与安全性"中的文件访问权限\n` +
+          `原始错误: ${errorMsg}`
+        )
+      }
     }
     
     // Windows 错误处理
@@ -227,8 +243,33 @@ export async function performMount(mountInfo: MountListItem): Promise<void> {
 
 /**
  * 执行卸载操作
+ * 卸载前先清理 VFS 缓存引用，卸载后清理残留临时文件
  */
 export async function performUnmount(mountPath: string): Promise<void> {
+  // 查找对应的存储名称，用于 VFS 缓存清理
+  const mountConfig = getMountConfig(mountPath)
+  
+  // 卸载前通知 VFS 释放缓存引用
+  if (mountConfig) {
+    try {
+      await rclone_api_post('/vfs/forget', {
+        fs: convertStoragePath(mountConfig.storageName) || mountConfig.storageName,
+      }, true)
+    } catch {
+      // 忽略 - 非关键操作
+    }
+  }
+  
   await rclone_api_post('/mount/unmount', { mountPoint: mountPath })
   await refreshMountList()
+  
+  // 卸载后清理该存储的残留临时文件
+  if (mountConfig) {
+    try {
+      const { cleanupVfsCacheOnUnmount } = await import('../../utils/tempCleanup')
+      await cleanupVfsCacheOnUnmount(mountConfig.storageName)
+    } catch {
+      // 忽略 - 非关键操作
+    }
+  }
 }

@@ -524,13 +524,15 @@ export default function AddMount_page() {
                   content: t('save_successfully'),
                 })
               } else {
-                await mountStorage(getMountStorage(mountPathTemp)!)
-                Notification.success({
-                  title: t('success'),
-                  content: t('mount_storage_successfully'),
-                })
-                if (isWindows && rcloneInfo.endpoint.isLocal) {
-                  showPathInExplorer(mountPathTemp, true)
+                const success = await mountStorage(getMountStorage(mountPathTemp)!)
+                if (success) {
+                  Notification.success({
+                    title: t('success'),
+                    content: t('mount_storage_successfully'),
+                  })
+                  if (isWindows && rcloneInfo.endpoint.isLocal) {
+                    showPathInExplorer(mountPathTemp, true)
+                  }
                 }
               }
               navigate('/mount')

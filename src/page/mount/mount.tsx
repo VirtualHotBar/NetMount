@@ -199,8 +199,11 @@ function Mount_page() {
                   {mounted ? (
                     <>
                       <Button
-                        onClick={() => {
-                          unmountStorage(item.mountPath)
+                        onClick={async () => {
+                          const success = await unmountStorage(item.mountPath)
+                          if (success) {
+                            Message.success(t('unmount_successfully') || '卸载成功')
+                          }
                         }}
                         status="danger"
                       >
@@ -210,8 +213,8 @@ function Mount_page() {
                   ) : (
                     <>
                       <Button
-                        onClick={() => {
-                          delMountStorage(item.mountPath)
+                        onClick={async () => {
+                          await delMountStorage(item.mountPath)
                         }}
                         status="danger"
                       >
@@ -232,7 +235,10 @@ function Mount_page() {
                             Message.error(t('mount_config_not_found'))
                             return
                           }
-                          await mountStorage(mountConfig)
+                          const success = await mountStorage(mountConfig)
+                          if (success) {
+                            Message.success(t('mount_storage_successfully'))
+                          }
                         }}
                         type="primary"
                       >
