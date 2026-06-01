@@ -213,6 +213,10 @@ async function sync(
       params.resync = true
     }
 
+    // 使用 checksum 比较而非 modtime，解决某些远程存储不支持 modtime 的问题
+    // 这是 rclone bisync 的推荐做法，可以避免 "Modtime compare was requested" 错误
+    params.checksum = true
+
     // 添加过滤规则
     if (filterRules && filterRules.length > 0) {
       params.filter = filterRules.join('\n')
