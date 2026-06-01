@@ -249,8 +249,17 @@ pub fn init() -> anyhow::Result<()> {
             //判断配置目录是否存在，如不存在创建配置目录
             let config_dir = app.app_data_dir();
             if !config_dir.exists() {
-                std::fs::create_dir_all(&config_dir).expect("创建配置目录失败");
-                println!("创建配置目录成功");
+                match std::fs::create_dir_all(&config_dir) {
+                    Ok(_) => println!("创建配置目录成功"),
+                    Err(e) => {
+                        eprintln!("创建配置目录失败: {} (路径: {})", e, config_dir.display());
+                        // 尝试使用临时目录作为后备方案
+                        let fallback_dir = std::env::temp_dir().join(".netmount");
+                        if !fallback_dir.exists() {
+                            let _ = std::fs::create_dir_all(&fallback_dir);
+                        }
+                    }
+                }
             }
 
             //配置文件

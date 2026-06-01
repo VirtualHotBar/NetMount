@@ -46,6 +46,21 @@ async function validateAndFixPaths(): Promise<void> {
     logger.warn('Home directory not resolved, using fallback', 'MainInit')
     runtimeEnv.path.homeDir = await homeDir()
   }
+  
+  // 检查挂载路径是否包含旧的用户名路径
+  // 当 Windows 用户名变更时，挂载路径可能失效
+  if (nmConfig.mount && nmConfig.mount.lists) {
+    for (const mount of nmConfig.mount.lists) {
+      if (mount.mountPath && mount.mountPath.includes('/Users/') || mount.mountPath.includes('\\Users\\')) {
+        // 检查挂载路径是否包含当前用户的 home 目录
+        const normalizedHome = currentHome.replace(/\\/g, '/').toLowerCase()
+        const normalizedMount = mount.mountPath.replace(/\\/g, '/').toLowerCase()
+        if (!normalizedMount.startsWith(normalizedHome)) {
+          logger.warn(`Mount path may contain old username: ${mount.mountPath}`, 'MainInit')
+        }
+      }
+    }
+  }
 }
 
 export async function init(setStartStr: SetStartStrFn) {
