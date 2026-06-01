@@ -23,6 +23,7 @@ import {
   defaultMountConfig,
   defaultVfsConfig,
   vfsCacheModeParam,
+  getDefaultMountConfig,
 } from '../../controller/storage/mount/parameters/defaults'
 import { rcloneInfo } from '../../services/rclone'
 import {
@@ -62,8 +63,11 @@ export default function AddMount_page() {
   const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows')
   const isMacOS = rcloneInfo.version.os.toLowerCase().includes('darwin')
 
-  // 判断是否为预定义路径：自动盘符、桌面路径、挂载路径
-  const isPredefinedPath = mountPath === '*' || mountPath.startsWith('~/Desktop/') || mountPath.startsWith('~/Mounts/')
+  // 根据平台获取默认挂载配置（macOS 自动设置 MountType=nfsmount）
+  const [parameters, setParameters] = useState<{ vfsOpt: VfsOptions; mountOpt: MountOptions }>({
+    mountOpt: getDefaultMountConfig(isMacOS),
+    vfsOpt: defaultVfsConfig,
+  })
   // 自定义路径：既不是自动盘符也不是桌面路径
   const isMountPathCustom = !isPredefinedPath
   // 是否为盘符路径（Windows）：自动盘符或盘符格式
@@ -221,7 +225,7 @@ export default function AddMount_page() {
     } else {
       next.CacheMaxSize = 21474836480 // 20GB
       next.WriteBack = 15000000000 // 15s
-      next.ReadAhead = 67108864 // 64MB
+      next.ReadAhead = 8388608 // 8MB
     }
     setParameters({ ...parameters, vfsOpt: next })
     vfsOptFormHook?.setFieldsValue(next)
@@ -470,6 +474,22 @@ export default function AddMount_page() {
               let mountPathTemp = mountPath
               if (mountPath === '*') {
                 mountPathTemp = await getAvailableDriveLetter()
+                // 检查是否成功获取到可用盘符
+                if (!mountPathTemp) {
+                  Notification.error({
+                    title: t('error'),
+                    content: t('no_available_drive_letter') || 'No available drive letter',
+                  })
+                  return
+                }
+                // 自动分配盘符后，检查是否与已有挂载冲突
+                if (getMountStorage(mountPathTemp)) {
+                  Notification.error({
+                    title: t('error'),
+                    content: t('mount_path_already_exists'),
+                  })
+                  return
+                }
               } else if (/* !isWindows &&  */ mountPath.startsWith('~/')) {
                 let homeDirStr = await homeDir()
                 if (!homeDirStr.endsWith('/')) {

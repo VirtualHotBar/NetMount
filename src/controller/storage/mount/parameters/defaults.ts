@@ -28,14 +28,14 @@ const defaultVfsConfig: VfsOptions = {
   CaseInsensitive: false,
   ChunkSize: 67108864,
   ChunkSizeLimit: -1,
-  DirCacheTime: 120000000000, // 2分钟（优化：更长的目录缓存提高浏览速度）
+  DirCacheTime: 30000000000, // 30秒（及时反映远程文件变更）
   DirPerms: 511,
   FilePerms: 511,
   NoChecksum: false,
   NoModTime: false,
   NoSeek: false,
-  PollInterval: 60000000000, // 60秒轮询间隔（优化：减少不必要的轮询）
-  ReadAhead: 33554432, // 32MB（优化：增加预读提高顺序读取性能）
+  PollInterval: 30000000000, // 30秒轮询间隔（及时反映远程文件变更）
+  ReadAhead: 4194304, // 4MB（平衡性能与内存占用，避免非分页缓冲区过高）
   ReadWait: 20000000,
   WriteBack: 5000000000,
   WriteWait: 1000000000,
@@ -73,4 +73,15 @@ const defaultMountConfig: MountOptions = {
   //CaseInsensitive: null,
 }
 
-export { defaultVfsConfig, defaultMountConfig, vfsCacheModeParam }
+/**
+ * 获取适合当前平台的默认挂载配置
+ * macOS 上自动设置 MountType 为 nfsmount（无需安装额外驱动）
+ */
+function getDefaultMountConfig(isMacOS?: boolean): MountOptions {
+  if (isMacOS) {
+    return { ...defaultMountConfig, MountType: 'nfsmount' }
+  }
+  return { ...defaultMountConfig }
+}
+
+export { defaultVfsConfig, defaultMountConfig, vfsCacheModeParam, getDefaultMountConfig }
