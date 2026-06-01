@@ -4,6 +4,7 @@ import { StorageParamItemType } from '../../type/controller/storage/info'
 import { ParametersType } from '../../type/defaults'
 import { FilterType } from '../../type/controller/storage/info'
 import { StorageAndPathInputer } from './StorageAndPathInputer'
+import { HumanizedValueInput } from './HumanizedValueInput'
 
 //应用过滤器
 function filter(filters: FilterType[], formValuesResult: ParametersType) {
@@ -39,7 +40,13 @@ function InputFormItemContent_module({
       content = <Switch />
       break
     case 'number':
-      content = <InputNumber mode="button" />
+      if (data.exType === 'SizeSuffix') {
+        content = <HumanizedValueInput mode="size" />
+      } else if (data.exType === 'Duration') {
+        content = <HumanizedValueInput mode="duration" />
+      } else {
+        content = <InputNumber mode="button" />
+      }
       break
     default: //case 'string':
       if (data.mark) {
