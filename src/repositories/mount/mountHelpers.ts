@@ -152,10 +152,43 @@ export async function performMount(mountInfo: MountListItem): Promise<void> {
     // Windows 错误处理
     if (rcloneInfo.version.os.toLowerCase().includes('windows')) {
       if (errorMsg.includes('winfsp') || errorMsg.includes('FUSE')) {
+        // 检测 Windows 24H2 相关的挂载问题
+        const isWin24H2Issue = errorMsg.includes('access denied') || 
+          errorMsg.includes('unspecified error') ||
+          errorMsg.includes('I/O operation was aborted') ||
+          errorMsg.includes('failed to retrieve mountpoint')
+        
+        if (isWin24H2Issue) {
+          throw new Error(
+            `Windows 挂载失败（可能是 Windows 24H2 兼容性问题）。\n` +
+            `请尝试以下解决方案：\n` +
+            `1. 确保已安装最新版 WinFsp（从 https://winfsp.dev/ 下载）\n` +
+            `2. 以管理员身份运行 NetMount\n` +
+            `3. 如果使用盘符挂载，尝试启用"网络驱动器"模式\n` +
+            `4. 如果问题持续，尝试挂载到目录路径而非盘符\n` +
+            `原始错误: ${errorMsg}`
+          )
+        }
+        
         throw new Error(
           `Windows 挂载失败。请确保已安装 WinFsp：\n` +
           `1. 从 https://winfsp.dev/ 下载并安装 WinFsp\n` +
           `2. 安装时选择 "Core" 和 "Developer" 组件\n` +
+          `原始错误: ${errorMsg}`
+        )
+      }
+      
+      // 检测资源不足错误（非分页缓冲区问题）
+      if (errorMsg.includes('Insufficient system resources') || 
+          errorMsg.includes('1450') ||
+          errorMsg.includes('not enough resource')) {
+        throw new Error(
+          `Windows 挂载失败：系统资源不足。\n` +
+          `这可能是非分页缓冲区占用过高的问题。\n` +
+          `请尝试：\n` +
+          `1. 减少 ReadAhead 参数（建议 4MB 或更低）\n` +
+          `2. 重启系统以释放内存\n` +
+          `3. 检查是否有其他程序占用大量内存\n` +
           `原始错误: ${errorMsg}`
         )
       }
