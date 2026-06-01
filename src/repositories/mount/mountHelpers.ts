@@ -130,12 +130,12 @@ export async function performMount(mountInfo: MountListItem): Promise<void> {
     
     if (isMacOS) {
       // 检测fuse-t相关错误
-      if (errorMsg.includes('fuse-t') || errorMsg.includes('macfuse') || errorMsg.includes('nfsmount')) {
+      if (errorMsg.includes('fuse-t') || errorMsg.includes('macfuse') || errorMsg.includes('nfsmount') || errorMsg.includes('mount_macfuse')) {
         throw new Error(
           `macOS 挂载失败。请检查以下事项：\n` +
-          `1. 如果使用 fuse-t：确保已安装 fuse-t 并在"系统设置 > 通用 > 登录项与扩展"中启用\n` +
-          `2. 如果使用 macfuse：确保已安装 macfuse 并在"系统设置 > 隐私与安全性"中允许\n` +
-          `3. M4 Mac 用户建议使用 nfsmount 后端（无需额外驱动）\n` +
+          `1. 推荐使用 nfsmount 后端（无需安装额外驱动，M1/M2/M3/M4 均支持）\n` +
+          `2. 如果使用 fuse-t：确保已安装 fuse-t 并在"系统设置 > 通用 > 登录项与扩展"中启用\n` +
+          `3. 如果使用 macfuse：需要在恢复模式下允许第三方内核扩展（M系列芯片）\n` +
           `4. 确保挂载路径不是桌面目录，建议使用 ~/Mounts/ 目录\n` +
           `原始错误: ${errorMsg}`
         )
@@ -143,8 +143,9 @@ export async function performMount(mountInfo: MountListItem): Promise<void> {
       
       if (mountInfo.mountPath.includes('/Desktop/')) {
         throw new Error(
-          `挂载到桌面失败。macOS 可能未授予桌面访问权限。` +
-          `请尝试将挂载路径改为非桌面目录（如 ~/Mounts/），或在"系统设置 > 隐私与安全性 > 文件和文件夹"中授权。`
+          `挂载到桌面失败。macOS 可能未授予桌面访问权限。\n` +
+          `建议将挂载路径改为 ~/Mounts/ 目录，或在"系统设置 > 隐私与安全性 > 文件和文件夹"中授权。\n` +
+          `原始错误: ${errorMsg}`
         )
       }
     }

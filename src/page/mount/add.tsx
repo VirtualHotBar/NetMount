@@ -50,10 +50,6 @@ export default function AddMount_page() {
   const [showAllOptions, setShowAllOptions] = useState(false)
   const [mountPath, setMountPath] = useState<string>('')
   const [autoMount, setAutoMount] = useState(true)
-  const [parameters, setParameters] = useState<{ vfsOpt: VfsOptions; mountOpt: MountOptions }>({
-    mountOpt: defaultMountConfig,
-    vfsOpt: defaultVfsConfig,
-  })
   const [vfsOptFormHook, setVfsOptFormHook] = useState<FormInstance>() //表单实例
   const [mountOptFormHook, setMountOptFormHook] = useState<FormInstance>() //表单实例
 
@@ -68,6 +64,9 @@ export default function AddMount_page() {
     mountOpt: getDefaultMountConfig(isMacOS),
     vfsOpt: defaultVfsConfig,
   })
+
+  // 判断是否为预定义路径：自动盘符、桌面路径、挂载路径
+  const isPredefinedPath = mountPath === '*' || mountPath.startsWith('~/Desktop/') || mountPath.startsWith('~/Mounts/')
   // 自定义路径：既不是自动盘符也不是桌面路径
   const isMountPathCustom = !isPredefinedPath
   // 是否为盘符路径（Windows）：自动盘符或盘符格式
@@ -168,7 +167,7 @@ export default function AddMount_page() {
         setMountPath('~/Desktop/' + storageName)
       } else {
         if (storageName) {
-          if (rcloneInfo.version.os.toLowerCase().includes('darwin')) {
+          if (isMacOS) {
             // macOS: 使用 ~/Mounts/ 而非 ~/Desktop/，避免桌面权限问题
             setMountPath('~/Mounts/' + storageName)
           } else {
@@ -185,7 +184,7 @@ export default function AddMount_page() {
       // SMB/NFS 存储默认使用网络驱动器模式（显示正确的网络驱动器图标）
       if (storageName && isWindows && mountPathuIsDriveLetter) {
         const storage = storageList.find(s => s.name === storageName)
-        if (storage && (storage.type === 'smb' || storage.type === 'nfs')) {
+        if (storage && (storage.type.toLowerCase() === 'smb' || storage.type.toLowerCase() === 'nfs')) {
           setParameters(prev => ({
             ...prev,
             mountOpt: { ...prev.mountOpt, NetworkMode: true },
@@ -274,6 +273,11 @@ export default function AddMount_page() {
             <Radio value={`~/Desktop/${storageName}`}>
               {t('desktop')}({t('recommend')})
             </Radio>
+            {isMacOS && (
+              <Radio value={`~/Mounts/${storageName}`}>
+                ~/Mounts/ ({t('recommend')})
+              </Radio>
+            )}
             {isWindows && <Radio value="*">{t('auto_drive_letter')}</Radio>}
             <Radio value="">{t('custom')}</Radio>
           </RadioGroup>
