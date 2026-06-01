@@ -16,7 +16,6 @@ async function updateStorageInfoList() {
     'Virtual',
     'Crypt',
     'Alias',
-    'SMB',
     'FTP',
     'Chunk',
     'WebDav',
