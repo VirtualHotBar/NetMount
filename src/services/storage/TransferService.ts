@@ -204,14 +204,28 @@ async function sync(
       params.resync = true
     }
 
+    // 使用 checksum 比较而非 modtime，解决某些远程存储不支持 modtime 的问题
+    // 这是 rclone bisync 的推荐做法，可以避免 "Modtime compare was requested" 错误
+    params.checksum = true
+
     success = await rclone_api_exec_async('/sync/bisync', params)
     if (!success) {
-      // 如果失败，可能是首次运行需要 resync
-      logger.info('Bisync failed, retrying with --resync flag', 'TransferService', { path1, path2 })
-      params.resync = true
-      success = await rclone_api_exec_async('/sync/bisync', params)
-      if (!success) {
-        throw new Error(`Bidirectional sync failed: ${path1} <-> ${path2}`)
+      // 如果用户未请求 resync 且首次失败，自动尝试 resync
+      if (!resync) {
+        logger.info('Bisync failed, retrying with --resync flag', 'TransferService', { path1, path2 })
+        params.resync = true
+        success = await rclone_api_exec_async('/sync/bisync', params)
+        if (!success) {
+          throw new Error(
+            `双向同步失败: ${path1} <-> ${path2}\n` +
+            `首次同步可能需要使用"强制重新同步"选项。如果问题持续，请检查两端的文件是否可访问。`
+          )
+        }
+      } else {
+        throw new Error(
+          `双向同步失败: ${path1} <-> ${path2}\n` +
+          `请检查两端的文件是否可访问，以及是否有权限问题。`
+        )
       }
     }
   }
