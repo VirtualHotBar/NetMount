@@ -3,18 +3,18 @@ import { copyDir, copyFile, delDir, delFile, moveDir, moveFile, sync } from '../
 import { logger } from '../../services/LoggerService'
 
 async function runTask(task: TaskListItem): Promise<TaskListItem> {
-  const executeTask = (t: TaskListItem) => {
+  const executeTask = async (t: TaskListItem) => {
     const srcIsDir = t.source.path.endsWith('/')
     const targetIsDir = t.target.path.endsWith('/')
 
     switch (t.taskType) {
       case 'copy': {
         if (srcIsDir && targetIsDir) {
-          copyDir(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
+          await copyDir(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
         } else if (!srcIsDir && !targetIsDir) {
-          copyFile(t.source.storageName, t.source.path, t.target.storageName, t.target.path, true)
+          await copyFile(t.source.storageName, t.source.path, t.target.storageName, t.target.path, true)
         } else if (!srcIsDir && targetIsDir) {
-          copyFile(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
+          await copyFile(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
         } else {
           throw new Error('The directory cannot be copied/moved to a file')
         }
@@ -22,11 +22,11 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
       }
       case 'move': {
         if (srcIsDir && targetIsDir) {
-          moveDir(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
+          await moveDir(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
         } else if (!srcIsDir && targetIsDir) {
-          moveFile(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
+          await moveFile(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
         } else if (!srcIsDir && !targetIsDir) {
-          moveFile(t.source.storageName, t.source.path, t.target.storageName, t.target.path, undefined, true)
+          await moveFile(t.source.storageName, t.source.path, t.target.storageName, t.target.path, undefined, true)
         } else {
           throw new Error('The directory cannot be copied/moved to a file')
         }
@@ -34,20 +34,20 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
       }
       case 'delete': {
         if (srcIsDir) {
-          delDir(t.source.storageName, t.source.path)
+          await delDir(t.source.storageName, t.source.path)
         } else {
-          delFile(t.source.storageName, t.source.path)
+          await delFile(t.source.storageName, t.source.path)
         }
         break
       }
       case 'sync': {
-        sync(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
+        await sync(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
         break
       }
       case 'bisync': {
         // 使用resync参数处理首次同步或同步状态丢失的情况
         const useResync = t.parameters?.resync === true
-        sync(t.source.storageName, t.source.path, t.target.storageName, t.target.path, true, useResync)
+        await sync(t.source.storageName, t.source.path, t.target.storageName, t.target.path, true, useResync)
         break
       }
       default: {
@@ -62,7 +62,7 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
 
   try {
     if (task.enable) {
-      executeTask(task)
+      await executeTask(task)
       task.runInfo = { ...task.runInfo, error: false, msg: '' }
     }
   } catch (error) {
