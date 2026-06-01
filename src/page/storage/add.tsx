@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Card,
   Form,
@@ -197,7 +198,13 @@ function AddStorage_page() {
                 <Typography.Text>{t(storageInfo.description)}</Typography.Text>
               </FormItem>
             ) : (
-              ''
+              searchStr && searchStr.toLowerCase().includes('nfs') && (
+                <Alert
+                  type="info"
+                  content={t('nfs_not_supported_tip')}
+                  style={{ marginTop: '0.5rem' }}
+                />
+              )
             )}
 
             <br />

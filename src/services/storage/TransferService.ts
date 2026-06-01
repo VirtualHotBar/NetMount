@@ -206,55 +206,10 @@ async function sync(
 
     success = await rclone_api_exec_async('/sync/bisync', params)
     if (!success) {
-      throw new Error(`Bidirectional sync failed: ${path1} <-> ${path2}`)
-    }
-  }
-}
-  if (!path || !destPath) {
-    throw new Error('Source or destination path is empty')
-  }
-
-  let success: boolean
-  if (!bisync) {
-    const srcFs = convertStoragePath(storageName, path, true)
-    const dstFs = convertStoragePath(destStoragename, destPath, true)
-
-    if (!srcFs || !dstFs) {
-      throw new Error('Invalid source or destination path')
-    }
-
-    success = await rclone_api_exec_async('/sync/sync', {
-      srcFs,
-      dstFs,
-    })
-    if (!success) {
-      throw new Error(`Sync failed: ${srcFs} -> ${dstFs}`)
-    }
-  } else {
-    const path1 = convertStoragePath(storageName, path, true)
-    const path2 = convertStoragePath(destStoragename, destPath, true)
-
-    if (!path1 || !path2) {
-      throw new Error('Invalid source or destination path')
-    }
-
-    // 双向同步：首次运行或同步状态丢失时需要 resync
-    // rclone bisync 要求首次运行时传入 --resync 参数
-    // 通过 _async + extra 参数传递
-    success = await rclone_api_exec_async('/sync/bisync', {
-      path1,
-      path2,
-      _resync: false, // 默认不 resync，rclone 会自动检测是否需要
-    })
-
-    if (!success) {
       // 如果失败，可能是首次运行需要 resync
       logger.info('Bisync failed, retrying with --resync flag', 'TransferService', { path1, path2 })
-      success = await rclone_api_exec_async('/sync/bisync', {
-        path1,
-        path2,
-        _resync: true,
-      })
+      params.resync = true
+      success = await rclone_api_exec_async('/sync/bisync', params)
       if (!success) {
         throw new Error(`Bidirectional sync failed: ${path1} <-> ${path2}`)
       }

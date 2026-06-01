@@ -20,6 +20,7 @@ import { hooks } from './services/hook'
 import { getLocale } from './controller/language/language'
 import { nmConfig } from './services/ConfigService'
 import { getLangCode } from './controller/language/localized'
+import { PasswordGuard } from './components/PasswordGuard'
 
 const { Item: MenuItem, SubMenu } = Menu
 const { Sider, Header, Content } = Layout
@@ -258,15 +259,16 @@ function App() {
   }, [location])
 
   return (
-    <ConfigProvider locale={getLocale(localeStr)}>
-      <Layout
-        style={{
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'var(--color-bg-1)',
-        }}
-      >
-        <Header
+    <PasswordGuard>
+      <ConfigProvider locale={getLocale(localeStr)}>
+        <Layout
+          style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'var(--color-bg-1)',
+          }}
+        >
+          <Header
           style={{
             width: '100%',
             height: '2.4rem',
@@ -336,8 +338,9 @@ function App() {
             </Suspense>
           </Content>
         </Layout>
-      </Layout>
-    </ConfigProvider>
+        </Layout>
+      </ConfigProvider>
+    </PasswordGuard>
   )
 }
 

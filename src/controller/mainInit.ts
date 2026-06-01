@@ -94,9 +94,8 @@ export async function init(setStartStr: SetStartStrFn) {
     return e as Error
   })
 
-  const openlistError = await startOpenlist().catch(e => {
+  await startOpenlist().catch(e => {
     logger.error('Failed to start openlist', e instanceof Error ? e : new Error(String(e)))
-    return e as Error
   })
 
   startUpdateCont()

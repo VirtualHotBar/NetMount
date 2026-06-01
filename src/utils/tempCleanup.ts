@@ -41,7 +41,7 @@ export async function cleanupTempFiles(): Promise<void> {
 /**
  * 清理目录中的过期文件
  */
-async function cleanupDirectory(dirPath: string, maxAgeMs: number): Promise<void> {
+async function cleanupDirectory(dirPath: string, _maxAgeMs: number): Promise<void> {
   try {
     // 使用Tauri的fs API来清理
     const exists = await invoke<boolean>('fs_exist_dir', { path: dirPath })
@@ -79,7 +79,7 @@ async function cleanupDirectory(dirPath: string, maxAgeMs: number): Promise<void
 /**
  * 清理旧日志文件，保留最近的日志
  */
-async function cleanupOldLogs(logDir: string, maxAgeMs: number): Promise<void> {
+async function cleanupOldLogs(logDir: string, _maxAgeMs: number): Promise<void> {
   try {
     const exists = await invoke<boolean>('fs_exist_dir', { path: logDir })
     if (!exists) {

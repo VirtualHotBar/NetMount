@@ -140,22 +140,6 @@ function Mount_page() {
                       setWinFspInstalling(true)
                       if (await installWinFsp()) {
                         await exit(true)
-                        //await restartRclone()
-                        /* Modal.success({
-                    title: t('install_success'),
-                    simple: true,
-                    maskClosable: false,
-                    escToExit: false,
-                    content: t('restartself_to_take_effect'),
-                    onOk: () => {
-                      exit(true);
-                    },
-                  }); */
-
-                        /* Message.info(t('about_to_restart_self'))
-                  setTimeout(() => {
-                    exit(true)
-                  }, 1500) */
                       } else {
                         Message.error(t('install_failed'))
                         await openWinFspInstaller()
@@ -172,6 +156,14 @@ function Mount_page() {
             />
             <br />
           </>
+        )}
+        {osInfo.osType === 'windows' && (
+          <Alert
+            type="info"
+            content={t('network_share_tip')}
+            style={{ marginBottom: '0.5rem' }}
+            closable
+          />
         )}
         <Table
           style={{ height: '100%' }}

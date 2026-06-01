@@ -28,14 +28,64 @@ import { useSettingsStore } from '../../../stores/useSettingsStore'
 
 const FormItem = Form.Item
 
+/**
+ * 简单的密码哈希函数（用于本地存储，非安全场景）
+ */
+function hashPassword(password: string): string {
+  let hash = 0
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // 转换为32位整数
+  }
+  return hash.toString(36)
+}
+
 export function GeneralSettings(): JSX.Element {
   const { t } = useTranslation()
   const [autostart, setAutostart] = useState<boolean>()
   const { increment: incrementSettings } = useSettingsStore()
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
   useEffect(() => {
     getAutostartState().then(setAutostart)
   }, [])
+
+  const handleSetPassword = async () => {
+    if (!newPassword) {
+      // 清除密码
+      if (!nmConfig.settings.security) {
+        nmConfig.settings.security = {}
+      }
+      nmConfig.settings.security.startupPassword = undefined
+      await saveNmConfig()
+      Message.success(t('password_cleared'))
+      setShowPasswordModal(false)
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      Message.error(t('password_mismatch'))
+      return
+    }
+
+    if (newPassword.length < 4) {
+      Message.error(t('password_too_short'))
+      return
+    }
+
+    if (!nmConfig.settings.security) {
+      nmConfig.settings.security = {}
+    }
+    nmConfig.settings.security.startupPassword = hashPassword(newPassword)
+    await saveNmConfig()
+    Message.success(t('password_set'))
+    setShowPasswordModal(false)
+    setNewPassword('')
+    setConfirmPassword('')
+  }
 
   return (
     <Form autoComplete="off" style={{ paddingRight: '0.8rem' }}>
@@ -138,6 +188,45 @@ export function GeneralSettings(): JSX.Element {
         </Input.Group>
       </FormItem>
 
+      <FormItem label={t('startup_password')}>
+        <Button
+          onClick={() => setShowPasswordModal(true)}
+        >
+          {nmConfig.settings.security?.startupPassword ? t('change_password') : t('set_password')}
+        </Button>
+        {nmConfig.settings.security?.startupPassword && (
+          <Button
+            style={{ marginLeft: '0.5rem' }}
+            status="danger"
+            onClick={async () => {
+              if (!nmConfig.settings.security) {
+                nmConfig.settings.security = {}
+              }
+              nmConfig.settings.security.startupPassword = undefined
+              await saveNmConfig()
+              Message.success(t('password_cleared'))
+            }}
+          >
+            {t('clear_password')}
+          </Button>
+        )}
+      </FormItem>
+
+      {nmConfig.settings.security?.startupPassword && (
+        <FormItem label={t('lock_on_sleep')}>
+          <Switch
+            checked={nmConfig.settings.security?.lockOnSleep || false}
+            onChange={value => {
+              if (!nmConfig.settings.security) {
+                nmConfig.settings.security = {}
+              }
+              nmConfig.settings.security.lockOnSleep = value
+              incrementSettings()
+            }}
+          />
+        </FormItem>
+      )}
+
       <div style={{ width: '100%', textAlign: 'right' }}>
         <Button
           type="primary"
@@ -149,6 +238,36 @@ export function GeneralSettings(): JSX.Element {
           {t('save')}
         </Button>
       </div>
+
+      <Modal
+        title={t('set_startup_password')}
+        visible={showPasswordModal}
+        onOk={handleSetPassword}
+        onCancel={() => {
+          setShowPasswordModal(false)
+          setNewPassword('')
+          setConfirmPassword('')
+        }}
+        okText={t('save')}
+        cancelText={t('step_back')}
+      >
+        <Form autoComplete="off">
+          <FormItem label={t('new_password')}>
+            <Input.Password
+              value={newPassword}
+              onChange={value => setNewPassword(value)}
+              placeholder={t('enter_password_placeholder')}
+            />
+          </FormItem>
+          <FormItem label={t('confirm_password')}>
+            <Input.Password
+              value={confirmPassword}
+              onChange={value => setConfirmPassword(value)}
+              placeholder={t('confirm_password_placeholder')}
+            />
+          </FormItem>
+        </Form>
+      </Modal>
     </Form>
   )
 }

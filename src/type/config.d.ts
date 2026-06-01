@@ -18,6 +18,10 @@ interface NMConfig {
     path: {
       cacheDir?: string
     }
+    security?: {
+      startupPassword?: string  // 启动密码（哈希值）
+      lockOnSleep?: boolean     // 休眠时锁定
+    }
   }
   notice?: Notice
   framework: {
