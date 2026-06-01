@@ -28,15 +28,29 @@ pub fn find_first_available_drive_letter() -> Result<Option<String>, io::Error> 
     }
     #[cfg(target_os = "windows")]
     {
-        for drive in ('A'..='Z').rev().map(|c| format!("{}:", c)) {
-            let drive_path = format!("{}\\", drive);
-            if fs::metadata(&drive_path).is_err() {
-                // 如果检测到错误，假设盘符未被使用并返回
-                return Ok(Some(drive));
+        // 使用 Windows API GetLogicalDrives 获取所有已使用的盘符位掩码
+        // 这比 fs::metadata 更可靠，能正确检测网络驱动器、CD-ROM 等
+        use winapi::um::fileapi::GetLogicalDrives;
+        let drive_mask = unsafe { GetLogicalDrives() };
+        if drive_mask == 0 {
+            // API 调用失败，回退到 fs::metadata 方式
+            for drive in ('A'..='Z').rev().map(|c| format!("{}:", c)) {
+                let drive_path = format!("{}\\", drive);
+                if fs::metadata(&drive_path).is_err() {
+                    return Ok(Some(drive));
+                }
+            }
+            return Ok(None);
+        }
+
+        // 从 Z 到 A 遍历，找第一个未被占用的盘符
+        for (i, c) in ('A'..='Z').enumerate() {
+            let idx = 25 - i; // Z=25, Y=24, ..., A=0
+            if drive_mask & (1 << idx) == 0 {
+                return Ok(Some(format!("{}:", c)));
             }
         }
 
-        // 如果所有盘符都被占用，返回None
         Ok(None)
     }
 }
