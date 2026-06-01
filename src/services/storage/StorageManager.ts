@@ -171,6 +171,13 @@ async function getStorageSpace(name: string): Promise<StorageSpace> {
     return { total: -2, free: -2, used: -2 }
   }
 
+  // 检测token相关错误（如百度网盘refresh token过期）
+  const errorStr = String(lastError)
+  if (errorStr.includes('refresh_token') || errorStr.includes('token') || errorStr.includes('auth')) {
+    logger.warn(`Storage ${name} may have token issues: ${errorStr}`, 'StorageManager')
+    return { total: -3, free: -3, used: -3 } // 特殊标记：token错误
+  }
+
   logger.warn(`getStorageSpace failed for ${name} after all retries:`, 'StorageManager', { lastError })
   return { total: -1, free: -1, used: -1 }
 }
@@ -331,6 +338,81 @@ function formatPathRclone(path: string): string {
   return path
 }
 
+/**
+ * Rename an existing storage
+ * @param oldName - Current storage name
+ * @param newName - New storage name
+ * @returns true if successful
+ */
+async function renameStorage(oldName: string, newName: string): Promise<boolean> {
+  if (!oldName || !newName || oldName === newName) {
+    return false
+  }
+
+  const storage = searchStorage(oldName)
+  if (!storage) {
+    logger.error(`Storage not found: ${oldName}`, undefined, 'StorageManager')
+    return false
+  }
+
+  // Check if new name already exists
+  if (searchStorage(newName)) {
+    logger.error(`Storage name already exists: ${newName}`, undefined, 'StorageManager')
+    return false
+  }
+
+  try {
+    switch (storage.framework) {
+      case 'rclone': {
+        // Get current config
+        const config = await rclone_api_post('/config/get', { name: oldName })
+        if (!config) {
+          logger.error(`Failed to get config for ${oldName}`, undefined, 'StorageManager')
+          return false
+        }
+        // Create new config with new name
+        await rclone_api_post('/config/create', {
+          name: newName,
+          type: config.type,
+          parameters: config,
+        })
+        // Delete old config
+        await rclone_api_post('/config/delete', { name: oldName })
+        break
+      }
+      case 'openlist': {
+        // OpenList storage rename is not directly supported
+        logger.warn('OpenList storage rename not supported', 'StorageManager')
+        return false
+      }
+    }
+
+    // Update mount references
+    for (const mount of nmConfig.mount.lists) {
+      if (mount.storageName === oldName) {
+        mount.storageName = newName
+      }
+    }
+
+    // Update task references
+    for (const task of nmConfig.task) {
+      if (task.source.storageName === oldName) {
+        task.source.storageName = newName
+      }
+      if (task.target.storageName === oldName) {
+        task.target.storageName = newName
+      }
+    }
+
+    await reupStorage()
+    logger.info(`Storage renamed: ${oldName} -> ${newName}`, 'StorageManager')
+    return true
+  } catch (error) {
+    logger.error(`Failed to rename storage ${oldName} -> ${newName}:`, error as Error, 'StorageManager')
+    return false
+  }
+}
+
 export {
   reupStorage,
   delStorage,
@@ -341,6 +423,7 @@ export {
   getStorageSpace,
   formatPathRclone,
   getFileName,
+  renameStorage,
 }
 
 // Register deleteStorage implementation to avoid circular dependencies
