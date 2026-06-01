@@ -1,6 +1,7 @@
 import { listenWindow, window as appWindow } from './window'
 import { nmConfig, readNmConfig, roConfig, runtimeEnv } from '../services/ConfigService'
 import { setThemeMode } from './setting/setting'
+import { isServiceMode } from './setting/setting'
 import { setLocalized } from './language/localized'
 import { startRclone } from '../utils/rclone/process'
 import { startOpenlist } from '../utils/openlist/process'
@@ -126,7 +127,10 @@ export async function init(setStartStr: SetStartStrFn) {
   // 启动定期清理任务（每4小时清理过期缓存）
   startPeriodicCleanup()
 
-  if (!nmConfig.settings.startHide) {
+  // 检查是否在服务模式下运行（--service 标志）
+  const serviceMode = await isServiceMode().catch(() => false)
+
+  if (!nmConfig.settings.startHide && !serviceMode) {
     await appWindow.show()
     await appWindow.setFocus()
   }

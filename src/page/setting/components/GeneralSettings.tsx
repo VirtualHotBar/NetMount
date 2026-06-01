@@ -18,7 +18,9 @@ import { useTranslation } from 'react-i18next'
 import * as dialog from '@tauri-apps/plugin-dialog'
 import {
   getAutostartState,
-  setAutostartState,
+  getAutostartMode,
+  setAutostartMode,
+  isTaskSchedulerAvailable,
   setThemeMode,
 } from '../../../controller/setting/setting'
 import { setLocalized } from '../../../controller/language/localized'
@@ -44,14 +46,25 @@ function hashPassword(password: string): string {
 
 export function GeneralSettings(): JSX.Element {
   const { t } = useTranslation()
-  const [autostart, setAutostart] = useState<boolean>()
+  const [autostartMode, setAutostartModeState] = useState<string>('none')
+  const [taskSchedulerAvailable, setTaskSchedulerAvailable] = useState<boolean>(false)
   const { increment: incrementSettings } = useSettingsStore()
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
   useEffect(() => {
-    getAutostartState().then(setAutostart)
+    // Load autostart mode and task scheduler availability
+    Promise.all([
+      getAutostartMode(),
+      isTaskSchedulerAvailable(),
+    ]).then(([mode, available]) => {
+      setAutostartModeState(mode)
+      setTaskSchedulerAvailable(available)
+    }).catch(() => {
+      // Fallback: check basic autostart state
+      getAutostartState().then(() => {})
+    })
   }, [])
 
   const handleSetPassword = async () => {
@@ -128,13 +141,22 @@ export function GeneralSettings(): JSX.Element {
         </Select>
       </FormItem>
       <FormItem label={t('autostart')}>
-        <Switch
-          checked={autostart || false}
+        <Select
+          value={autostartMode}
           onChange={async value => {
-            await setAutostartState(value)
-            setAutostart(value)
+            const success = await setAutostartMode(value as 'none' | 'registry' | 'task_scheduler')
+            if (success) {
+              setAutostartModeState(value)
+            }
           }}
-        />
+          style={{ width: '14rem' }}
+        >
+          <Select.Option value="none">{t('autostart_disabled')}</Select.Option>
+          <Select.Option value="registry">{t('autostart_standard')}</Select.Option>
+          {taskSchedulerAvailable && (
+            <Select.Option value="task_scheduler">{t('autostart_high_priority')}</Select.Option>
+          )}
+        </Select>
       </FormItem>
       <FormItem label={t('start_hide')}>
         <Switch

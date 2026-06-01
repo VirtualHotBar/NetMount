@@ -42,4 +42,37 @@ async function setAutostartState(state: boolean): Promise<boolean> {
   return (await invoke('set_autostart_state', { enabled: state })) as boolean
 }
 
-export { setThemeMode, getAutostartState, setAutostartState }
+// 自启模式类型
+type AutostartMode = 'none' | 'registry' | 'task_scheduler'
+
+//获取自启模式
+async function getAutostartMode(): Promise<AutostartMode> {
+  return (await invoke('get_autostart_mode')) as AutostartMode
+}
+
+//设置自启模式
+async function setAutostartMode(mode: AutostartMode): Promise<boolean> {
+  return (await invoke('set_autostart_mode', { mode })) as boolean
+}
+
+//检查是否支持任务计划程序（仅 Windows）
+async function isTaskSchedulerAvailable(): Promise<boolean> {
+  return (await invoke('is_task_scheduler_available')) as boolean
+}
+
+//检查是否在服务模式下运行
+async function isServiceMode(): Promise<boolean> {
+  return (await invoke('is_service_mode')) as boolean
+}
+
+export {
+  setThemeMode,
+  getAutostartState,
+  setAutostartState,
+  getAutostartMode,
+  setAutostartMode,
+  isTaskSchedulerAvailable,
+  isServiceMode,
+}
+
+export type { AutostartMode }
