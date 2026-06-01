@@ -6,9 +6,11 @@ import { App } from './app'
 import { BrowserRouter } from 'react-router-dom'
 import { init } from './controller/main'
 import ReactDOM from 'react-dom/client'
-import { Spin } from '@arco-design/web-react'
+import { Button, Result, Spin } from '@arco-design/web-react'
 import './controller/errorHandling'
 import { logger } from './services'
+import { webviewWindow } from '@tauri-apps/api'
+import { exit } from '@tauri-apps/plugin-process'
 
 function StartPage() {
   const { t } = useTranslation()
@@ -52,6 +54,36 @@ const reactRoot =
   (container.__netmount_react_root__ = ReactDOM.createRoot(container))
 reactRoot.render(<StartPage></StartPage>)
 
+function ErrorPage({ error, onRetry }: { error: string; onRetry: () => void }) {
+  const { t } = useTranslation()
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'var(--color-bg-1)',
+      }}
+    >
+      <Result
+        status="error"
+        title={t('error')}
+        subTitle={error}
+        extra={[
+          <Button key="retry" type="primary" onClick={onRetry}>
+            {t('retry') || 'Retry'}
+          </Button>,
+          <Button key="quit" onClick={() => exit(0)}>
+            {t('quit') || 'Quit'}
+          </Button>,
+        ]}
+      />
+    </div>
+  )
+}
+
 let appStarting = false
 type SetStartStrFn = (str: string) => void
 async function appStart(setStartStr: SetStartStrFn) {
@@ -64,7 +96,31 @@ async function appStart(setStartStr: SetStartStrFn) {
     await init(setStartStr) //初始化功能
   } catch (e) {
     appStarting = false
+    const errorMsg = e instanceof Error ? e.message : String(e)
     logger.error('App init failed', e instanceof Error ? e : new Error(String(e)))
+
+    // 关键修复：初始化失败时也要显示窗口，让用户看到错误信息
+    try {
+      const appWindow = webviewWindow.getCurrentWebviewWindow()
+      await appWindow.show()
+      await appWindow.setFocus()
+    } catch {
+      // ignore show window errors
+    }
+
+    reactRoot.render(
+      <React.StrictMode>
+        <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+          <ErrorPage
+            error={errorMsg}
+            onRetry={() => {
+              appStarting = false
+              reactRoot.render(<StartPage />)
+            }}
+          />
+        </BrowserRouter>
+      </React.StrictMode>
+    )
     return
   }
 

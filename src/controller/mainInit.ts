@@ -12,8 +12,41 @@ import { defaultCacheDir } from '../utils/netmountPaths'
 import { homeDir } from '@tauri-apps/api/path'
 import { t } from 'i18next'
 import { logger } from '../services/LoggerService'
+import { cleanupTempFiles } from '../utils/tempCleanup'
+import { invoke } from '@tauri-apps/api/core'
 
 type SetStartStrFn = (str: string) => void
+
+/**
+ * 验证并修复配置中的路径
+ * 当 Windows 用户名变更时，旧路径可能失效
+ */
+async function validateAndFixPaths(): Promise<void> {
+  const currentHome = runtimeEnv.path.homeDir
+  
+  // 检查缓存目录是否有效
+  if (nmConfig.settings.path.cacheDir) {
+    const cacheDir = nmConfig.settings.path.cacheDir
+    // 如果缓存目录包含旧的用户名路径，重置为默认值
+    // 简单检查：如果目录不存在且包含 homeDir 的父路径
+    try {
+      const exists = await invoke<boolean>('fs_exist_dir', { path: cacheDir })
+      if (!exists) {
+        logger.warn(`Cache directory does not exist: ${cacheDir}, resetting to default`, 'MainInit')
+        nmConfig.settings.path.cacheDir = undefined
+      }
+    } catch {
+      logger.warn(`Failed to check cache directory: ${cacheDir}, resetting to default`, 'MainInit')
+      nmConfig.settings.path.cacheDir = undefined
+    }
+  }
+  
+  // 确保 homeDir 是有效的
+  if (!currentHome || currentHome === '~') {
+    logger.warn('Home directory not resolved, using fallback', 'MainInit')
+    runtimeEnv.path.homeDir = await homeDir()
+  }
+}
 
 export async function init(setStartStr: SetStartStrFn) {
   setStartStr(t('init'))
@@ -24,6 +57,9 @@ export async function init(setStartStr: SetStartStrFn) {
 
   setStartStr(t('read_config'))
   await readNmConfig()
+
+  // 验证并修复可能失效的路径（如 Windows 用户名变更后）
+  await validateAndFixPaths()
 
   if (nmConfig.settings.language) {
     await setLocalized(nmConfig.settings.language)
@@ -41,21 +77,46 @@ export async function init(setStartStr: SetStartStrFn) {
     nmConfig.settings.path.cacheDir = defaultCacheDir()
   }
 
+  // 确保缓存目录存在
+  try {
+    await invoke('fs_make_dir', { path: nmConfig.settings.path.cacheDir })
+  } catch (e) {
+    logger.warn(`Failed to create cache directory: ${nmConfig.settings.path.cacheDir}`, 'MainInit', { error: e })
+  }
+
   setThemeMode(nmConfig.settings.themeMode)
 
   setStartStr(t('start_framework'))
 
-  await startRclone()
-  await startOpenlist()
+  // 启动组件时使用独立的 try-catch，避免单个组件失败导致整个初始化失败
+  const rcloneError = await startRclone().catch(e => {
+    logger.error('Failed to start rclone', e instanceof Error ? e : new Error(String(e)))
+    return e as Error
+  })
+
+  const openlistError = await startOpenlist().catch(e => {
+    logger.error('Failed to start openlist', e instanceof Error ? e : new Error(String(e)))
+    return e as Error
+  })
 
   startUpdateCont()
 
   startComponentWatchdog()
   runStartupTasksInBackground()
 
+  // 启动后清理过期临时文件（非阻塞）
+  cleanupTempFiles().catch(() => {
+    // 清理失败不影响主流程
+  })
+
   if (!nmConfig.settings.startHide) {
     await appWindow.show()
     await appWindow.setFocus()
+  }
+
+  // 如果核心组件启动失败，抛出让上层显示错误
+  if (rcloneError instanceof Error) {
+    throw new Error(`Rclone startup failed: ${rcloneError.message}`)
   }
 
   logger.info('Application initialization complete', 'MainInit')
