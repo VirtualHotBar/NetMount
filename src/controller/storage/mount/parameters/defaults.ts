@@ -28,14 +28,14 @@ const defaultVfsConfig: VfsOptions = {
   CaseInsensitive: false,
   ChunkSize: 67108864,
   ChunkSizeLimit: -1,
-  DirCacheTime: 300000000000,
+  DirCacheTime: 120000000000, // 2分钟（优化：更长的目录缓存提高浏览速度）
   DirPerms: 511,
   FilePerms: 511,
   NoChecksum: false,
   NoModTime: false,
   NoSeek: false,
-  PollInterval: 60000000000,
-  ReadAhead: 0,
+  PollInterval: 60000000000, // 60秒轮询间隔（优化：减少不必要的轮询）
+  ReadAhead: 33554432, // 32MB（优化：增加预读提高顺序读取性能）
   ReadWait: 20000000,
   WriteBack: 5000000000,
   WriteWait: 1000000000,
