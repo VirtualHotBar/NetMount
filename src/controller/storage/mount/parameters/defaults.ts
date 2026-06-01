@@ -28,14 +28,14 @@ const defaultVfsConfig: VfsOptions = {
   CaseInsensitive: false,
   ChunkSize: 67108864,
   ChunkSizeLimit: -1,
-  DirCacheTime: 5000000000, // 5秒（及时反映远程文件变更，解决WebDAV等存储文件不同步问题）
+  DirCacheTime: 30000000000, // 30秒（减少目录重读频率，提升浏览速度）
   DirPerms: 511,
   FilePerms: 511,
   NoChecksum: false,
   NoModTime: false,
   NoSeek: false,
   PollInterval: 10000000000, // 10秒轮询间隔（更频繁地检查远程变更）
-  ReadAhead: 4194304, // 4MB（平衡性能与内存占用，避免非分页缓冲区过高）
+  ReadAhead: 33554432, // 32MB（与 writes 缓存策略一致，显著提升顺序读取吞吐量）
   ReadWait: 20000000,
   WriteBack: 5000000000,
   WriteWait: 1000000000,

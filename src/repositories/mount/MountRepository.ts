@@ -12,7 +12,7 @@ import { nmConfig, saveNmConfig } from '../../services/ConfigService'
 import { rcloneInfo } from '../../services/rclone'
 import type { MountEntity, MountStatus, VfsOptions, MountOptions } from '../../type/mount/mount'
 import type { MountListItem } from '../../type/config'
-import { generateMountId, parseMountId, normalizeMountPath, performMount, performUnmount, refreshMountList, isMounted, getMountConfig } from './mountHelpers'
+import { generateMountId, parseMountId, normalizeMountPath, performMount, performUnmount, refreshMountList, isMounted, getMountConfig, forgetAllVfsCache } from './mountHelpers'
 
 const mountLogger = logger.withContext('MountRepository')
 
@@ -231,7 +231,6 @@ export class MountRepository extends BaseRepository<MountEntity> {
     }
     nmConfig.mount.lists.push(mountInfo)
     await saveNmConfig()
-    await this.refreshMountList()
     return true
   }
 
@@ -263,6 +262,14 @@ export class MountRepository extends BaseRepository<MountEntity> {
    */
   async unmountStorage(mountPath: string): Promise<void> {
     await performUnmount(mountPath)
+  }
+
+  /**
+   * 清除所有已挂载存储的 VFS 目录缓存
+   * 用于刷新操作，强制 rclone 重新从远程读取目录列表
+   */
+  async forgetAllVfsCache(): Promise<void> {
+    await forgetAllVfsCache()
   }
 
   /**

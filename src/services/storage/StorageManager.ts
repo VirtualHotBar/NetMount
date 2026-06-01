@@ -35,9 +35,16 @@ async function reupStorage() {
         throw new Error('Invalid rclone config dump response')
       }
       
-      for (const storageName in dumpResult) {
-        const space = await getStorageSpace(storageName)
+      // 并行查询所有存储的容量信息，避免串行等待
+      const storageNames = Object.keys(dumpResult)
+      const spaceResults = await Promise.all(
+        storageNames.map(async (storageName) => {
+          const space = await getStorageSpace(storageName)
+          return { storageName, space }
+        })
+      )
 
+      for (const { storageName, space } of spaceResults) {
         // 检查是否是失效的内部存储（标记为 -2）
         if (space.total === -2 && storageName.includes('.netmount-')) {
           logger.warn(`Detected invalid internal storage: ${storageName}, will cleanup`, 'StorageManager')
