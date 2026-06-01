@@ -759,6 +759,25 @@
     "rename_not_supported": "此存儲類型不支持重命名操作",
     "rename_failed": "重命名失敗",
     "s3_rename_dir_not_supported": "S3等對象存儲不支持直接重命名文件夾。請嘗試：1) 在雲端存儲中直接重命名；2) 創建新文件夾，移動文件後刪除舊文件夾。",
-    "token_expired_tip": "存儲的認證Token已過期或無效，請重新編輯存儲並更新Token。對於百度網盤，請確保使用正確的refresh_token（不是access_token），並在百度開發者平台正確配置回調URL。"
+    "token_expired_tip": "存儲的認證Token已過期或無效，請重新編輯存儲並更新Token。對於百度網盤，請確保使用正確的refresh_token（不是access_token），並在百度開發者平台正確配置回調URL。",
+    "startup_password": "啟動密碼",
+    "set_password": "設置密碼",
+    "change_password": "修改密碼",
+    "clear_password": "清除密碼",
+    "set_startup_password": "設置啟動密碼",
+    "new_password": "新密碼",
+    "confirm_password": "確認密碼",
+    "enter_password_placeholder": "輸入密碼（留空則清除）",
+    "confirm_password_placeholder": "再次輸入密碼",
+    "password_set": "密碼已設置",
+    "password_cleared": "密碼已清除",
+    "password_mismatch": "兩次輸入的密碼不一致",
+    "password_too_short": "密碼長度不能少於4個字符",
+    "lock_on_sleep": "休眠時鎖定",
+    "idle_timeout": "閒置超時鎖定",
+    "idle_timeout_hint": "指定分鐘數無操作後自動鎖定。設為0表示禁用。",
+    "enter_startup_password": "請輸入啟動密碼",
+    "unlock": "解鎖",
+    "wrong_password": "密碼錯誤"
 }
 

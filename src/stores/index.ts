@@ -21,6 +21,9 @@ export { useTaskStore } from './useTaskStore'
 // Settings store
 export { useSettingsStore } from './useSettingsStore'
 
+// Security store
+export { useSecurityStore } from './useSecurityStore'
+
 // Rclone store - unified state management
 export { useRcloneStore } from './useRcloneStore'
 

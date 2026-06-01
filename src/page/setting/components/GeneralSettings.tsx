@@ -8,6 +8,7 @@ import {
   Button,
   Form,
   Input,
+  InputNumber,
   Message,
   Modal,
   Select,
@@ -188,6 +189,78 @@ export function GeneralSettings(): JSX.Element {
         </Input.Group>
       </FormItem>
 
+      <FormItem label={t('log_dir')}>
+        <Input.Group compact>
+          <Input
+            style={{ width: 'calc(100% - 4rem)' }}
+            value={nmConfig.settings.path.logDir || ''}
+            placeholder={t('default') + ': ~/.netmount/log/'}
+          />
+          <Button
+            style={{ width: '4rem' }}
+            onClick={async () => {
+              let dirPath = await dialog.open({
+                title: t('please_select_log_dir'),
+                multiple: false,
+                directory: true,
+                defaultPath: nmConfig.settings.path.logDir || '',
+              })
+              dirPath = dirPath ? formatPath(dirPath, osInfo.platform === 'windows') : dirPath
+              if (dirPath && dirPath !== nmConfig.settings.path.logDir) {
+                nmConfig.settings.path.logDir = dirPath
+                incrementSettings()
+
+                Modal.confirm({
+                  title: t('ask_restartself'),
+                  content: t('after_changing_the_log_directory_tips'),
+                  onOk: () => {
+                    exit(true)
+                  },
+                })
+              }
+            }}
+          >
+            {t('select')}
+          </Button>
+        </Input.Group>
+      </FormItem>
+
+      <FormItem label={t('transfer_dir')}>
+        <Input.Group compact>
+          <Input
+            style={{ width: 'calc(100% - 4rem)' }}
+            value={nmConfig.settings.path.transferDir || ''}
+            placeholder={t('default') + ': {cacheDir}/rclone-temp/'}
+          />
+          <Button
+            style={{ width: '4rem' }}
+            onClick={async () => {
+              let dirPath = await dialog.open({
+                title: t('please_select_transfer_dir'),
+                multiple: false,
+                directory: true,
+                defaultPath: nmConfig.settings.path.transferDir || '',
+              })
+              dirPath = dirPath ? formatPath(dirPath, osInfo.platform === 'windows') : dirPath
+              if (dirPath && dirPath !== nmConfig.settings.path.transferDir) {
+                nmConfig.settings.path.transferDir = dirPath
+                incrementSettings()
+
+                Modal.confirm({
+                  title: t('ask_restartself'),
+                  content: t('after_changing_the_transfer_directory_tips'),
+                  onOk: () => {
+                    exit(true)
+                  },
+                })
+              }
+            }}
+          >
+            {t('select')}
+          </Button>
+        </Input.Group>
+      </FormItem>
+
       <FormItem label={t('startup_password')}>
         <Button
           onClick={() => setShowPasswordModal(true)}
@@ -213,18 +286,41 @@ export function GeneralSettings(): JSX.Element {
       </FormItem>
 
       {nmConfig.settings.security?.startupPassword && (
-        <FormItem label={t('lock_on_sleep')}>
-          <Switch
-            checked={nmConfig.settings.security?.lockOnSleep || false}
-            onChange={value => {
-              if (!nmConfig.settings.security) {
-                nmConfig.settings.security = {}
-              }
-              nmConfig.settings.security.lockOnSleep = value
-              incrementSettings()
-            }}
-          />
-        </FormItem>
+        <>
+          <FormItem label={t('lock_on_sleep')}>
+            <Switch
+              checked={nmConfig.settings.security?.lockOnSleep || false}
+              onChange={value => {
+                if (!nmConfig.settings.security) {
+                  nmConfig.settings.security = {}
+                }
+                nmConfig.settings.security.lockOnSleep = value
+                incrementSettings()
+              }}
+            />
+          </FormItem>
+          <FormItem label={t('idle_timeout')}>
+            <InputNumber
+              mode="button"
+              min={0}
+              max={1440}
+              step={5}
+              value={nmConfig.settings.security?.idleTimeoutMinutes || 0}
+              onChange={value => {
+                if (!nmConfig.settings.security) {
+                  nmConfig.settings.security = {}
+                }
+                nmConfig.settings.security.idleTimeoutMinutes = value || 0
+                incrementSettings()
+              }}
+              placeholder="0"
+              suffix={t('minute')}
+            />
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-3)', marginTop: '0.25rem' }}>
+              {t('idle_timeout_hint')}
+            </div>
+          </FormItem>
+        </>
       )}
 
       <div style={{ width: '100%', textAlign: 'right' }}>

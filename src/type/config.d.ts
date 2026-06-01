@@ -17,10 +17,13 @@ interface NMConfig {
     language?: string
     path: {
       cacheDir?: string
+      logDir?: string
+      transferDir?: string
     }
     security?: {
       startupPassword?: string  // 启动密码（哈希值）
       lockOnSleep?: boolean     // 休眠时锁定
+      idleTimeoutMinutes?: number // 空闲超时锁定（分钟），0或undefined表示禁用
     }
   }
   notice?: Notice
