@@ -19,6 +19,7 @@ export {
   getStorageSpace,
   formatPathRclone,
   getFileName,
+  renameStorage,
   
   // File Manager
   getFileList,

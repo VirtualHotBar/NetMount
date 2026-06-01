@@ -229,16 +229,26 @@ function ExplorerItem() {
       ),
       onOk: async () => {
         if (nameTemp) {
-          isDir
-            ? await moveDir(storageName!, filePath, storageName!, getParentPath(filePath), nameTemp)
-            : await moveFile(
-                storageName!,
-                filePath,
-                storageName!,
-                getParentPath(filePath),
-                nameTemp
-              )
-          fileInfo()
+          try {
+            isDir
+              ? await moveDir(storageName!, filePath, storageName!, getParentPath(filePath), nameTemp)
+              : await moveFile(
+                  storageName!,
+                  filePath,
+                  storageName!,
+                  getParentPath(filePath),
+                  nameTemp
+                )
+            fileInfo()
+          } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            // S3等对象存储不支持原生重命名，需要通过复制+删除实现
+            if (errorMsg.includes('not supported') || errorMsg.includes('rename')) {
+              Message.error(t('rename_not_supported'))
+            } else {
+              Message.error(t('rename_failed') + ': ' + errorMsg)
+            }
+          }
         } else {
           Message.error(t('name_cannot_empty'))
         }

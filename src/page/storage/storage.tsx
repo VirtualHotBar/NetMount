@@ -1,7 +1,7 @@
-import { Button, Grid, Popconfirm, Space, Tag, Tooltip } from '@arco-design/web-react'
+import { Button, Grid, Input, Modal, Popconfirm, Space, Tag, Tooltip } from '@arco-design/web-react'
 import { useTranslation } from 'react-i18next'
-import { delStorage, filterHideStorage } from '../../services/storage/StorageManager'
-import { useEffect } from 'react'
+import { delStorage, filterHideStorage, renameStorage } from '../../services/storage/StorageManager'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStorageStore } from '../../stores'
 
@@ -19,6 +19,9 @@ function Storage_page() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { storageList, refreshStorage } = useStorageStore()
+  const [renameModalVisible, setRenameModalVisible] = useState(false)
+  const [renamingStorage, setRenamingStorage] = useState<string>('')
+  const [newStorageName, setNewStorageName] = useState<string>('')
 
   useEffect(() => {
     refreshStorage()
@@ -26,6 +29,17 @@ function Storage_page() {
 
   const handleRefresh = () => {
     refreshStorage()
+  }
+
+  const handleRename = async () => {
+    if (!newStorageName.trim()) {
+      return
+    }
+    const success = await renameStorage(renamingStorage, newStorageName.trim())
+    if (success) {
+      setRenameModalVisible(false)
+      refreshStorage()
+    }
   }
 
   const columns: TableColumnProps[] = [
@@ -81,6 +95,7 @@ function Storage_page() {
           data={filterHideStorage(storageList).map(item => {
             const isNotWork =
               item.framework === 'openlist' && item.other?.openlist?.status !== 'work'
+            const hasTokenError = item.space && item.space.total === -3
             return {
               ...item,
               name: (
@@ -94,6 +109,15 @@ function Storage_page() {
                     >
                       {' '}
                       <Tag color="RED">{t('not_work')}</Tag>
+                    </Tooltip>
+                  ) : hasTokenError ? (
+                    <Tooltip
+                      content={t('token_expired_tip')}
+                      color="#FF6060"
+                      style={{ marginRight: '10rem' }}
+                    >
+                      {' '}
+                      <Tag color="ORANGE">{t('token_expired')}</Tag>
                     </Tooltip>
                   ) : (
                     ''
@@ -116,6 +140,16 @@ function Storage_page() {
                   </Popconfirm>
 
                   <Button
+                    onClick={() => {
+                      setRenamingStorage(item.name)
+                      setNewStorageName(item.name)
+                      setRenameModalVisible(true)
+                    }}
+                  >
+                    {t('rename')}
+                  </Button>
+
+                  <Button
                     onClick={() =>
                       navigate('./add?edit=true&name=' + item.name + '&type=' + item.type)
                     }
@@ -134,6 +168,21 @@ function Storage_page() {
           })}
         />
       </div>
+
+      <Modal
+        title={t('rename_storage')}
+        visible={renameModalVisible}
+        onOk={handleRename}
+        onCancel={() => setRenameModalVisible(false)}
+        okText={t('save')}
+        cancelText={t('step_back')}
+      >
+        <Input
+          value={newStorageName}
+          onChange={value => setNewStorageName(value)}
+          placeholder={t('please_input')}
+        />
+      </Modal>
     </div>
   )
 }

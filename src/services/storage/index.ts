@@ -20,6 +20,7 @@ export {
   getStorageSpace,
   formatPathRclone,
   getFileName,
+  renameStorage,
 } from './StorageManager'
 
 // Storage Creation Service - Creation with validation
