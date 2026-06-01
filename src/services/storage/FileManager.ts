@@ -220,8 +220,21 @@ const uploadFileRequest = (option: RequestOptions, storageName: string, path: st
     }
   }
 
-  xhr.onload = () => {
-    xhr.status === 200 ? onSuccess() : onError(xhr)
+  xhr.onload = async () => {
+    if (xhr.status === 200) {
+      // 上传成功后刷新 VFS 缓存，避免重复上传
+      try {
+        const parentPath = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '/'
+        await refreshVfsCache(storageName, parentPath)
+        logger.debug('VFS cache refreshed after upload', 'FileManager', { storageName, path })
+      } catch (e) {
+        // 刷新失败不影响上传成功回调
+        logger.warn('Failed to refresh VFS cache after upload', 'FileManager', { error: e })
+      }
+      onSuccess()
+    } else {
+      onError(xhr)
+    }
   }
 
   xhr.onerror = () => onError(xhr)
