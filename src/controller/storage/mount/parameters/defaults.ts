@@ -24,17 +24,17 @@ const defaultVfsConfig: VfsOptions = {
   CacheMaxAge: 3600000000000,
   CacheMaxSize: 10737418240, //10GB
   CacheMode: 'writes',
-  CachePollInterval: 60000000000,
+  CachePollInterval: 10000000000, // 10秒（更频繁地检查缓存新鲜度）
   CaseInsensitive: false,
   ChunkSize: 67108864,
   ChunkSizeLimit: -1,
-  DirCacheTime: 30000000000, // 30秒（及时反映远程文件变更）
+  DirCacheTime: 5000000000, // 5秒（及时反映远程文件变更，解决WebDAV等存储文件不同步问题）
   DirPerms: 511,
   FilePerms: 511,
   NoChecksum: false,
   NoModTime: false,
   NoSeek: false,
-  PollInterval: 30000000000, // 30秒轮询间隔（及时反映远程文件变更）
+  PollInterval: 10000000000, // 10秒轮询间隔（更频繁地检查远程变更）
   ReadAhead: 4194304, // 4MB（平衡性能与内存占用，避免非分页缓冲区过高）
   ReadWait: 20000000,
   WriteBack: 5000000000,

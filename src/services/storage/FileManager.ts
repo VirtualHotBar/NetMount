@@ -20,13 +20,22 @@ async function refreshVfsCache(storageName: string, path: string): Promise<void>
     const mountItem = mountList.find(m => m.storageName === storageName)
     
     if (mountItem) {
-      // 构建 VFS 刷新路径：挂载点路径 + 当前浏览的子路径
+      // 构建 VFS 刷新路径：使用空字符串刷新根目录，或使用相对路径
+      // rclone /vfs/refresh 的 dir 参数是相对于挂载点的路径
       const refreshPath = path === '/' ? '' : path
       await rclone_api_post('/vfs/refresh', {
         dir: refreshPath,
         recursive: false,
       }, true) // ignoreError = true, 刷新失败不影响列表加载
-      logger.debug('VFS cache refreshed', 'FileManager', { storageName, path })
+      logger.debug('VFS cache refreshed', 'FileManager', { storageName, path, refreshPath })
+    } else {
+      // 如果没有找到挂载点，尝试使用存储名作为 fs 参数刷新
+      // 这种情况适用于通过 rclone rc 直接管理的存储
+      logger.debug('No mount point found, trying direct VFS refresh', 'FileManager', { storageName, path })
+      await rclone_api_post('/vfs/refresh', {
+        dir: path === '/' ? '' : path,
+        recursive: false,
+      }, true)
     }
   } catch {
     // 忽略错误，VFS 刷新失败不影响主流程
