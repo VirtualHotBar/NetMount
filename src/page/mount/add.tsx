@@ -62,8 +62,8 @@ export default function AddMount_page() {
   const isWindows = rcloneInfo.version.os.toLowerCase().includes('windows')
   const isMacOS = rcloneInfo.version.os.toLowerCase().includes('darwin')
 
-  // 判断是否为预定义路径：自动盘符、桌面路径
-  const isPredefinedPath = mountPath === '*' || mountPath.startsWith('~/Desktop/')
+  // 判断是否为预定义路径：自动盘符、桌面路径、挂载路径
+  const isPredefinedPath = mountPath === '*' || mountPath.startsWith('~/Desktop/') || mountPath.startsWith('~/Mounts/')
   // 自定义路径：既不是自动盘符也不是桌面路径
   const isMountPathCustom = !isPredefinedPath
   // 是否为盘符路径（Windows）：自动盘符或盘符格式
@@ -100,14 +100,17 @@ export default function AddMount_page() {
     mountPathTemp = normalizeMountPath(mountPathTemp)
     const mount = getMountStorage(mountPathTemp)
     if (mount) {
-      // 尝试将绝对路径转换回 ~/Desktop/ 形式（如果适用）
+      // 尝试将绝对路径转换回 ~/Desktop/ 或 ~/Mounts/ 形式（如果适用）
       let displayMountPath = mount.mountPath
       try {
         const homeDirStr = await homeDir()
-        const desktopPath = homeDirStr.replace(/\\/g, '/') + '/Desktop/'
-        if (displayMountPath.replace(/\\/g, '/').startsWith(desktopPath)) {
-          displayMountPath =
-            '~/Desktop/' + displayMountPath.replace(/\\/g, '/').substring(desktopPath.length)
+        const normalizedHome = homeDirStr.replace(/\\/g, '/')
+        const normalizedMount = displayMountPath.replace(/\\/g, '/')
+        
+        if (normalizedMount.startsWith(normalizedHome + '/Desktop/')) {
+          displayMountPath = '~/Desktop/' + normalizedMount.substring((normalizedHome + '/Desktop/').length)
+        } else if (normalizedMount.startsWith(normalizedHome + '/Mounts/')) {
+          displayMountPath = '~/Mounts/' + normalizedMount.substring((normalizedHome + '/Mounts/').length)
         }
       } catch (e) {
         // 忽略错误，使用原始路径
@@ -162,7 +165,8 @@ export default function AddMount_page() {
       } else {
         if (storageName) {
           if (rcloneInfo.version.os.toLowerCase().includes('darwin')) {
-            setMountPath('~/Desktop/' + storageName)
+            // macOS: 使用 ~/Mounts/ 而非 ~/Desktop/，避免桌面权限问题
+            setMountPath('~/Mounts/' + storageName)
           } else {
             setMountPath('/mnt/' + storageName)
           }
@@ -172,6 +176,18 @@ export default function AddMount_page() {
       //默认卷标
       if (mountPathuIsDriveLetter) {
         mountOptFormHook && mountOptFormHook.setFieldsValue({ VolumeName: storageName })
+      }
+
+      // SMB/NFS 存储默认使用网络驱动器模式（显示正确的网络驱动器图标）
+      if (storageName && isWindows && mountPathuIsDriveLetter) {
+        const storage = storageList.find(s => s.name === storageName)
+        if (storage && (storage.type === 'smb' || storage.type === 'nfs')) {
+          setParameters(prev => ({
+            ...prev,
+            mountOpt: { ...prev.mountOpt, NetworkMode: true },
+          }))
+          mountOptFormHook?.setFieldValue('NetworkMode', true)
+        }
       }
     }
   }, [storageName])

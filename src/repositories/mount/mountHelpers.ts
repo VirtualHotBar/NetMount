@@ -103,15 +103,37 @@ export async function performMount(mountInfo: MountListItem): Promise<void> {
   // 非 Windows 系统需要创建目录
   if (!rcloneInfo.version.os.toLowerCase().includes('windows')) {
     if (!(await fs_exist_dir(mountInfo.mountPath))) {
-      await fs_make_dir(mountInfo.mountPath)
+      try {
+        await fs_make_dir(mountInfo.mountPath)
+      } catch (e) {
+        const isMacOS = rcloneInfo.version.os.toLowerCase().includes('darwin')
+        if (isMacOS && mountInfo.mountPath.includes('/Desktop/')) {
+          throw new Error(
+            `无法创建挂载目录 "${mountInfo.mountPath}"。macOS 可能未授予桌面访问权限。` +
+            `请尝试将挂载路径改为非桌面目录（如 ~/Mounts/），或在系统设置中授予 NetMount 桌面访问权限。`
+          )
+        }
+        throw new Error(`无法创建挂载目录 "${mountInfo.mountPath}": ${e}`)
+      }
     }
   }
 
-  await rclone_api_post('/mount/mount', {
-    fs: convertStoragePath(mountInfo.storageName) || mountInfo.storageName,
-    mountPoint: mountInfo.mountPath,
-    ...mountInfo.parameters,
-  })
+  try {
+    await rclone_api_post('/mount/mount', {
+      fs: convertStoragePath(mountInfo.storageName) || mountInfo.storageName,
+      mountPoint: mountInfo.mountPath,
+      ...mountInfo.parameters,
+    })
+  } catch (e) {
+    const isMacOS = rcloneInfo.version.os.toLowerCase().includes('darwin')
+    if (isMacOS && mountInfo.mountPath.includes('/Desktop/')) {
+      throw new Error(
+        `挂载到桌面失败。macOS 可能未授予桌面访问权限。` +
+        `请尝试将挂载路径改为非桌面目录（如 ~/Mounts/），或在"系统设置 > 隐私与安全性 > 文件和文件夹"中授权。`
+      )
+    }
+    throw e
+  }
 
   await refreshMountList()
 }
