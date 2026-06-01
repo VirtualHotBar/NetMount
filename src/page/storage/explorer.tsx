@@ -93,10 +93,10 @@ function ExplorerItem() {
   ]
 
   //刷新文件列表
-  async function fileInfo() {
+  async function fileInfo(forceRefresh?: boolean) {
     setLoading(true)
     try {
-      const l = await getFileList(storageName!, path!)
+      const l = await getFileList(storageName!, path!, forceRefresh)
       setFileInfo(l)
     } finally {
       setLoading(false)
@@ -206,8 +206,8 @@ function ExplorerItem() {
             ></Upload>
           </>
         ),
-        onOk: fileInfo,
-        onCancel: fileInfo,
+        onOk: () => fileInfo(),
+        onCancel: () => fileInfo(),
       })
     }
   }
@@ -280,7 +280,7 @@ function ExplorerItem() {
           <Col flex="2rem">
             <Button
               /* type='secondary'  */ icon={<IconRefresh />}
-              onClick={fileInfo}
+              onClick={() => fileInfo(true)}
               disabled={!storageName}
               type="text"
               title={t('refresh')}

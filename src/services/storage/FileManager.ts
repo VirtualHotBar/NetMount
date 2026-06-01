@@ -8,14 +8,46 @@ import { isRcloneFileItem } from '../../utils/validators/rcloneValidators'
 import { logger } from '../../services/LoggerService'
 
 /**
+ * Refresh VFS directory cache for a specific path
+ * This forces rclone to re-read the directory from the remote
+ * @param storageName - Storage name
+ * @param path - Directory path to refresh
+ */
+async function refreshVfsCache(storageName: string, path: string): Promise<void> {
+  try {
+    // 获取存储对应的挂载点
+    const mountList = rcloneInfo.mountList
+    const mountItem = mountList.find(m => m.storageName === storageName)
+    
+    if (mountItem) {
+      // 构建 VFS 刷新路径：挂载点路径 + 当前浏览的子路径
+      const refreshPath = path === '/' ? '' : path
+      await rclone_api_post('/vfs/refresh', {
+        dir: refreshPath,
+        recursive: false,
+      }, true) // ignoreError = true, 刷新失败不影响列表加载
+      logger.debug('VFS cache refreshed', 'FileManager', { storageName, path })
+    }
+  } catch {
+    // 忽略错误，VFS 刷新失败不影响主流程
+  }
+}
+
+/**
  * Get file list from a storage
  * @param storageName - Storage name
  * @param path - Directory path to list
+ * @param forceRefresh - If true, clear VFS cache before listing
  * @returns Array of file info or undefined
  */
-async function getFileList(storageName: string, path: string): Promise<FileInfo[] | undefined> {
+async function getFileList(storageName: string, path: string, forceRefresh?: boolean): Promise<FileInfo[] | undefined> {
   const storage = searchStorage(storageName)
   let fileList: FileInfo[] | undefined = undefined
+
+  // 如果强制刷新，先清除 VFS 目录缓存
+  if (forceRefresh) {
+    await refreshVfsCache(storageName, path)
+  }
 
   // 移除路径末尾的斜杠，根目录直接传空字符串
   const backData = await rclone_api_post('/operations/list', {
@@ -106,6 +138,10 @@ async function delFile(storageName: string, path: string, refreshCallback?: Refr
     remote: convertStoragePath(storageName, path, false, true),
   })
 
+  // 删除后刷新 VFS 缓存，确保列表更新
+  const parentPath = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '/'
+  await refreshVfsCache(storageName, parentPath)
+
   if (refreshCallback) {
     refreshCallback()
   }
@@ -123,6 +159,10 @@ async function delDir(storageName: string, path: string, refreshCallback?: Refre
     remote: convertStoragePath(storageName, path, true, true),
   })
 
+  // 删除后刷新 VFS 缓存，确保列表更新
+  const parentPath = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '/'
+  await refreshVfsCache(storageName, parentPath)
+
   if (refreshCallback) {
     refreshCallback()
   }
@@ -139,6 +179,10 @@ async function mkDir(storageName: string, path: string, refreshCallback?: Refres
     fs: convertStoragePath(storageName, undefined, undefined, undefined, true),
     remote: convertStoragePath(storageName, path, true, true),
   })
+
+  // 创建目录后刷新 VFS 缓存，确保列表更新
+  const parentPath = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '/'
+  await refreshVfsCache(storageName, parentPath)
 
   if (refreshCallback) {
     refreshCallback()
@@ -184,6 +228,7 @@ const uploadFileRequest = (option: RequestOptions, storageName: string, path: st
 
 export {
   getFileList,
+  refreshVfsCache,
   delFile,
   delDir,
   mkDir,
