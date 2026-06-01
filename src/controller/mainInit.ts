@@ -12,7 +12,7 @@ import { defaultCacheDir } from '../utils/netmountPaths'
 import { homeDir } from '@tauri-apps/api/path'
 import { t } from 'i18next'
 import { logger } from '../services/LoggerService'
-import { cleanupTempFiles } from '../utils/tempCleanup'
+import { cleanupTempFiles, startPeriodicCleanup } from '../utils/tempCleanup'
 import { invoke } from '@tauri-apps/api/core'
 
 type SetStartStrFn = (str: string) => void
@@ -122,6 +122,9 @@ export async function init(setStartStr: SetStartStrFn) {
   cleanupTempFiles().catch(() => {
     // 清理失败不影响主流程
   })
+
+  // 启动定期清理任务（每4小时清理过期缓存）
+  startPeriodicCleanup()
 
   if (!nmConfig.settings.startHide) {
     await appWindow.show()
