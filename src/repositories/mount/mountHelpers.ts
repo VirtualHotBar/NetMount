@@ -118,10 +118,21 @@ export async function performMount(mountInfo: MountListItem): Promise<void> {
     }
   }
 
+  // Windows 盘符挂载路径处理：确保路径格式正确
+  let mountPath = mountInfo.mountPath
+  if (rcloneInfo.version.os.toLowerCase().includes('windows')) {
+    // 标准化路径分隔符
+    mountPath = mountPath.replace(/\//g, '\\')
+    // 对于盘符路径（如 X: 或 X:\），确保格式为 X:\
+    if (/^[A-Za-z]:$/.test(mountPath)) {
+      mountPath = mountPath + '\\'
+    }
+  }
+
   try {
     await rclone_api_post('/mount/mount', {
       fs: convertStoragePath(mountInfo.storageName) || mountInfo.storageName,
-      mountPoint: mountInfo.mountPath,
+      mountPoint: mountPath,
       ...mountInfo.parameters,
     })
   } catch (e) {
@@ -167,6 +178,19 @@ export async function performMount(mountInfo: MountListItem): Promise<void> {
             `2. 以管理员身份运行 NetMount\n` +
             `3. 如果使用盘符挂载，尝试启用"网络驱动器"模式\n` +
             `4. 如果问题持续，尝试挂载到目录路径而非盘符\n` +
+            `原始错误: ${errorMsg}`
+          )
+        }
+        
+        // 检测挂载点父目录不存在的问题（常见于自编译版本）
+        if (errorMsg.includes('parent of mountpoint directory does not exist')) {
+          throw new Error(
+            `Windows 挂载失败：挂载点父目录不存在。\n` +
+            `这可能是 rclone 版本兼容性问题。\n` +
+            `请尝试以下解决方案：\n` +
+            `1. 如果使用盘符挂载，确保盘符未被占用\n` +
+            `2. 尝试挂载到目录路径而非盘符（如 C:\\Mounts\\MyDrive）\n` +
+            `3. 确保已安装最新版 WinFsp\n` +
             `原始错误: ${errorMsg}`
           )
         }
