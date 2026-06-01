@@ -17,6 +17,7 @@ import { mergeObjects } from '../utils'
 import { logger } from './LoggerService'
 import { rcloneInfo as rcloneInfoInstance } from './rclone'
 import { roConfig, runtimeEnv, getRuntimeEnv, ConfigChangeListener, OsInfoChangeListener, createDefaultConfig, createDefaultOsInfo } from './config/roConfig'
+import { encodePassword, decodePassword } from '../utils/passwordEncoding'
 
 export { roConfig, runtimeEnv, getRuntimeEnv }
 
@@ -155,6 +156,15 @@ class ConfigService {
     try {
       const configData = await invoke<Partial<NMConfig>>('get_config')
       this.config = mergeObjects(this.config, configData)
+      
+      // 解码框架密码（向后兼容明文密码）
+      if (this.config.framework?.rclone?.password) {
+        this.config.framework.rclone.password = decodePassword(this.config.framework.rclone.password)
+      }
+      if (this.config.framework?.openlist?.password) {
+        this.config.framework.openlist.password = decodePassword(this.config.framework.openlist.password)
+      }
+      
       logger.info('Config loaded from disk', 'ConfigService')
     } catch (error) {
       logger.error('Failed to load config', error as Error, 'ConfigService')
@@ -167,8 +177,17 @@ class ConfigService {
    */
   async saveConfig(): Promise<void> {
     try {
+      // 创建配置副本，编码框架密码后再保存
+      const configToSave = JSON.parse(JSON.stringify(this.config)) as NMConfig
+      if (configToSave.framework?.rclone?.password) {
+        configToSave.framework.rclone.password = encodePassword(configToSave.framework.rclone.password)
+      }
+      if (configToSave.framework?.openlist?.password) {
+        configToSave.framework.openlist.password = encodePassword(configToSave.framework.openlist.password)
+      }
+      
       await invoke('update_config', {
-        data: this.config,
+        data: configToSave,
       })
       logger.info('Config saved to disk', 'ConfigService')
     } catch (error) {
