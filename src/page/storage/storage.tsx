@@ -1,6 +1,6 @@
-import { Button, Grid, Input, Modal, Popconfirm, Space, Tag, Tooltip } from '@arco-design/web-react'
+import { Button, Grid, Input, Message, Modal, Popconfirm, Space, Tag, Tooltip } from '@arco-design/web-react'
 import { useTranslation } from 'react-i18next'
-import { delStorage, filterHideStorage, renameStorage } from '../../services/storage/StorageManager'
+import { delStorage, filterHideStorage, renameStorage, searchStorage } from '../../services/storage/StorageManager'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStorageStore } from '../../stores'
@@ -32,13 +32,32 @@ function Storage_page() {
   }
 
   const handleRename = async () => {
-    if (!newStorageName.trim()) {
+    const trimmedName = newStorageName.trim()
+    if (!trimmedName) {
+      Message.error(t('storage_name_cannot_be_empty'))
       return
     }
-    const success = await renameStorage(renamingStorage, newStorageName.trim())
+    if (trimmedName === renamingStorage) {
+      setRenameModalVisible(false)
+      return
+    }
+    // Check for duplicate name
+    if (searchStorage(trimmedName)) {
+      Message.error(t('storage_name_already_exists'))
+      return
+    }
+    // Validate storage name characters
+    if (/[\\/:*?"<>|]/.test(trimmedName)) {
+      Message.error(t('storage_name_illegal'))
+      return
+    }
+    const success = await renameStorage(renamingStorage, trimmedName)
     if (success) {
+      Message.success(t('success'))
       setRenameModalVisible(false)
       refreshStorage()
+    } else {
+      Message.error(t('rename_failed'))
     }
   }
 
@@ -140,6 +159,8 @@ function Storage_page() {
                   </Popconfirm>
 
                   <Button
+                    disabled={item.framework === 'openlist'}
+                    title={item.framework === 'openlist' ? t('rename_not_supported') : undefined}
                     onClick={() => {
                       setRenamingStorage(item.name)
                       setNewStorageName(item.name)
