@@ -119,6 +119,27 @@ async function updateRcloneStorageInfoList() {
       storageParams.push(storageParam)
     }
 
+    // S3 存储特殊处理：将 force_path_style 从高级选项提升为基础选项
+    // MinIO 等自建 S3 服务需要此选项，用户反馈无法找到此设置
+    if (provider.Prefix === 's3') {
+      for (const param of storageParams) {
+        if (param.name === 'force_path_style') {
+          param.advanced = false
+          break
+        }
+      }
+    }
+
+    // 压缩存储特殊处理：将 remote 和压缩选项从高级选项提升为基础选项
+    // 用户反馈压缩存储实际不压缩，原因是关键配置项被隐藏
+    if (provider.Prefix === 'compress') {
+      for (const param of storageParams) {
+        if (param.name === 'remote' || param.name === 'compression_mode' || param.name === 'compression_level') {
+          param.advanced = false
+        }
+      }
+    }
+
     rcloneStorageInfoList.push({
       label: 'storage.' + normalizeStorageId(provider.Prefix),
       type: provider.Prefix,
