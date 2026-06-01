@@ -15,6 +15,7 @@ import { RETRY_CONFIG } from '../../constants'
 import { logger } from '../../services/LoggerService'
 import { isRcloneConfigDump, isRcloneAboutResponse } from '../../utils/validators/rcloneValidators'
 import { useStorageStore } from '../../stores/storageStore'
+import { cleanupStorageOnDelete } from '../../utils/tempCleanup'
 
 /**
  * Refresh and update storage list from both rclone and OpenList
@@ -202,6 +203,11 @@ async function delStorage(name: string) {
     if (mount.storageName === storage?.name) {
       await delMountStorage(mount.mountPath)
     }
+  }
+
+  // 清理 VFS 缓存和临时文件（需要在存储配置删除前执行，因为需要远程存在）
+  if (storage) {
+    await cleanupStorageOnDelete(storage.name)
   }
 
   switch (storage?.framework) {

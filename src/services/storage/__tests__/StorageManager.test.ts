@@ -63,6 +63,10 @@ vi.mock('../../controller/storage/mount/mount', () => ({
   delMountStorage: vi.fn(),
 }))
 
+vi.mock('../../utils/tempCleanup', () => ({
+  cleanupStorageOnDelete: vi.fn(),
+}))
+
 describe('StorageManager', () => {
   beforeEach(() => {
     vi.useFakeTimers()

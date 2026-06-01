@@ -213,6 +213,31 @@ export async function cleanupTempOnExit(): Promise<void> {
 }
 
 /**
+ * 删除存储时的缓存清理
+ * 在删除存储配置前调用，清理 VFS 缓存和本地临时文件
+ * 
+ * 与 cleanupVfsCacheOnUnmount 不同，此函数额外清理本地 VFS 缓存目录，
+ * 确保删除存储策略后磁盘空间被正确释放
+ */
+export async function cleanupStorageOnDelete(storageName: string): Promise<void> {
+  try {
+    // 1. 清理 rclone VFS 缓存（需要远程还存在）
+    await cleanupVfsCacheOnUnmount(storageName)
+    
+    // 2. 清理本地 VFS 缓存目录（兜底措施，确保本地文件被清除）
+    const rcloneCacheDir = getRcloneCacheDir()
+    if (rcloneCacheDir) {
+      const vfsCacheDir = formatPath(rcloneCacheDir + 'vfs/' + storageName + '/', osInfo.platform === 'windows')
+      await purgeDirectory(vfsCacheDir, 15000)
+    }
+    
+    logger.info('Storage cache cleaned on delete', 'TempCleanup', { storageName })
+  } catch (error) {
+    logger.debug('Storage cache cleanup on delete failed (non-critical)', 'TempCleanup', { error: String(error) })
+  }
+}
+
+/**
  * 手动清理所有缓存
  */
 export async function clearAllCache(): Promise<boolean> {
