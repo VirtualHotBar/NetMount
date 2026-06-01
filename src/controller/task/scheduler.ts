@@ -5,9 +5,11 @@ import { logger } from '../../services/LoggerService'
 
 class TaskScheduler {
   tasks: TaskListItem[]
+  private runningTasks: Set<string>
 
   constructor() {
     this.tasks = []
+    this.runningTasks = new Set()
   }
 
   public async addTask(task: TaskListItem) {
@@ -26,7 +28,6 @@ class TaskScheduler {
       case 'disposable':
         void this.executeTask(task)
         this.cancelTask(task.name)
-        delTask(task.name)
         break
       case 'time': {
         const executeTaskInterval = () => {
@@ -59,8 +60,24 @@ class TaskScheduler {
   }
 
   public async executeTask(task: TaskListItem) {
-    const updatedTask = await runTask(task)
-    this.tasks = this.tasks.map(t => t.name === updatedTask.name ? updatedTask : t)
+    // 防止同一任务重叠执行
+    if (this.runningTasks.has(task.name)) {
+      logger.debug(`Task ${task.name} is already running, skipping`, 'TaskScheduler')
+      return
+    }
+
+    this.runningTasks.add(task.name)
+    try {
+      const updatedTask = await runTask(task)
+      this.tasks = this.tasks.map(t => t.name === updatedTask.name ? updatedTask : t)
+
+      // disposable 模式：任务完成后删除
+      if (updatedTask.run.mode === 'disposable') {
+        delTask(updatedTask.name)
+      }
+    } finally {
+      this.runningTasks.delete(task.name)
+    }
   }
 
   cancelTask(taskName: string) {

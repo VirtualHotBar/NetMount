@@ -45,7 +45,9 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
         break
       }
       case 'bisync': {
-        sync(t.source.storageName, t.source.path, t.target.storageName, t.target.path, true)
+        // 使用resync参数处理首次同步或同步状态丢失的情况
+        const useResync = t.parameters?.resync === true
+        sync(t.source.storageName, t.source.path, t.target.storageName, t.target.path, true, useResync)
         break
       }
       default: {
