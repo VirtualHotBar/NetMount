@@ -772,6 +772,17 @@
     "sign_key": "Sign Key",
     "password_obscured_hint": "密码已被rclone混淆存储，无法显示原始值，如需修改请重新输入",
 
+    "proxy_settings": "网络代理",
+    "proxy_type": "代理类型",
+    "no_proxy": "不使用代理",
+    "proxy_host": "代理主机",
+    "proxy_host_placeholder": "例如：127.0.0.1",
+    "proxy_port": "代理端口",
+    "proxy_port_placeholder": "例如：7890",
+    "proxy_username": "代理用户名",
+    "proxy_password": "代理密码",
+    "proxy_settings_hint": "配置代理服务器以通过代理访问云存储。支持 HTTP 和 SOCKS5 代理。修改后需重启组件生效。",
+
     "error_boundary_title": "出现错误",
     "error_boundary_subtitle": "应用遇到了问题，但别担心，数据是安全的",
     "reload": "重新加载",
@@ -801,5 +812,19 @@
     "error_no_permission": "没有权限",
     "error_resource_not_found": "{{resource}} 不存在",
     "error_operation_timeout": "{{operation}} 操作超时",
-    "no_logs": "暂无日志"
+    "no_logs": "暂无日志",
+
+    "import_alist_config": "导入 alist 配置",
+    "import_alist_config_description": "从 alist 导出的 JSON 文件中导入存储配置",
+    "import_alist_config_tip": "支持 alist 导出的存储配置 JSON 文件，将自动创建对应的存储",
+    "confirm_import_alist": "确认导入 alist 配置",
+    "confirm_import_alist_description": "将从 alist 配置文件中导入存储配置到 OpenList，是否继续？",
+    "alist_import_parse_error": "无法解析 JSON 文件，请检查文件格式",
+    "alist_import_format_error": "配置文件格式不正确，需要包含存储配置的数组",
+    "alist_import_no_storages": "配置文件中没有找到有效的存储配置",
+    "alist_import_driver_not_supported": "存储驱动 \"{{driver}}\" 不受支持",
+    "alist_import_success": "成功导入 {{success}}/{{total}} 个存储",
+    "alist_import_partial": "部分导入完成：{{success}} 成功，{{failed}} 失败，共 {{total}} 个",
+    "size_suffix_hint": "如: 10G, 500M, 1T",
+    "duration_suffix_hint": "如: 1h, 30m, 5s"
 }

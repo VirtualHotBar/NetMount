@@ -726,6 +726,17 @@
     "confirm_import_description": "導入配置將覆蓋當前所有配置並自動重啓軟件，是否繼續？",
 "password_obscured_hint": "密碼已被rclone混淆存儲，無法顯示原始值，如需修改請重新輸入",
 
+    "proxy_settings": "網絡代理",
+    "proxy_type": "代理類型",
+    "no_proxy": "不使用代理",
+    "proxy_host": "代理主機",
+    "proxy_host_placeholder": "例如：127.0.0.1",
+    "proxy_port": "代理端口",
+    "proxy_port_placeholder": "例如：7890",
+    "proxy_username": "代理用戶名",
+    "proxy_password": "代理密碼",
+    "proxy_settings_hint": "配置代理伺服器以通過代理訪問雲存儲。支持 HTTP 和 SOCKS5 代理。修改後需重啟組件生效。",
+
     "error_boundary_title": "出現錯誤",
     "error_boundary_subtitle": "應用遇到了問題，但不用擔心，數據是安全的",
     "reload": "重新載入",
@@ -782,6 +793,20 @@
     "idle_timeout_hint": "指定分鐘數無操作後自動鎖定。設為0表示禁用。",
     "enter_startup_password": "請輸入啟動密碼",
     "unlock": "解鎖",
-    "wrong_password": "密碼錯誤"
+    "wrong_password": "密碼錯誤",
+
+    "import_alist_config": "導入 alist 配置",
+    "import_alist_config_description": "從 alist 導出的 JSON 檔案中導入儲存配置",
+    "import_alist_config_tip": "支援 alist 導出的儲存配置 JSON 檔案，將自動建立對應的儲存",
+    "confirm_import_alist": "確認導入 alist 配置",
+    "confirm_import_alist_description": "將從 alist 配置檔案中導入儲存配置到 OpenList，是否繼續？",
+    "alist_import_parse_error": "無法解析 JSON 檔案，請檢查檔案格式",
+    "alist_import_format_error": "配置檔案格式不正確，需要包含儲存配置的陣列",
+    "alist_import_no_storages": "配置檔案中沒有找到有效的儲存配置",
+    "alist_import_driver_not_supported": "儲存驅動 \"{{driver}}\" 不受支援",
+    "alist_import_success": "成功導入 {{success}}/{{total}} 個儲存",
+    "alist_import_partial": "部分導入完成：{{success}} 成功，{{failed}} 失敗，共 {{total}} 個",
+    "size_suffix_hint": "如: 10G, 500M, 1T",
+    "duration_suffix_hint": "如: 1h, 30m, 5s"
 }
 

@@ -164,9 +164,6 @@
   "resync": "Resync",
   "force_resync": "Force Resync",
   "force_resync_tip": "Use --resync flag to force a full resync. Useful for first-time setup or when sync state is corrupted.",
-  "resync": "Resync",
-  "force_resync": "Force Resync",
-  "force_resync_tip": "Use --resync flag to force a full resync. Useful for first-time setup or when sync state is corrupted.",
     "add_storage": "Add Storage",
     "add_mount": "Add Mount",
     "add_task": "Add Task",
@@ -762,6 +759,17 @@
     "confirm_import_description": "Importing configuration will overwrite all current settings and automatically restart the software. Continue?",
 "password_obscured_hint": "Password is obscured by rclone and cannot be displayed. Please re-enter to modify",
 
+    "proxy_settings": "Network Proxy",
+    "proxy_type": "Proxy Type",
+    "no_proxy": "No Proxy",
+    "proxy_host": "Proxy Host",
+    "proxy_host_placeholder": "e.g. 127.0.0.1",
+    "proxy_port": "Proxy Port",
+    "proxy_port_placeholder": "e.g. 7890",
+    "proxy_username": "Proxy Username",
+    "proxy_password": "Proxy Password",
+    "proxy_settings_hint": "Configure a proxy server to access cloud storage through a proxy. Supports HTTP and SOCKS5 proxies. Restart components after modification to take effect.",
+
     "error_boundary_title": "An error occurred",
     "error_boundary_subtitle": "The application encountered a problem, but your data is safe",
     "reload": "Reload",
@@ -791,6 +799,20 @@
     "error_no_permission": "No permission",
     "error_resource_not_found": "{{resource}} not found",
     "error_operation_timeout": "{{operation}} operation timeout",
-    "no_logs": "No logs"
+    "no_logs": "No logs",
+
+    "import_alist_config": "Import alist Config",
+    "import_alist_config_description": "Import storage configurations from alist exported JSON file",
+    "import_alist_config_tip": "Supports alist exported storage config JSON files, will automatically create corresponding storages",
+    "confirm_import_alist": "Confirm Import alist Config",
+    "confirm_import_alist_description": "Will import storage configurations from alist config file to OpenList. Continue?",
+    "alist_import_parse_error": "Failed to parse JSON file, please check the file format",
+    "alist_import_format_error": "Invalid config file format, expected an array of storage configurations",
+    "alist_import_no_storages": "No valid storage configurations found in the config file",
+    "alist_import_driver_not_supported": "Storage driver \"{{driver}}\" is not supported",
+    "alist_import_success": "Successfully imported {{success}}/{{total}} storages",
+    "alist_import_partial": "Partial import completed: {{success}} succeeded, {{failed}} failed, {{total}} total",
+    "size_suffix_hint": "e.g. 10G, 500M, 1T",
+    "duration_suffix_hint": "e.g. 1h, 30m, 5s"
 }
 
