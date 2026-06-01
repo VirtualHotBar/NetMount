@@ -41,13 +41,15 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
         break
       }
       case 'sync': {
-        await sync(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
+        const syncFilterRules = t.parameters?.filterRules as string[] | undefined
+        await sync(t.source.storageName, t.source.path, t.target.storageName, t.target.path, false, false, syncFilterRules)
         break
       }
       case 'bisync': {
         // 使用resync参数处理首次同步或同步状态丢失的情况
         const useResync = t.parameters?.resync === true
-        await sync(t.source.storageName, t.source.path, t.target.storageName, t.target.path, true, useResync)
+        const bisyncFilterRules = t.parameters?.filterRules as string[] | undefined
+        await sync(t.source.storageName, t.source.path, t.target.storageName, t.target.path, true, useResync, bisyncFilterRules)
         break
       }
       default: {

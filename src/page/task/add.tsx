@@ -1,5 +1,6 @@
 import {
   Button,
+  Checkbox,
   Form,
   Grid,
   Input,
@@ -35,6 +36,7 @@ type Action =
   | { type: 'setTargetPath'; payload: string }
   | { type: 'setIntervalDays'; payload: number }
   | { type: 'setRunTime'; payload: { h: number; m: number; s: number } }
+  | { type: 'setResync'; payload: boolean }
   | { type: 'setWhole'; payload: TaskListItem }
 
 // 定义 reducer 函数
@@ -61,6 +63,8 @@ const reducer = (state: TaskInfoState, action: Action): TaskInfoState => {
       }
     case 'setRunTime':
       return { ...state, run: { ...state.run, time: { ...state.run.time, ...action.payload } } }
+    case 'setResync':
+      return { ...state, parameters: { ...state.parameters, resync: action.payload } }
     case 'setWhole':
       return action.payload
     default:
@@ -281,6 +285,22 @@ function AddTask_page() {
           </Select>
         </Form.Item>
 
+        {taskInfo.taskType === 'bisync' && (
+          <Form.Item label={t('resync')}>
+            <Checkbox
+              checked={taskInfo.parameters?.resync === true}
+              onChange={checked =>
+                dispatch({ type: 'setResync', payload: checked } as Action)
+              }
+            >
+              {t('force_resync')}
+            </Checkbox>
+            <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+              {t('force_resync_tip')}
+            </div>
+          </Form.Item>
+        )}
+
         <Form.Item label={t('source_path')}>
           <Row>
             <Col flex={'7rem'}>
@@ -344,6 +364,32 @@ function AddTask_page() {
                 </Tooltip>
               </Col>
             </Row>
+          </Form.Item>
+        )}
+
+        {(taskInfo.taskType === 'sync' || taskInfo.taskType === 'bisync') && (
+          <Form.Item label={t('filter_rules')}>
+            <Input.TextArea
+              value={((taskInfo.parameters?.filterRules as string[]) || []).join('\n')}
+              onChange={value => {
+                const rules = value.split('\n').filter(line => line.trim() !== '')
+                dispatch({
+                  type: 'setWhole',
+                  payload: {
+                    ...taskInfo,
+                    parameters: {
+                      ...taskInfo.parameters,
+                      filterRules: rules.length > 0 ? rules : undefined,
+                    },
+                  },
+                } as Action)
+              }}
+              placeholder={t('filter_rules_placeholder')}
+              autoSize={{ minRows: 2, maxRows: 6 }}
+            />
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-3)', marginTop: '0.25rem' }}>
+              {t('filter_rules_help')}
+            </div>
           </Form.Item>
         )}
       </Form>

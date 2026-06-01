@@ -150,6 +150,7 @@ async function moveDir(
  * @param destPath - Destination directory path
  * @param bisync - If true, perform bidirectional sync (default: false)
  * @param resync - If true, force resync for bisync (default: false)
+ * @param filterRules - Optional array of rclone filter rules (e.g., ["+ *.jpg", "- *.tmp"])
  * @throws Error if source or destination is invalid
  */
 async function sync(
@@ -158,7 +159,8 @@ async function sync(
   destStoragename: string,
   destPath: string,
   bisync?: boolean,
-  resync?: boolean
+  resync?: boolean,
+  filterRules?: string[]
 ) {
   //bisync: 双向同步
 
@@ -179,10 +181,17 @@ async function sync(
       throw new Error('Invalid source or destination path')
     }
 
-    success = await rclone_api_exec_async('/sync/sync', {
+    const params: Record<string, unknown> = {
       srcFs,
       dstFs,
-    })
+    }
+
+    // 添加过滤规则
+    if (filterRules && filterRules.length > 0) {
+      params.filter = filterRules.join('\n')
+    }
+
+    success = await rclone_api_exec_async('/sync/sync', params)
     if (!success) {
       throw new Error(`Sync failed: ${srcFs} -> ${dstFs}`)
     }
@@ -204,9 +213,10 @@ async function sync(
       params.resync = true
     }
 
-    // 使用 checksum 比较而非 modtime，解决某些远程存储不支持 modtime 的问题
-    // 这是 rclone bisync 的推荐做法，可以避免 "Modtime compare was requested" 错误
-    params.checksum = true
+    // 添加过滤规则
+    if (filterRules && filterRules.length > 0) {
+      params.filter = filterRules.join('\n')
+    }
 
     success = await rclone_api_exec_async('/sync/bisync', params)
     if (!success) {
