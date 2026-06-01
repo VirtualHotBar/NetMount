@@ -11,6 +11,7 @@ use fs::{fs_exist_dir, fs_make_dir, read_json_file, write_json_file, copy_file, 
 use locale::Locale;
 use tray::Tray;
 
+mod autostart;
 mod config;
 mod diagnostics;
 mod fs;
@@ -18,6 +19,39 @@ mod locale;
 mod sidecar;
 mod tray;
 mod utils;
+
+/// 便携式模式：检测可执行文件同目录下是否存在 `.portable` 标记文件。
+/// 若存在，则数据存储在 `<exe_dir>/data/` 而非 `~/.netmount/`。
+pub(crate) fn is_portable() -> bool {
+    env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join(".portable").exists()))
+        .unwrap_or(false)
+}
+
+/// 获取用户主目录。
+fn home_dir() -> PathBuf {
+    if cfg!(target_os = "windows") {
+        env::var("USERPROFILE").map(PathBuf::from).unwrap_or_else(|_| env::temp_dir())
+    } else {
+        env::var("HOME").map(PathBuf::from).unwrap_or_else(|_| env::temp_dir())
+    }
+}
+
+/// 获取数据目录路径。
+/// - 便携式模式：`<exe_dir>/data/`
+/// - 普通模式：`~/.netmount/`
+pub(crate) fn resolve_data_dir() -> PathBuf {
+    if is_portable() {
+        env::current_exe()
+            .expect("无法获取当前可执行文件路径")
+            .parent()
+            .expect("无法获取父目录")
+            .join("data")
+    } else {
+        home_dir().join(".netmount")
+    }
+}
 
 use crate::utils::download_with_progress;
 use tauri_plugin_autostart::MacosLauncher;
@@ -91,7 +125,7 @@ impl<M: tauri::Manager<Runtime>> AppExt for M {
     }
 
     fn app_data_dir(&self) -> PathBuf {
-        self.path().home_dir().unwrap().join(".netmount")
+        resolve_data_dir()
     }
 
     fn app_config_file(&self) -> PathBuf {
@@ -378,6 +412,58 @@ fn set_autostart_state(app: tauri::AppHandle<Runtime>, enabled: bool) -> Result<
     })
 }
 
+/// Get the current autostart mode.
+/// Returns "none", "registry", or "task_scheduler".
+#[tauri::command]
+fn get_autostart_mode(app: tauri::AppHandle<Runtime>) -> String {
+    let task_enabled = autostart::is_task_enabled();
+    let registry_enabled = app.autolaunch().is_enabled().unwrap_or(false);
+
+    if task_enabled {
+        "task_scheduler".to_string()
+    } else if registry_enabled {
+        "registry".to_string()
+    } else {
+        "none".to_string()
+    }
+}
+
+/// Set the autostart mode.
+/// Mode can be "none", "registry", or "task_scheduler".
+#[tauri::command]
+fn set_autostart_mode(app: tauri::AppHandle<Runtime>, mode: String) -> Result<bool, String> {
+    let autostart_manager = app.autolaunch();
+
+    // Disable all existing modes first
+    let _ = autostart_manager.disable();
+    let _ = autostart::delete_task();
+
+    match mode.as_str() {
+        "registry" => Ok(autostart_manager.enable().is_ok()),
+        "task_scheduler" => {
+            let exe_path = std::env::current_exe()
+                .map_err(|e| format!("Failed to get executable path: {}", e))?
+                .to_string_lossy()
+                .to_string();
+            autostart::create_task(&exe_path, false).map(|()| true)
+        }
+        _ => Ok(true), // "none" - already disabled above
+    }
+}
+
+/// Check if the app is running in service (headless) mode.
+/// Service mode is activated via the `--service` CLI flag.
+#[tauri::command]
+fn is_service_mode() -> bool {
+    std::env::args().any(|arg| arg == "--service")
+}
+
+/// Check if Task Scheduler is available on this platform (Windows only).
+#[tauri::command]
+fn is_task_scheduler_available() -> bool {
+    cfg!(target_os = "windows")
+}
+
 #[tauri::command]
 fn download_file(url: String, out_path: String) -> Result<bool, usize> {
     download_with_progress(&url, &out_path, |total_size, downloaded| {
@@ -462,13 +548,11 @@ async fn spawn_sidecar(
         ), tauri::path::BaseDirectory::Resource)
         .map_err(|e| format!("Failed to resolve sidecar path: {}", e))?;
     
-    // 获取工作目录：优先使用传入的 cwd，否则使用默认目录
+    // 获取工作目录：优先使用传入的 cwd，否则使用默认目录（支持便携式模式）
     let work_dir = if let Some(cwd_path) = cwd {
         std::path::PathBuf::from(cwd_path)
     } else {
-        app.path().home_dir()
-            .map_err(|e| format!("Failed to get home dir: {}", e))?
-            .join(".netmount")
+        resolve_data_dir()
     };
     
     // 确保工作目录存在
@@ -476,7 +560,7 @@ async fn spawn_sidecar(
         let _ = std::fs::create_dir_all(&work_dir);
     }
 
-    // sidecar 统一诊断日志：~/.netmount/log/sidecar-<name>.log
+    // sidecar 统一诊断日志
     let log_dir = work_dir.join("log");
     let _ = std::fs::create_dir_all(&log_dir);
     let sidecar_log_path = log_dir.join(format!("sidecar-{}.log", sidecar_name));
@@ -710,20 +794,18 @@ async fn run_sidecar_once(
         )
         .map_err(|e| format!("Failed to resolve sidecar path: {}", e))?;
 
-    // 获取工作目录：优先使用传入的 cwd，否则使用默认目录
+    // 获取工作目录：优先使用传入的 cwd，否则使用默认目录（支持便携式模式）
     let work_dir = if let Some(cwd_path) = cwd {
         std::path::PathBuf::from(cwd_path)
     } else {
-        app.path().home_dir()
-            .map_err(|e| format!("Failed to get home dir: {}", e))?
-            .join(".netmount")
+        resolve_data_dir()
     };
     
     if !work_dir.exists() {
         let _ = std::fs::create_dir_all(&work_dir);
     }
 
-    // sidecar 统一诊断日志：~/.netmount/log/sidecar-<name>.log
+    // sidecar 统一诊断日志
     let log_dir = work_dir.join("log");
     let _ = std::fs::create_dir_all(&log_dir);
     let sidecar_log_path = log_dir.join(format!("sidecar-{}.log", sidecar_name));

@@ -28,11 +28,7 @@ fn resolve_tilde(app: &tauri::AppHandle<Runtime>, path: &str) -> anyhow::Result<
 }
 
 fn app_data_dir(app: &tauri::AppHandle<Runtime>) -> anyhow::Result<PathBuf> {
-    Ok(app
-        .path()
-        .home_dir()
-        .map_err(|e| anyhow::anyhow!("Failed to get home dir: {}", e))?
-        .join(".netmount"))
+    Ok(crate::resolve_data_dir())
 }
 
 fn ensure_under_app_data_dir(app: &tauri::AppHandle<Runtime>, candidate: &Path) -> anyhow::Result<()> {

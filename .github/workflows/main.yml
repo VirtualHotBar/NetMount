@@ -357,6 +357,47 @@ jobs:
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
 
+      # Windows 便携式版本：将构建产物打包为 ZIP
+      - name: Create Windows portable ZIP
+        if: contains(matrix.platform, 'windows')
+        shell: pwsh
+        env:
+          PACKAGE_VERSION: ${{ needs.create-release.outputs.package_version }}
+          TARGET: ${{ matrix.target }}
+          ARCH: ${{ matrix.arch }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $exeExt = ".exe"
+          $exeName = "NetMount"
+          
+          # 构建输出目录
+          $releaseDir = "src-tauri/target/$env:TARGET/release"
+          
+          # 创建临时打包目录
+          $portableDir = "portable-pack"
+          if (Test-Path $portableDir) { Remove-Item -Recurse -Force $portableDir }
+          New-Item -ItemType Directory -Path $portableDir | Out-Null
+          
+          # 复制可执行文件
+          Copy-Item "$releaseDir/$exeName$exeExt" "$portableDir/"
+          
+          # 创建 .portable 标记文件
+          New-Item -ItemType File -Path "$portableDir/.portable" -Force | Out-Null
+          
+          # 生成 ZIP 文件名
+          $zipName = "NetMount_${env:PACKAGE_VERSION}_windows_${env:ARCH}_portable.zip"
+          
+          # 打包 ZIP
+          Compress-Archive -Path "$portableDir/*" -DestinationPath $zipName -Force
+          
+          # 清理临时目录
+          Remove-Item -Recurse -Force $portableDir
+          
+          Write-Host "Created portable ZIP: $zipName"
+          
+          # 上传到 Release（使用 gh CLI）
+          gh release upload "v$env:PACKAGE_VERSION" $zipName --clobber
+
   # ========== 生成 Changelog ==========
   generate-changelog:
     needs: [create-release]

@@ -37,6 +37,10 @@ fn fix_openlist_config_paths(config_path: &Path) -> anyhow::Result<()> {
         ("", "temp_dir"),
     ];
     
+    // 获取数据目录前缀（用于路径匹配）
+    let data_dir = crate::resolve_data_dir();
+    let data_dir_str = data_dir.to_string_lossy().replace('\\', "/");
+    
     for (parent, field) in path_fields {
         if let Some(value) = if parent.is_empty() {
             config.get(field).cloned()
@@ -47,16 +51,28 @@ fn fix_openlist_config_paths(config_path: &Path) -> anyhow::Result<()> {
                 // 检查是否为绝对路径
                 if is_absolute_path(path_str) {
                     // 尝试提取相对路径部分
-                    // 通常路径格式为: C:/Users/username/.netmount/openlist/xxx
-                    // 我们需要提取出相对路径: data/xxx 或 log/xxx 等
                     let normalized = path_str.replace('\\', "/");
                     
                     // 尝试从路径中提取相对部分
+                    // 支持两种格式：
+                    //   - 普通模式: C:/Users/username/.netmount/openlist/xxx
+                    //   - 便携式模式: E:/NetMount/data/openlist/xxx
                     let relative_path = if normalized.contains("/.netmount/openlist/") {
                         normalized.split("/.netmount/openlist/").nth(1).map(|s| s.to_string())
                     } else if normalized.contains("/.netmount/") {
-                        // 处理其他可能的路径格式
                         normalized.split("/.netmount/").nth(1).map(|s| {
+                            if s.starts_with("openlist/") {
+                                s.strip_prefix("openlist/").map(|p| p.to_string()).unwrap_or(s.to_string())
+                            } else {
+                                s.to_string()
+                            }
+                        })
+                    } else if normalized.contains("/data/openlist/") {
+                        // 便携式模式路径: E:/NetMount/data/openlist/xxx
+                        normalized.split("/data/openlist/").nth(1).map(|s| s.to_string())
+                    } else if normalized.contains("/data/") && data_dir_str.contains("/data/") {
+                        // 便携式模式其他路径: E:/NetMount/data/xxx
+                        normalized.split("/data/").nth(1).map(|s| {
                             if s.starts_with("openlist/") {
                                 s.strip_prefix("openlist/").map(|p| p.to_string()).unwrap_or(s.to_string())
                             } else {
@@ -108,11 +124,7 @@ fn resolve_path(app: &tauri::AppHandle<Runtime>, path: &str) -> anyhow::Result<P
 }
 
 fn app_data_dir(app: &tauri::AppHandle<Runtime>) -> anyhow::Result<PathBuf> {
-    Ok(app
-        .path()
-        .home_dir()
-        .map_err(|e| anyhow::anyhow!("Failed to get home dir: {}", e))?
-        .join(".netmount"))
+    Ok(crate::resolve_data_dir())
 }
 
 #[tauri::command]
@@ -339,11 +351,7 @@ pub fn export_config(
         let options: zip::write::FileOptions<'_, ()> = zip::write::FileOptions::default()
             .compression_method(zip::CompressionMethod::Deflated);
 
-        let data_dir = app
-            .path()
-            .home_dir()
-            .map_err(|e| anyhow::anyhow!("Failed to get home dir: {}", e))?
-            .join(".netmount");
+        let data_dir = crate::resolve_data_dir();
         
         // 递归添加目录内容（排除 log 目录）
         fn add_dir_to_zip(
@@ -418,11 +426,7 @@ pub fn import_config(
             .map_err(|e| anyhow::anyhow!("无效的备份文件：{}", e))?;
         
         // 获取数据目录
-        let data_dir = app
-            .path()
-            .home_dir()
-            .map_err(|e| anyhow::anyhow!("Failed to get home dir: {}", e))?
-            .join(".netmount");
+        let data_dir = crate::resolve_data_dir();
         
         // 确保数据目录存在
         fs::create_dir_all(&data_dir)?;
