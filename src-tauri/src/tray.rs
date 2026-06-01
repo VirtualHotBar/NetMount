@@ -35,6 +35,9 @@ impl Tray {
                     {
                         if let Some(window) = icon.app_handle().app_main_window() {
                             let _ = window.toggle_visibility(None);
+                        } else {
+                            // 窗口不存在（可能是 WebView2 未安装），显示原生错误提示
+                            show_webview_error_dialog();
                         }
                     }
                 }
@@ -44,6 +47,9 @@ impl Tray {
                 "show" => {
                     if let Some(window) = app.app_main_window() {
                         let _ = window.toggle_visibility(Some(true));
+                    } else {
+                        // 窗口不存在（可能是 WebView2 未安装），显示原生错误提示
+                        show_webview_error_dialog();
                     }
                 }
                 "restart" => {
@@ -56,6 +62,37 @@ impl Tray {
             });
             Ok(Self(tray))
         })
+    }
+}
+
+/// 显示 WebView2 缺失的原生错误对话框（不依赖 WebView2）
+fn show_webview_error_dialog() {
+    #[cfg(target_os = "windows")]
+    {
+        use std::process::Command;
+        // 使用 PowerShell 显示原生消息框
+        let _ = Command::new("powershell")
+            .args(&[
+                "-Command",
+                "Add-Type -AssemblyName System.Windows.Forms; \
+                 [System.Windows.Forms.MessageBox]::Show( \
+                   '无法显示主窗口。这可能是因为 Microsoft Edge WebView2 运行时未安装或被删除。\n\n\
+                   请按以下步骤修复：\n\
+                   1. 重新安装 Microsoft Edge 浏览器，或\n\
+                   2. 从 https://developer.microsoft.com/en-us/microsoft-edge/webview2/ 下载并安装 WebView2 运行时\n\n\
+                   安装后请重启 NetMount。', \
+                   'NetMount - 显示主窗口失败', \
+                   'OK', \
+                   'Error' \
+                 )"
+            ])
+            .spawn();
+    }
+    
+    #[cfg(not(target_os = "windows"))]
+    {
+        // 非 Windows 平台使用 eprintln 输出错误
+        eprintln!("无法显示主窗口。请检查系统是否安装了必要的 WebView 运行时。");
     }
 }
 
