@@ -367,7 +367,7 @@ function AddTask_page() {
           </Form.Item>
         )}
 
-        {(taskInfo.taskType === 'sync' || taskInfo.taskType === 'bisync') && (
+        {taskInfo.taskType !== 'delete' && (
           <Form.Item label={t('filter_rules')}>
             <Input.TextArea
               value={((taskInfo.parameters?.filterRules as string[]) || []).join('\n')}

@@ -9,8 +9,9 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
 
     switch (t.taskType) {
       case 'copy': {
+        const copyFilterRules = t.parameters?.filterRules as string[] | undefined
         if (srcIsDir && targetIsDir) {
-          await copyDir(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
+          await copyDir(t.source.storageName, t.source.path, t.target.storageName, t.target.path, copyFilterRules)
         } else if (!srcIsDir && !targetIsDir) {
           await copyFile(t.source.storageName, t.source.path, t.target.storageName, t.target.path, true)
         } else if (!srcIsDir && targetIsDir) {
@@ -21,8 +22,9 @@ async function runTask(task: TaskListItem): Promise<TaskListItem> {
         break
       }
       case 'move': {
+        const moveFilterRules = t.parameters?.filterRules as string[] | undefined
         if (srcIsDir && targetIsDir) {
-          await moveDir(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
+          await moveDir(t.source.storageName, t.source.path, t.target.storageName, t.target.path, undefined, moveFilterRules)
         } else if (!srcIsDir && targetIsDir) {
           await moveFile(t.source.storageName, t.source.path, t.target.storageName, t.target.path)
         } else if (!srcIsDir && !targetIsDir) {

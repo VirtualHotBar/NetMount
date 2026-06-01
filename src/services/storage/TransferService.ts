@@ -69,13 +69,15 @@ async function moveFile(
  * @param path - Source directory path
  * @param destStoragename - Destination storage name
  * @param destPath - Destination directory path
+ * @param filterRules - Optional array of rclone filter rules (e.g., ["+ *.jpg", "- *.tmp"])
  * @throws Error if source or destination is invalid
  */
 async function copyDir(
   storageName: string,
   path: string,
   destStoragename: string,
-  destPath: string
+  destPath: string,
+  filterRules?: string[]
 ) {
   // 参数验证
   if (!storageName || !destStoragename) {
@@ -92,10 +94,17 @@ async function copyDir(
     throw new Error('Invalid source or destination path')
   }
 
-  const success = await rclone_api_exec_async('/sync/copy', {
+  const params: Record<string, unknown> = {
     srcFs,
     dstFs,
-  })
+  }
+
+  // 添加过滤规则
+  if (filterRules && filterRules.length > 0) {
+    params.filter = filterRules.join('\n')
+  }
+
+  const success = await rclone_api_exec_async('/sync/copy', params)
   if (!success) {
     throw new Error(`Copy directory failed: ${srcFs} -> ${dstFs}`)
   }
@@ -108,6 +117,7 @@ async function copyDir(
  * @param destStoragename - Destination storage name
  * @param destPath - Destination directory path
  * @param newNmae - New directory name (optional)
+ * @param filterRules - Optional array of rclone filter rules (e.g., ["+ *.jpg", "- *.tmp"])
  * @throws Error if source or destination is invalid
  */
 async function moveDir(
@@ -115,7 +125,8 @@ async function moveDir(
   path: string,
   destStoragename: string,
   destPath: string,
-  newNmae?: string
+  newNmae?: string,
+  filterRules?: string[]
 ) {
   // 参数验证
   if (!storageName || !destStoragename) {
@@ -133,10 +144,17 @@ async function moveDir(
     throw new Error('Invalid source or destination path')
   }
 
-  const success = await rclone_api_exec_async('/sync/move', {
+  const params: Record<string, unknown> = {
     srcFs,
     dstFs,
-  })
+  }
+
+  // 添加过滤规则
+  if (filterRules && filterRules.length > 0) {
+    params.filter = filterRules.join('\n')
+  }
+
+  const success = await rclone_api_exec_async('/sync/move', params)
   if (!success) {
     throw new Error(`Move directory failed: ${srcFs} -> ${dstFs}`)
   }
