@@ -17,15 +17,21 @@ async function startRclone() {
     await stopRclone()
   }
 
-  //设置缓存目录
+  //设置缓存目录和临时目录（分离以避免临时文件污染缓存）
+  const cacheBase = nmConfig.settings.path.cacheDir
   rcloneInfo.localArgs.path.tempDir = formatPath(
-    nmConfig.settings.path.cacheDir + '/rclone/',
+    cacheBase + '/rclone/',
+    osInfo.osType === 'windows'
+  )
+  const rcloneTempDir = formatPath(
+    cacheBase + '/rclone-temp/',
     osInfo.osType === 'windows'
   )
 
   // 确保缓存和临时目录存在
   try {
     await invoke('fs_make_dir', { path: rcloneInfo.localArgs.path.tempDir })
+    await invoke('fs_make_dir', { path: rcloneTempDir })
   } catch {
     // ignore - rclone will create it if needed
   }
@@ -35,7 +41,7 @@ async function startRclone() {
 
   rcloneInfo.endpoint.url = `${LOCALHOST_URLS.RCLONE}:${rcloneInfo.endpoint.localhost.port.toString()}`
 
-  // 确保日志目录存在（用于“设置-组件-日志”查看）
+  // 确保日志目录存在（用于"设置-组件-日志"查看）
   const logDir = netmountLogDir()
   const logFile = rcloneLogFile()
   try {
@@ -53,7 +59,7 @@ async function startRclone() {
     '--rc-allow-origin=' + window.location.origin || '*',
     `--config=${rcloneConfigFile()}`,
     '--cache-dir=' + rcloneInfo.localArgs.path.tempDir,
-    '--temp-dir=' + rcloneInfo.localArgs.path.tempDir,
+    '--temp-dir=' + rcloneTempDir,
     `--log-file=${logFile}`,
     '--log-level=INFO',
   ]

@@ -95,6 +95,8 @@ export const createDefaultConfig = (): NMConfig => ({
     language: undefined,
     path: {
       cacheDir: undefined,
+      logDir: undefined,
+      transferDir: undefined,
     },
   },
   framework: {
