@@ -218,13 +218,18 @@ export default function AddMount_page() {
     if (mode === 'off' || mode === 'minimal') {
       next.CacheMaxSize = 1073741824 // 1GB
       next.WriteBack = 1000000000 // 1s
+      next.ReadAhead = 4194304 // 4MB
+      next.DirCacheTime = 30000000000 // 30s
     } else if (mode === 'writes') {
       next.CacheMaxSize = 10737418240 // 10GB
       next.WriteBack = 5000000000 // 5s
+      next.ReadAhead = 33554432 // 32MB
+      next.DirCacheTime = 120000000000 // 2min
     } else {
       next.CacheMaxSize = 21474836480 // 20GB
       next.WriteBack = 15000000000 // 15s
-      next.ReadAhead = 8388608 // 8MB
+      next.ReadAhead = 134217728 // 128MB
+      next.DirCacheTime = 300000000000 // 5min
     }
     setParameters({ ...parameters, vfsOpt: next })
     vfsOptFormHook?.setFieldsValue(next)
@@ -339,6 +344,14 @@ export default function AddMount_page() {
                   <Select.Option value="fuse-t">fuse-t</Select.Option>
                   <Select.Option value="macfuse">macfuse</Select.Option>
                 </Select>
+                {/* FUSE-T 安全提示 */}
+                {parameters.mountOpt.MountType === 'fuse-t' && (
+                  <Alert
+                    type="warning"
+                    content={t('mac_fuse_t_security_tip')}
+                    style={{ marginTop: '0.5rem' }}
+                  />
+                )}
               </FormItem>
             )}
             <FormItem label={t('cache_strategy')}>
@@ -400,6 +413,14 @@ export default function AddMount_page() {
               <Select.Option value="fuse-t">fuse-t</Select.Option>
               <Select.Option value="macfuse">macfuse</Select.Option>
             </Select>
+            {/* FUSE-T 安全提示 */}
+            {parameters.mountOpt.MountType === 'fuse-t' && (
+              <Alert
+                type="warning"
+                content={t('mac_fuse_t_security_tip')}
+                style={{ marginTop: '0.5rem' }}
+              />
+            )}
           </FormItem>
         )}
       </div>

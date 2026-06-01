@@ -242,9 +242,12 @@ function ExplorerItem() {
             fileInfo()
           } catch (error) {
             const errorMsg = error instanceof Error ? error.message : String(error)
-            // S3等对象存储不支持原生重命名，需要通过复制+删除实现
+            // S3等对象存储不支持原生重命名
             if (errorMsg.includes('not supported') || errorMsg.includes('rename')) {
               Message.error(t('rename_not_supported'))
+            } else if (isDir && (errorMsg.includes('DirMove') || errorMsg.includes('500') || errorMsg.includes('Internal Server Error'))) {
+              // S3目录重命名失败的特殊处理
+              Message.error(t('s3_rename_dir_not_supported'))
             } else {
               Message.error(t('rename_failed') + ': ' + errorMsg)
             }

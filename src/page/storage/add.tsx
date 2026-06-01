@@ -194,9 +194,27 @@ function AddStorage_page() {
 
             {/* 存储介绍 */}
             {storageTypeName ? (
-              <FormItem label={t('storage_introduce')}>
-                <Typography.Text>{t(storageInfo.description)}</Typography.Text>
-              </FormItem>
+              <>
+                <FormItem label={t('storage_introduce')}>
+                  <Typography.Text>{t(storageInfo.description)}</Typography.Text>
+                </FormItem>
+                {/* WebDAV 路径提示 */}
+                {storageInfo.type.toLowerCase().includes('webdav') && (
+                  <Alert
+                    type="info"
+                    content={t('webdav_path_tip')}
+                    style={{ marginTop: '0.5rem' }}
+                  />
+                )}
+                {/* 百度网盘 Token 提示 */}
+                {storageInfo.type.toLowerCase().includes('baidunetdisk') && (
+                  <Alert
+                    type="info"
+                    content={t('baidu_token_tip')}
+                    style={{ marginTop: '0.5rem' }}
+                  />
+                )}
+              </>
             ) : (
               searchStr && searchStr.toLowerCase().includes('nfs') && (
                 <Alert

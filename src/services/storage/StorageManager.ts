@@ -173,7 +173,8 @@ async function getStorageSpace(name: string): Promise<StorageSpace> {
 
   // 检测token相关错误（如百度网盘refresh token过期）
   const errorStr = String(lastError)
-  if (errorStr.includes('refresh_token') || errorStr.includes('token') || errorStr.includes('auth')) {
+  if (errorStr.includes('refresh_token') || errorStr.includes('token') || errorStr.includes('auth') || 
+      errorStr.includes('empty token') || errorStr.includes('wrong refresh token')) {
     logger.warn(`Storage ${name} may have token issues: ${errorStr}`, 'StorageManager')
     return { total: -3, free: -3, used: -3 } // 特殊标记：token错误
   }
