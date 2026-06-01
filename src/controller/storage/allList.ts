@@ -52,6 +52,7 @@ async function updateStorageInfoList() {
     { text: 'onedrive', weight: 6 },
     { text: 'dropbox', weight: 4.4 },
     { text: '123pan', weight: 4 },
+    { text: 'vercelblob', weight: 5 },
   ]
 
   storageInfoList = storageInfoList.sort((a, b) => {
