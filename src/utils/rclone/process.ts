@@ -23,6 +23,13 @@ async function startRclone() {
     osInfo.osType === 'windows'
   )
 
+  // 确保缓存和临时目录存在
+  try {
+    await invoke('fs_make_dir', { path: rcloneInfo.localArgs.path.tempDir })
+  } catch {
+    // ignore - rclone will create it if needed
+  }
+
   //自动分配端口
   rcloneInfo.endpoint.localhost.port = (await getAvailablePorts(2))[1]!
 
@@ -46,6 +53,7 @@ async function startRclone() {
     '--rc-allow-origin=' + window.location.origin || '*',
     `--config=${rcloneConfigFile()}`,
     '--cache-dir=' + rcloneInfo.localArgs.path.tempDir,
+    '--temp-dir=' + rcloneInfo.localArgs.path.tempDir,
     `--log-file=${logFile}`,
     '--log-level=INFO',
   ]
