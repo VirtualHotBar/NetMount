@@ -573,7 +573,7 @@
     "description.yandex": "Yandex Disk是Yandex提供的云存储服务，支持文件同步、备份与分享，以及与Yandex生态系统的集成。",
     "description.crypt": "加密，确保用户数据在云端存储时的安全性。",
     "description.alias": "别名，便于访问和管理。",
-    "description.aliyundrive": "阿里云盘是一个由阿里巴巴集团提供的个人云存储服务，用户可以享受高速的文件存储和分享服务。",
+    "description.aliyundrive": "阿里云盘是一个由阿里巴巴集团提供的个人云存储服务，用户可以享受高速的文件存储和分享服务。注意：请确保正确设置根目录ID，否则可能只能看到部分文件夹。",
     "description.aliyundriveopen": "阿里云盘开放接口",
     "description.aliyundriveshare": "阿里云盘分享链接",
     "description.chaoxinggroupdrive": "超星小组网盘是面向教育机构的云存储服务，支持教学资源共享和协作。",

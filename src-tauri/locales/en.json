@@ -573,7 +573,7 @@
     "description.yandex": "Yandex Disk is a cloud storage service provided by Yandex, supporting file synchronization, backup, and sharing, as well as integration with the Yandex ecosystem.",
     "description.crypt": "Encryption ensures the security of user data when stored in the cloud.",
     "description.alias": "An alias for easy access and management.",
-    "description.aliyundrive": "Aliyun Drive is a personal cloud storage service provided by Alibaba Group, where users can enjoy high-speed file storage and sharing services.",
+    "description.aliyundrive": "Aliyun Drive is a personal cloud storage service provided by Alibaba Group, where users can enjoy high-speed file storage and sharing services. Note: Please ensure the Root Folder ID is set correctly, otherwise only some folders may be visible.",
     "description.aliyundriveopen": "Aliyun Drive Open Interface",
     "description.aliyundriveshare": "Aliyun Drive Share Link",
     "description.chaoxinggroupdrive": "ChaoXing Group Drive is a cloud storage service aimed at educational institutions, supporting the sharing and collaboration of educational resources.",
