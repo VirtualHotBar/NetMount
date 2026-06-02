@@ -34,6 +34,21 @@ async function reupMount(noRefreshUI?: boolean) {
 }
 
 /**
+ * 清除所有已挂载存储的 VFS 目录缓存并刷新挂载列表
+ * 解决远程添加文件后本地不显示的问题
+ */
+async function refreshMountWithVfsCache(): Promise<void> {
+  try {
+    // 先清除所有 VFS 缓存，强制 rclone 重新读取远程目录
+    await mountRepository.forgetAllVfsCache()
+    // 再刷新挂载列表
+    await mountRepository.refreshMountList()
+  } catch (error) {
+    mountLogger.error('Failed to refresh mount with VFS cache', error as Error)
+  }
+}
+
+/**
  * 获取挂载配置
  */
 function getMountStorage(mountPath: string): MountListItem | undefined {
@@ -136,6 +151,7 @@ async function getAvailableDriveLetter(): Promise<string> {
 
 export {
   reupMount,
+  refreshMountWithVfsCache,
   mountStorage,
   unmountStorage,
   addMountStorage,

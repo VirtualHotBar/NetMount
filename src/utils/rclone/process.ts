@@ -12,6 +12,29 @@ import { netmountLogDir, rcloneConfigFile, rcloneLogFile } from '../netmountPath
 import { restartSidecar, startSidecarAndWait, stopSidecarGracefully } from '../sidecarService'
 import { parseExtraCliArgs } from '../cliArgs'
 
+/**
+ * 构建代理URL
+ * 根据代理配置生成 rclone --http-proxy 参数值
+ * 支持 HTTP 和 SOCKS5 代理，格式：protocol://[user:pass@]host:port
+ */
+function buildProxyUrl(proxy: { type: string; host?: string; port?: number; username?: string; password?: string }): string | undefined {
+  if (proxy.type === 'no_proxy' || !proxy.host || !proxy.port) {
+    return undefined
+  }
+
+  const protocol = proxy.type === 'socks5' ? 'socks5' : 'http'
+  let auth = ''
+  if (proxy.username) {
+    auth = encodeURIComponent(proxy.username)
+    if (proxy.password) {
+      auth += ':' + encodeURIComponent(proxy.password)
+    }
+    auth += '@'
+  }
+
+  return `${protocol}://${auth}${proxy.host}:${proxy.port}`
+}
+
 async function startRclone() {
   if (rcloneInfo.process.child) {
     await stopRclone()
@@ -67,6 +90,17 @@ async function startRclone() {
   if (nmConfig.framework.rclone.user === '') {
     args.push('--rc-no-auth')
   }
+
+  // 应用代理配置
+  const proxy = nmConfig.settings.proxy
+  if (proxy && proxy.type !== 'no_proxy') {
+    const proxyUrl = buildProxyUrl(proxy)
+    if (proxyUrl) {
+      args.push(`--http-proxy=${proxyUrl}`)
+      logger.info('Rclone proxy configured', 'Rclone', { type: proxy.type, host: proxy.host })
+    }
+  }
+
   args.push(...parseExtraCliArgs(nmConfig.framework.rclone.extraArgs))
 
   // 使用 Rust 端启动 sidecar，确保由主进程创建

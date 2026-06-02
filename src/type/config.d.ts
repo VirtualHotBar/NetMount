@@ -25,6 +25,13 @@ interface NMConfig {
       lockOnSleep?: boolean     // 休眠时锁定
       idleTimeoutMinutes?: number // 空闲超时锁定（分钟），0或undefined表示禁用
     }
+    proxy?: {
+      type: 'no_proxy' | 'http' | 'socks5'  // 代理类型
+      host?: string       // 代理主机地址
+      port?: number       // 代理端口
+      username?: string   // 代理用户名（可选）
+      password?: string   // 代理密码（可选）
+    }
   }
   notice?: Notice
   framework: {

@@ -242,6 +242,28 @@ export async function performMount(mountInfo: MountListItem): Promise<void> {
 }
 
 /**
+ * 清除所有已挂载存储的 VFS 目录缓存
+ * 用于刷新操作，强制 rclone 重新从远程读取目录列表
+ */
+export async function forgetAllVfsCache(): Promise<void> {
+  const mounts = rcloneInfo.mountList
+  if (mounts.length === 0) return
+
+  const forgetPromises = mounts.map(async (mount) => {
+    try {
+      await rclone_api_post('/vfs/forget', {
+        fs: convertStoragePath(mount.storageName) || mount.storageName,
+      }, true)
+    } catch {
+      // 忽略 - 非关键操作
+    }
+  })
+
+  await Promise.all(forgetPromises)
+  mountLogger.debug('VFS cache forgotten for all mounts', { count: mounts.length })
+}
+
+/**
  * 执行卸载操作
  * 卸载前先清理 VFS 缓存引用，卸载后清理残留临时文件
  */
