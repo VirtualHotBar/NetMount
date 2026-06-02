@@ -164,6 +164,10 @@ class ConfigService {
       if (this.config.framework?.openlist?.password) {
         this.config.framework.openlist.password = decodePassword(this.config.framework.openlist.password)
       }
+      // 解码代理密码
+      if (this.config.settings?.proxy?.password) {
+        this.config.settings.proxy.password = decodePassword(this.config.settings.proxy.password)
+      }
       
       logger.info('Config loaded from disk', 'ConfigService')
     } catch (error) {
@@ -184,6 +188,10 @@ class ConfigService {
       }
       if (configToSave.framework?.openlist?.password) {
         configToSave.framework.openlist.password = encodePassword(configToSave.framework.openlist.password)
+      }
+      // 编码代理密码
+      if (configToSave.settings?.proxy?.password) {
+        configToSave.settings.proxy.password = encodePassword(configToSave.settings.proxy.password)
       }
       
       await invoke('update_config', {

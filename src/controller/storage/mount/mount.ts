@@ -56,10 +56,11 @@ function getMountStorage(mountPath: string): MountListItem | undefined {
 }
 
 /**
- * 检查是否已挂载
+ * 检查挂载配置是否存在（同步版本，仅检查配置，不检查实际挂载状态）
+ * 注意：此函数检查的是配置是否存在，而非实际的rclone挂载状态
+ * 如需检查实际挂载状态，请使用 mountRepository.isMounted()（异步版本）
  */
 function isMounted(mountPath: string): boolean {
-  // 同步版本，用于 UI 判断
   const mountList = mountRepository.getMountConfig(mountPath)
   return mountList !== undefined
 }

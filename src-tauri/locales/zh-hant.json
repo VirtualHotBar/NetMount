@@ -736,6 +736,7 @@
     "no_proxy": "不使用代理",
     "proxy_host": "代理主機",
     "proxy_host_placeholder": "例如：127.0.0.1",
+    "proxy_host_invalid": "主機名格式無效，請輸入有效的IP地址或域名",
     "proxy_port": "代理端口",
     "proxy_port_placeholder": "例如：7890",
     "proxy_username": "代理用戶名",

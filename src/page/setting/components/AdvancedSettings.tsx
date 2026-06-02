@@ -11,6 +11,16 @@ import { clearAllCache } from '../../../utils/tempCleanup'
 
 const FormItem = Form.Item
 
+/**
+ * 验证主机名格式（允许IP地址、域名、localhost）
+ */
+function isValidHostname(hostname: string): boolean {
+  if (!hostname) return false
+  // 允许: IP地址、域名、localhost
+  const hostnameRegex = /^[a-zA-Z0-9]([a-zA-Z0-9\-\.]*[a-zA-Z0-9])?$/
+  return hostnameRegex.test(hostname)
+}
+
 export function AdvancedSettings(): JSX.Element {
   const { t } = useTranslation()
   const { increment: incrementSettings } = useSettingsStore()
@@ -57,6 +67,12 @@ export function AdvancedSettings(): JSX.Element {
                     if (nmConfig.settings.proxy) {
                       nmConfig.settings.proxy.host = value
                       incrementSettings()
+                    }
+                  }}
+                  onBlur={e => {
+                    const value = e.target.value
+                    if (value && !isValidHostname(value)) {
+                      Message.warning(t('proxy_host_invalid'))
                     }
                   }}
                 />

@@ -769,6 +769,7 @@
     "no_proxy": "No Proxy",
     "proxy_host": "Proxy Host",
     "proxy_host_placeholder": "e.g. 127.0.0.1",
+    "proxy_host_invalid": "Invalid hostname format. Please enter a valid IP address or domain name",
     "proxy_port": "Proxy Port",
     "proxy_port_placeholder": "e.g. 7890",
     "proxy_username": "Proxy Username",

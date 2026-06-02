@@ -11,13 +11,14 @@ import { LOCALHOST_URLS } from '../../constants'
 import { netmountLogDir, rcloneConfigFile, rcloneLogFile } from '../netmountPaths'
 import { restartSidecar, startSidecarAndWait, stopSidecarGracefully } from '../sidecarService'
 import { parseExtraCliArgs } from '../cliArgs'
+import type { NMConfig } from '../../type/config'
 
 /**
  * 构建代理URL
  * 根据代理配置生成 rclone --http-proxy 参数值
  * 支持 HTTP 和 SOCKS5 代理，格式：protocol://[user:pass@]host:port
  */
-function buildProxyUrl(proxy: { type: string; host?: string; port?: number; username?: string; password?: string }): string | undefined {
+function buildProxyUrl(proxy: NonNullable<NMConfig['settings']['proxy']>): string | undefined {
   if (proxy.type === 'no_proxy' || !proxy.host || !proxy.port) {
     return undefined
   }
