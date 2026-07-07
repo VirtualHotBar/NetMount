@@ -1,0 +1,275 @@
+name: "Daily Build"
+
+on:
+  schedule:
+    # 每天凌晨 2:00 UTC（北京时间 10:00）
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: daily-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  RUST_TOOLCHAIN: stable
+  RCLONE_VERSION: "current"
+  OPENLIST_VERSION: "v4.1.10"
+
+jobs:
+  # ========== 获取版本信息 ==========
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      dev_version: ${{ steps.version.outputs.dev_version }}
+      short_sha: ${{ steps.version.outputs.short_sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: version
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          DEV_VERSION="${PACKAGE_VERSION}-${SHORT_SHA}"
+          echo "dev_version=$DEV_VERSION" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "Dev version: $DEV_VERSION"
+
+  # ========== 多平台构建 ==========
+  build:
+    needs: [prepare]
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            target: 'aarch64-apple-darwin'
+            args: '--target aarch64-apple-darwin'
+            arch: 'aarch64'
+          - platform: 'macos-latest'
+            target: 'x86_64-apple-darwin'
+            args: '--target x86_64-apple-darwin'
+            arch: 'x86_64'
+          - platform: 'ubuntu-22.04'
+            target: 'x86_64-unknown-linux-gnu'
+            args: ''
+            arch: 'x86_64'
+          - platform: 'ubuntu-22.04-arm'
+            target: 'aarch64-unknown-linux-gnu'
+            args: ''
+            arch: 'aarch64'
+          - platform: 'windows-latest'
+            target: 'x86_64-pc-windows-msvc'
+            args: ''
+            arch: 'x86_64'
+          - platform: 'windows-11-arm'
+            target: 'aarch64-pc-windows-msvc'
+            args: ''
+            arch: 'aarch64'
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: daily-${{ matrix.target }}
+          cache-on-failure: true
+
+      - name: Cache binaries
+        uses: actions/cache@v4
+        id: cache-binaries
+        with:
+          path: |
+            src-tauri/binaries/rclone
+            src-tauri/binaries/openlist
+            src-tauri/binaries/rclone-${{ matrix.target }}${{ contains(matrix.platform, 'windows') && '.exe' || '' }}
+            src-tauri/binaries/openlist-${{ matrix.target }}${{ contains(matrix.platform, 'windows') && '.exe' || '' }}
+            src-tauri/binaries/winfsp.msi
+          key: binaries-${{ matrix.target }}-${{ env.RCLONE_VERSION }}-${{ env.OPENLIST_VERSION }}
+
+      - name: Resolve skip-downloads flag
+        id: resolve-skip-downloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.cache-binaries.outputs.cache-hit }}" != "true" ]; then
+            echo "skip_downloads=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ext=""
+          if [ "${{ contains(matrix.platform, 'windows') }}" = "true" ]; then
+            ext=".exe"
+          fi
+
+          has_rclone=false
+          has_openlist=false
+
+          if [ -f "src-tauri/binaries/rclone${ext}" ] || [ -f "src-tauri/binaries/rclone-${{ matrix.target }}${ext}" ]; then
+            has_rclone=true
+          fi
+
+          if [ -f "src-tauri/binaries/openlist${ext}" ] || [ -f "src-tauri/binaries/openlist-${{ matrix.target }}${ext}" ]; then
+            has_openlist=true
+          fi
+
+          if [ "$has_rclone" = "true" ] && [ "$has_openlist" = "true" ]; then
+            echo "skip_downloads=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip_downloads=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Linux dependencies
+        if: contains(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - run: pnpm install --frozen-lockfile
+
+      # 修改版本号为开发版本：{base_version}-{short_sha}
+      - name: Patch version to dev build
+        shell: bash
+        run: |
+          DEV_VERSION="${{ needs.prepare.outputs.dev_version }}"
+
+          # 修改 package.json
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '${DEV_VERSION}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('package.json version set to:', pkg.version);
+          "
+
+          # 同步版本到 Cargo.toml
+          node scripts/sync-version.mjs
+
+      # 检测是否有签名密钥（fork 通常没有此 secret，跳过 updater 签名即可）
+      - name: Check signing key availability
+        id: signing-check
+        shell: bash
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then
+            echo "has_key=true" >> "$GITHUB_OUTPUT"
+            echo "Signing key found, updater artifacts will be generated."
+          else
+            echo "has_key=false" >> "$GITHUB_OUTPUT"
+            echo "No signing key configured, disabling updater artifacts."
+            node -e "
+              const fs = require('fs');
+              const path = 'src-tauri/tauri.conf.json';
+              const conf = JSON.parse(fs.readFileSync(path, 'utf8'));
+              conf.bundle.createUpdaterArtifacts = false;
+              fs.writeFileSync(path, JSON.stringify(conf, null, 2) + '\n');
+              console.log('Patched createUpdaterArtifacts to false');
+            "
+          fi
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.resolve-skip-downloads.outputs.skip_downloads }}
+        with:
+          tagName: daily-v${{ needs.prepare.outputs.dev_version }}
+          releaseName: 'NetMount Dev ${{ needs.prepare.outputs.dev_version }}'
+          releaseBody: |
+            > This is an automated daily development build. Use at your own risk.
+            > Commit: ${{ github.sha }}
+          prerelease: true
+          tauriScript: pnpm tauri
+          args: ${{ matrix.args }}
+          includeUpdaterJson: ${{ steps.signing-check.outputs.has_key == 'true' }}
+
+      # Windows 便携式版本
+      - name: Create Windows portable ZIP
+        if: contains(matrix.platform, 'windows')
+        shell: pwsh
+        env:
+          DEV_VERSION: ${{ needs.prepare.outputs.dev_version }}
+          ARCH: ${{ matrix.arch }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $exeExt = ".exe"
+          $exeName = "NetMount"
+
+          # Tauri 原生编译输出到 target/release/，交叉编译输出到 target/{triple}/release/
+          $releaseDir = "src-tauri/target/release"
+          if (-not (Test-Path "$releaseDir/$exeName$exeExt")) {
+            $releaseDir = "src-tauri/target/${{ matrix.target }}/release"
+          }
+          Write-Host "Release dir: $releaseDir"
+
+          $portableDir = "portable-pack"
+          if (Test-Path $portableDir) { Remove-Item -Recurse -Force $portableDir }
+          New-Item -ItemType Directory -Path $portableDir | Out-Null
+
+          Copy-Item "$releaseDir/$exeName$exeExt" "$portableDir/"
+
+          # 创建 .portable 标记文件
+          New-Item -ItemType File -Path "$portableDir/.portable" -Force | Out-Null
+
+          $zipName = "NetMount_${env:DEV_VERSION}_windows_${env:ARCH}_portable.zip"
+
+          Compress-Archive -Path "$portableDir/*" -DestinationPath $zipName -Force
+
+          Remove-Item -Recurse -Force $portableDir
+
+          Write-Host "Created portable ZIP: $zipName"
+
+          gh release upload "daily-v${env:DEV_VERSION}" $zipName --clobber
+
+  # ========== 清理旧的 Daily Release（保留最新 5 个）==========
+  cleanup:
+    needs: [build]
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Delete old daily releases (keep latest 5)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          KEEP_COUNT: 5
+        run: |
+          set -euo pipefail
+          echo "Fetching daily prereleases..."
+          TAGS=$(gh release list --repo "$GH_REPO" --limit 100 \
+            --json tagName,isPrerelease,createdAt \
+            --jq '[.[] | select(.isPrerelease and (.tagName | startswith("daily-v")))]
+              | sort_by(.createdAt) | reverse | .['$KEEP_COUNT':] | .[].tagName')
+          if [ -z "$TAGS" ]; then
+            echo "No old daily releases to clean up."
+            exit 0
+          fi
+          while read -r tag; do
+            echo "Deleting old daily release: $tag"
+            gh release delete "$tag" --yes --repo "$GH_REPO"
+            echo "  -> Deleted"
+          done <<< "$TAGS"
+          echo "Cleanup complete."
