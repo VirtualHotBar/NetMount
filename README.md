@@ -36,7 +36,8 @@
 ![image](https://github.com/VirtualHotBar/NetMount/assets/96966978/a919b68e-a165-411f-a99b-d184b3f264b0)
 
 ## 鸣谢
-- [缤纷云 Bitiful](https://www.bitiful.com/) - 为本项目提供CDN和存储资源。
+- [缤纷云 Bitiful](https://www.bitiful.com/) - 为本项目提供 CDN 和存储资源。
+- [Tokeness.io](https://tokeness.io) - 为本项目提供 AI Tokens 支持
 
 ## 许可证
 
