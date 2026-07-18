@@ -8,6 +8,7 @@ import {
   moveDir,
   sync,
 } from '../TransferService'
+import { convertStoragePath, formatPathRclone, getFileName } from '../StorageManager'
 
 // Mock 依赖模块
 vi.mock('../../../utils/rclone/request', () => ({
@@ -16,14 +17,20 @@ vi.mock('../../../utils/rclone/request', () => ({
 }))
 
 vi.mock('../StorageManager', () => ({
-  convertStoragePath: vi.fn((name, path) => path ? `${name}:${path}` : `${name}:`),
-  formatPathRclone: vi.fn((path) => path?.replace(/^\//, '') || ''),
-  getFileName: vi.fn((path) => path?.split('/').pop() || ''),
+  convertStoragePath: vi.fn(),
+  formatPathRclone: vi.fn(),
+  getFileName: vi.fn(),
 }))
 
 describe('TransferService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // vitest config 设了 mockReset: true，每个 test 前会清掉 mock 实现，
+    // 所以这里在 reset 之后重新装实现，避免 convertStoragePath 返回 undefined
+    // 导致 impl 在 'Invalid source or destination path' 处提前抛错。
+    vi.mocked(convertStoragePath).mockImplementation((name, path) => path ? `${name}:${path}` : `${name}:`)
+    vi.mocked(formatPathRclone).mockImplementation((path) => path?.replace(/^\//, '') || '')
+    vi.mocked(getFileName).mockImplementation((path) => path?.split('/').pop() || '')
   })
 
   describe('copyDir', () => {
@@ -109,7 +116,9 @@ describe('TransferService', () => {
       const { rclone_api_exec_async } = await import('../../../utils/rclone/request')
       vi.mocked(rclone_api_exec_async).mockResolvedValueOnce(false)
 
-      await expect(sync('src', '/folder1', 'dst', '/folder2', true)).rejects.toThrow('Bidirectional sync failed')
+      // impl 在 bisync 失败后会自动用 resync 重试一次（第二次调用返回默认 mock = undefined = falsy），
+      // 然后抛出中文错误 '双向同步失败'。对齐实现的真实消息。
+      await expect(sync('src', '/folder1', 'dst', '/folder2', true)).rejects.toThrow('双向同步失败')
     })
   })
 })

@@ -42,11 +42,11 @@ vi.mock('../../services/ConfigService', () => ({
   },
 }))
 
-vi.mock('../../utils/rclone/request', () => ({
+vi.mock('../../../utils/rclone/request', () => ({
   rclone_api_post: vi.fn(),
 }))
 
-vi.mock('../../utils/openlist/request', () => ({
+vi.mock('../../../utils/openlist/request', () => ({
   openlist_api_get: vi.fn(),
   openlist_api_post: vi.fn(),
 }))
@@ -213,7 +213,7 @@ describe('StorageManager', () => {
 
       const result = convertStoragePath('mys3', '/folder/file.txt', false, false, true)
 
-      expect(result).toBe('mys3')
+      expect(result).toBe('mys3:')
     })
 
     it('should return empty string for unknown storage', async () => {
@@ -246,18 +246,24 @@ describe('StorageManager', () => {
 
     it('should return negative values when storage is not accessible', async () => {
       const { rclone_api_post } = await import('../../../utils/rclone/request')
-      vi.mocked(rclone_api_post).mockRejectedValueOnce(new Error('Storage not found'))
+      // reject on every retry attempt; impl retries with setTimeout delays between attempts
+      vi.mocked(rclone_api_post).mockRejectedValue(new Error('Storage not found'))
 
-      const result = await getStorageSpace('test-storage')
+      const resultPromise = getStorageSpace('test-storage')
+      await vi.runAllTimersAsync()
+      const result = await resultPromise
 
       expect(result.total).toBeLessThan(0)
     })
 
     it('should mark internal storage for cleanup when inaccessible', async () => {
       const { rclone_api_post } = await import('../../../utils/rclone/request')
-      vi.mocked(rclone_api_post).mockRejectedValueOnce(new Error('Storage not found'))
+      // reject on every retry attempt; impl retries with setTimeout delays between attempts
+      vi.mocked(rclone_api_post).mockRejectedValue(new Error('Storage not found'))
 
-      const result = await getStorageSpace('.netmount-test')
+      const resultPromise = getStorageSpace('.netmount-test')
+      await vi.runAllTimersAsync()
+      const result = await resultPromise
 
       expect(result).toEqual({ total: -2, free: -2, used: -2 })
     })

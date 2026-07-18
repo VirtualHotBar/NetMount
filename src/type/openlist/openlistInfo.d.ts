@@ -1,5 +1,3 @@
-import { Child, Command } from '@tauri-apps/plugin-shell'
-
 interface OpenlistInfo {
   markInRclone: string
   endpoint: {
@@ -85,8 +83,8 @@ interface OpenlistInfo {
     version: string
   }
   process: {
-    command?: Command
-    child?: Child
+    command?: unknown
+    child?: { pid: number }
     log?: string
     logFile?: string
   }

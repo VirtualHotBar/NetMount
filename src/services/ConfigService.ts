@@ -10,7 +10,7 @@
  * 保持向后兼容：原导出仍然可用，但建议使用新的服务类
  */
 
-import { invoke } from '@tauri-apps/api/core'
+import { getRuntime } from '../runtime/port'
 import { NMConfig, OSInfo } from '../type/config'
 import { RcloneInfo } from '../type/rclone/rcloneInfo'
 import { mergeObjects } from '../utils'
@@ -154,7 +154,7 @@ class ConfigService {
    */
   async loadConfig(): Promise<void> {
     try {
-      const configData = await invoke<Partial<NMConfig>>('get_config')
+      const configData = await getRuntime().configIO.load<Partial<NMConfig>>()
       this.config = mergeObjects(this.config, configData)
       
       // 解码框架密码（向后兼容明文密码）
@@ -194,9 +194,7 @@ class ConfigService {
         configToSave.settings.proxy.password = encodePassword(configToSave.settings.proxy.password)
       }
       
-      await invoke('update_config', {
-        data: configToSave,
-      })
+      await getRuntime().configIO.save(configToSave)
       logger.info('Config saved to disk', 'ConfigService')
     } catch (error) {
       logger.error('Failed to save config', error as Error, 'ConfigService')

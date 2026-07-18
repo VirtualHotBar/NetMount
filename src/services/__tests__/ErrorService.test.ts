@@ -2,7 +2,28 @@
  * ErrorService 测试
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+// i18next 在 vitest 上下文中未初始化（翻译资源由 Tauri 侧 src-tauri/locales 加载，
+// 不进入 JS 测试环境），未初始化的 t() 会返回空串/undefined。此处以 src-tauri/locales/zh-cn.json
+// 中的真实翻译作为 fixture mock t()，使 AppError 的 i18n 驱动逻辑（资源插值、按分类回退）可观测。
+vi.mock('i18next', () => {
+  const TRANSLATIONS: Record<string, string> = {
+    error_network: '网络连接失败，请检查网络设置',
+    error_validation: '输入数据有误，请检查后重试',
+    error_resource_not_found: '{{resource}} 不存在',
+  }
+  const t = (key: string, opts?: Record<string, unknown>): string => {
+    const raw = TRANSLATIONS[key]
+    if (raw === undefined) {
+      // 未知 key：尊重 defaultValue 选项（getUserMessage 的回退链依赖此行为）
+      return (opts?.defaultValue as string | undefined) ?? key
+    }
+    return raw.replace(/\{\{(\w+)\}\}/g, (_, name: string) => String(opts?.[name] ?? ''))
+  }
+  return { t, default: { t } }
+})
+
 import {
   ErrorCategory,
   ErrorSeverity,

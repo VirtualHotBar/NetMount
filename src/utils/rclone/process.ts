@@ -1,5 +1,4 @@
-import { invoke } from '@tauri-apps/api/core'
-import { Child } from '@tauri-apps/plugin-shell'
+import { getRuntime } from '../../runtime/port'
 import { rcloneInfo } from '../../services/rclone'
 import { rclone_api_noop, rclone_api_post } from './request'
 import { formatPath, getAvailablePorts } from '../index'
@@ -53,12 +52,8 @@ async function startRclone() {
   )
 
   // 确保缓存和临时目录存在
-  try {
-    await invoke('fs_make_dir', { path: rcloneInfo.localArgs.path.tempDir })
-    await invoke('fs_make_dir', { path: rcloneTempDir })
-  } catch {
-    // ignore - rclone will create it if needed
-  }
+  await getRuntime().fs.makeDir(rcloneInfo.localArgs.path.tempDir)
+  await getRuntime().fs.makeDir(rcloneTempDir)
 
   //自动分配端口
   rcloneInfo.endpoint.localhost.port = (await getAvailablePorts(2))[1]!
@@ -68,11 +63,7 @@ async function startRclone() {
   // 确保日志目录存在（用于"设置-组件-日志"查看）
   const logDir = netmountLogDir()
   const logFile = rcloneLogFile()
-  try {
-    await invoke('fs_make_dir', { path: logDir })
-  } catch {
-    // ignore
-  }
+  await getRuntime().fs.makeDir(logDir)
   rcloneInfo.process.logFile = logFile
 
   const args: string[] = [
@@ -80,7 +71,7 @@ async function startRclone() {
     `--rc-addr=:${rcloneInfo.endpoint.localhost.port.toString()}`,
     `--rc-user=${nmConfig.framework.rclone.user}`,
     `--rc-pass=${nmConfig.framework.rclone.password}`,
-    '--rc-allow-origin=' + window.location.origin || '*',
+    '--rc-allow-origin=' + (rcloneInfo.endpoint.url || '*'),
     `--config=${rcloneConfigFile()}`,
     '--cache-dir=' + rcloneInfo.localArgs.path.tempDir,
     '--temp-dir=' + rcloneTempDir,
@@ -112,7 +103,7 @@ async function startRclone() {
     readyCheck: rclone_api_noop,
     initialDelayMs: 1000,
   })
-  rcloneInfo.process.child = { pid } as Child
+  rcloneInfo.process.child = { pid }
   logger.info('rclone spawned from Rust', 'Rclone', { pid })
 }
 

@@ -1,10 +1,9 @@
-import { Child, Command } from '@tauri-apps/plugin-shell'
 import { RcloneStats } from './stats'
 
 interface RcloneInfo {
   process: {
-    command?: Command
-    child?: Child
+    command?: unknown
+    child?: { pid: number }
     log?: string
     logFile?: string
   }

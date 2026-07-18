@@ -1,15 +1,12 @@
-import * as os from '@tauri-apps/plugin-os'
 import { setOsInfo } from '../../services/ConfigService'
-import { invoke } from '@tauri-apps/api/core'
+import { getRuntime } from '../../runtime/port'
+import type { OSInfo } from '../../type/config'
 
 async function getOsInfo() {
-  setOsInfo({
-    arch: await os.arch(),
-    osType: await os.type(),
-    platform: await os.platform(),
-    tempDir: await invoke('get_temp_dir'),
-    osVersion: await os.version(),
-  })
+  // The runtime port returns plain strings (decoupled from @tauri-apps Arch/
+  // OsType/Platform enums); at runtime these are produced by os.arch()/type()/
+  // platform() so they are valid OSInfo values.
+  setOsInfo((await getRuntime().osInfo.info()) as OSInfo)
 }
 
 export { getOsInfo }

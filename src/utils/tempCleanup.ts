@@ -6,7 +6,7 @@
  * 在卸载和退出时清理临时文件和缓存文件
  */
 
-import { invoke } from '@tauri-apps/api/core'
+import { getRuntime } from '../runtime/port'
 import { nmConfig, osInfo } from '../services/ConfigService'
 import { logger } from '../services/LoggerService'
 import { netmountLogDir } from './netmountPaths'
@@ -92,15 +92,13 @@ export function stopPeriodicCleanup(): void {
  */
 async function cleanupDirectory(dirPath: string, minAge: string): Promise<void> {
   try {
-    const exists = await invoke<boolean>('fs_exist_dir', { path: dirPath })
+    const exists = await getRuntime().fs.existDir(dirPath)
     if (!exists) {
       return
     }
 
-    await invoke('run_sidecar_once', {
-      name: 'binaries/rclone',
-      args: ['delete', dirPath, '--min-age', minAge],
-      timeout_ms: 30000,
+    await getRuntime().spawn.runSidecarOnce('binaries/rclone', ['delete', dirPath, '--min-age', minAge], {
+      timeoutMs: 30000,
     }).catch(() => {
       // 忽略错误，清理失败不影响主流程
     })
@@ -115,15 +113,13 @@ async function cleanupDirectory(dirPath: string, minAge: string): Promise<void> 
  */
 async function purgeDirectory(dirPath: string, timeoutMs: number = 30000): Promise<void> {
   try {
-    const exists = await invoke<boolean>('fs_exist_dir', { path: dirPath })
+    const exists = await getRuntime().fs.existDir(dirPath)
     if (!exists) {
       return
     }
 
-    await invoke('run_sidecar_once', {
-      name: 'binaries/rclone',
-      args: ['purge', dirPath],
-      timeout_ms: timeoutMs,
+    await getRuntime().spawn.runSidecarOnce('binaries/rclone', ['purge', dirPath], {
+      timeoutMs,
     }).catch(() => {
       // 忽略错误
     })
@@ -137,16 +133,14 @@ async function purgeDirectory(dirPath: string, timeoutMs: number = 30000): Promi
  */
 async function cleanupOldLogs(logDir: string, minAge: string): Promise<void> {
   try {
-    const exists = await invoke<boolean>('fs_exist_dir', { path: logDir })
+    const exists = await getRuntime().fs.existDir(logDir)
     if (!exists) {
       return
     }
 
     // 只清理 .log.1, .log.2 等轮转日志，保留当前日志
-    await invoke('run_sidecar_once', {
-      name: 'binaries/rclone',
-      args: ['delete', logDir, '--include', '*.log.*', '--min-age', minAge],
-      timeout_ms: 30000,
+    await getRuntime().spawn.runSidecarOnce('binaries/rclone', ['delete', logDir, '--include', '*.log.*', '--min-age', minAge], {
+      timeoutMs: 30000,
     }).catch(() => {
       // 忽略错误
     })
@@ -173,10 +167,8 @@ export async function cleanupVfsCacheOnUnmount(storageName: string): Promise<voi
     // 2. 尝试清理该存储在 VFS 缓存中的残留文件
     // rclone VFS 缓存路径格式: <cache-dir>/vfs/<remote>/<path>
     // 使用 rclone cleanup 命令清理缓存中的残留文件
-    await invoke('run_sidecar_once', {
-      name: 'binaries/rclone',
-      args: ['cleanup', storageName + ':'],
-      timeout_ms: 15000,
+    await getRuntime().spawn.runSidecarOnce('binaries/rclone', ['cleanup', storageName + ':'], {
+      timeoutMs: 15000,
     }).catch(() => {
       // cleanup 可能因远程不可用而失败，忽略
     })

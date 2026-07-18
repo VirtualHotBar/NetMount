@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core'
+import { getRuntime } from '../../runtime/port'
 import { openlistDataDir } from './paths'
 import { openlistInfo } from '../../services/openlist'
 import { createStorage } from '../../services/storage/StorageCreationService'
@@ -91,17 +91,17 @@ async function modifyOpenlistConfig(
 
   // 确保数据目录及子目录存在
   try {
-    await invoke('fs_make_dir', { path: dataDir })
-    await invoke('fs_make_dir', { path: joinDir(dataDir, 'data') })
-    await invoke('fs_make_dir', { path: joinDir(dataDir, 'log') })
-    await invoke('fs_make_dir', { path: joinDir(dataDir, 'bleve') })
+    await getRuntime().fs.makeDir(dataDir)
+    await getRuntime().fs.makeDir(joinDir(dataDir, 'data'))
+    await getRuntime().fs.makeDir(joinDir(dataDir, 'log'))
+    await getRuntime().fs.makeDir(joinDir(dataDir, 'bleve'))
   } catch (e) {
     // 目录可能已存在
   }
 
   let oldOpenlistConfig: Record<string, unknown> = {}
   try {
-    oldOpenlistConfig = (await invoke('read_json_file', { path: configPath })) as Record<
+    oldOpenlistConfig = (await getRuntime().fs.readJsonFile(configPath)) as Record<
       string,
       unknown
     >
@@ -157,7 +157,7 @@ async function modifyOpenlistConfig(
     newOpenlistConfig.temp_dir = toRelativePath(newOpenlistConfig.temp_dir)
   }
 
-  await invoke('write_json_file', { configData: newOpenlistConfig, path: configPath })
+  await getRuntime().fs.writeJsonFile(configPath, newOpenlistConfig)
 }
 
 async function addOpenlistInRclone() {

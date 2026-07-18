@@ -1,4 +1,3 @@
-import { Child } from '@tauri-apps/plugin-shell'
 import { formatPath, getAvailablePorts } from '../index'
 import { openlistInfo } from '../../services/openlist'
 import { nmConfig, osInfo } from '../../services/ConfigService'
@@ -67,7 +66,7 @@ async function startOpenlist() {
     throw new Error(`Failed to spawn OpenList: ${e}`)
   }
 
-  openlistInfo.process.child = { pid } as Child
+  openlistInfo.process.child = { pid }
   openlistInfo.process.log = '' // 初始化日志
   openlistInfo.process.logFile = openlistLogFile()
   logger.info('openlist spawned from Rust', 'OpenList', { pid })

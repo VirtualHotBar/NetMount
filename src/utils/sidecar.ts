@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core'
+import { getRuntime } from '../runtime/port'
 import { sleep } from './index'
 import { logger } from '../services/LoggerService'
 
@@ -20,7 +20,7 @@ function shortSidecarName(nameOrBinary: string): string {
 }
 
 async function spawnSidecar(binary: string, args: string[], cwd?: string): Promise<number> {
-  return await invoke<number>('spawn_sidecar', { name: binary, args, cwd })
+  return await getRuntime().spawn.spawnSidecar(binary, args, cwd)
 }
 
 async function runSidecarOnce(
@@ -28,17 +28,12 @@ async function runSidecarOnce(
   args: string[],
   opts?: { timeoutMs?: number; cwd?: string }
 ): Promise<RunSidecarOnceResult> {
-  return await invoke<RunSidecarOnceResult>('run_sidecar_once', {
-    name: binary,
-    args,
-    timeout_ms: opts?.timeoutMs,
-    cwd: opts?.cwd,
-  })
+  return await getRuntime().spawn.runSidecarOnce(binary, args, opts)
 }
 
 async function killSidecar(nameOrBinary: string): Promise<boolean> {
   const name = shortSidecarName(nameOrBinary)
-  return (await invoke('kill_sidecar', { name })) as boolean
+  return await getRuntime().spawn.killSidecar(name)
 }
 
 async function waitForReady(check: () => Promise<boolean>, opts: WaitReadyOptions): Promise<void> {

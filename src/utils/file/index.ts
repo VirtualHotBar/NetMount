@@ -1,8 +1,5 @@
-import * as fs from '@tauri-apps/plugin-fs'
-import * as shell from '@tauri-apps/plugin-shell'
-import { runCmd } from '../tauri/cmd'
+import { getRuntime } from '../../runtime/port'
 import { logger } from '../../services/LoggerService'
-import { invoke } from '@tauri-apps/api/core'
 
 /**
  * 下载文件
@@ -11,11 +8,8 @@ import { invoke } from '@tauri-apps/api/core'
  * @returns 文件是否成功下载
  */
 export async function downloadFile(url: string, path: string): Promise<boolean> {
-  await invoke('download_file', {
-    url: url,
-    outPath: path,
-  })
-  return await fs.exists(path)
+  await getRuntime().fs.downloadFile(url, path)
+  return await getRuntime().fs.exists(path)
 }
 
 /**
@@ -23,7 +17,7 @@ export async function downloadFile(url: string, path: string): Promise<boolean> 
  * @returns WinFsp 是否已安装
  */
 export async function getWinFspInstallState(): Promise<boolean> {
-  return (await invoke('get_winfsp_install_state')) as boolean
+  return await getRuntime().system.getWinFspInstallState()
 }
 
 /**
@@ -32,7 +26,7 @@ export async function getWinFspInstallState(): Promise<boolean> {
  */
 export async function installWinFsp(): Promise<boolean> {
   try {
-    await runCmd('msiexec', ['/i', 'binaries\\winfsp.msi', '/passive'])
+    await getRuntime().spawn.runCmd('msiexec', ['/i', 'binaries\\winfsp.msi', '/passive'])
     return true
   } catch {
     return false
@@ -46,11 +40,11 @@ export async function installWinFsp(): Promise<boolean> {
 export async function openWinFspInstaller(): Promise<boolean> {
   const installerPath = 'binaries\\winfsp.msi'
   try {
-    await shell.open(installerPath)
+    await getRuntime().spawn.openExternal(installerPath)
     return true
   } catch {
     try {
-      await runCmd('explorer', [installerPath])
+      await getRuntime().spawn.runCmd('explorer', [installerPath])
       return true
     } catch {
       return false
@@ -63,7 +57,7 @@ export async function openWinFspInstaller(): Promise<boolean> {
  * @param url - 要打开的 URL
  */
 export async function openUrlInBrowser(url: string): Promise<void> {
-  await shell.open(url)
+  await getRuntime().spawn.openExternal(url)
 }
 
 /**
@@ -82,13 +76,7 @@ export async function showPathInExplorer(path: string, isDir?: boolean): Promise
   }
 
   try {
-    if (isDir) {
-      await runCmd('explorer', [path])
-    } else {
-      await runCmd('explorer', ['/select,', path])
-    }
-
-    return true
+    return await getRuntime().spawn.showPathInExplorer(path, isDir)
   } catch {
     return false
   }
@@ -183,7 +171,7 @@ export function getFileExtension(inputPath: string): string {
  * @returns 连接后的路径
  * 
  * @example
- * joinPath('folder', 'subfolder', 'file.txt') // '/folder/subfolder/file.txt'
+ * joinPath('folder', 'subfolder', 'file.txt') // 'folder/subfolder/file.txt'
  * joinPath('/folder/', '/subfolder/') // '/folder/subfolder'
  */
 export function joinPath(...paths: string[]): string {
@@ -248,9 +236,7 @@ export function getPathDepth(inputPath: string): number {
  * @returns 目录是否存在
  */
 export async function fs_exist_dir(path: string): Promise<boolean> {
-  return (await invoke('fs_exist_dir', {
-    path: path,
-  })) as boolean
+  return await getRuntime().fs.existDir(path)
 }
 
 /**
@@ -260,9 +246,7 @@ export async function fs_exist_dir(path: string): Promise<boolean> {
  */
 export async function fs_make_dir(path: string): Promise<boolean> {
   try {
-    await invoke('fs_make_dir', {
-      path: path,
-    })
+    await getRuntime().fs.makeDir(path)
     return true
   } catch {
     return false

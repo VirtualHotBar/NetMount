@@ -1,4 +1,4 @@
-import { Message } from '@arco-design/web-react'
+import { getRuntime } from '../../runtime/port'
 import { rcloneInfo } from '../../services/rclone'
 import { logger } from '../../services/LoggerService'
 import { buildApiUrl, getRcloneApiHeaders, handleApiResponse } from './httpClient'
@@ -50,7 +50,7 @@ async function printError(error: Error | Response): Promise<void> {
   }
 
   if (errorMessage) {
-    Message.error(errorMessage)
+    getRuntime().notify('error', errorMessage)
   }
 }
 
@@ -203,14 +203,14 @@ async function rclone_api_wait_for_job(
       } else {
         const errorMsg = status.error || 'Unknown error'
         logger.error(`Job ${jobid} failed: ${errorMsg}`)
-        Message.error(`Task failed: ${errorMsg}`)
+        getRuntime().notify('error', `Task failed: ${errorMsg}`)
         return false
       }
     }
 
     if (timeout > 0 && Date.now() - startTime > timeout) {
       logger.error(`Job ${jobid} timed out`, undefined, 'Rclone')
-      Message.error('Task timed out')
+      getRuntime().notify('error', 'Task timed out')
       await rclone_api_post('/job/stop', { jobid }, true).catch(() => {})
       return false
     }

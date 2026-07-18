@@ -5,8 +5,7 @@
  * 保持向后兼容的导出接口
  */
 
-import { invoke } from '@tauri-apps/api/core'
-import { Notification } from '@arco-design/web-react'
+import { getRuntime } from '../../../runtime/port'
 import { mountRepository } from '../../../repositories/mount/MountRepository'
 import { MountListItem } from '../../../type/config'
 import { logger } from '../../../services/LoggerService'
@@ -86,10 +85,7 @@ async function delMountStorage(mountPath: string) {
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
     mountLogger.error('Failed to delete mount config', error as Error)
-    Notification.error({
-      title: '删除挂载配置失败',
-      content: errorMsg,
-    })
+    getRuntime().notify('error', '删除挂载配置失败: ' + errorMsg)
   }
 }
 
@@ -112,11 +108,7 @@ async function mountStorage(mountInfo: MountListItem): Promise<boolean> {
     mountLogger.error(`Mount failed for ${mountInfo.mountPath}`, error as Error)
     
     // 显示友好的错误通知，而不是让错误传播到生产模式
-    Notification.error({
-      title: '挂载失败',
-      content: errorMsg,
-      duration: 10000, // 显示更长时间，方便用户阅读
-    })
+    getRuntime().notify('error', '挂载失败: ' + errorMsg)
     return false
   }
 }
@@ -131,10 +123,7 @@ async function unmountStorage(mountPath: string): Promise<boolean> {
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error)
     mountLogger.error(`Unmount failed for ${mountPath}`, error as Error)
-    Notification.error({
-      title: '卸载失败',
-      content: errorMsg,
-    })
+    getRuntime().notify('error', '卸载失败: ' + errorMsg)
     return false
   }
 }
@@ -143,7 +132,7 @@ async function unmountStorage(mountPath: string): Promise<boolean> {
  * 获取可用驱动器字母（Windows）
  */
 async function getAvailableDriveLetter(): Promise<string> {
-  return await invoke('get_available_drive_letter')
+  return await getRuntime().paths.availableDriveLetter()
 }
 
 // ==========================================

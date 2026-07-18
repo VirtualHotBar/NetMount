@@ -64,11 +64,17 @@ vi.mock('../../type/rclone/api', () => ({
 describe('MountRepository', () => {
   let repository: MountRepository
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2024-01-01'))
     repository = new MountRepository()
     vi.clearAllMocks()
+
+    // vitest config sets mockReset/clearMocks, so module-level mock
+    // implementations are wiped before each test. Re-establish the response
+    // type guard (mountHelpers.refreshMountList gates on isMountListResponse).
+    const { isMountListResponse } = await import('../../type/rclone/api')
+    vi.mocked(isMountListResponse).mockReturnValue(true)
   })
 
   afterEach(() => {
@@ -99,9 +105,9 @@ describe('MountRepository', () => {
 
   describe('mountStorage', () => {
     it('should mount storage successfully', async () => {
-      const { nmConfig, saveNmConfig } = await import('../../services/ConfigService')
+      const { nmConfig } = await import('../../services/ConfigService')
       const { rclone_api_post } = await import('../../utils/rclone/request')
-      
+
       nmConfig.mount.lists = []
       vi.mocked(rclone_api_post).mockResolvedValueOnce(undefined)
       vi.mocked(rclone_api_post).mockResolvedValueOnce({
@@ -119,7 +125,12 @@ describe('MountRepository', () => {
 
       await repository.mountStorage(mountInfo)
 
-      expect(saveNmConfig).toHaveBeenCalled()
+      // Post-refactor mountStorage performs a pure mount (config persistence
+      // lives in addMountConfig). Assert the /mount/mount call fired.
+      expect(rclone_api_post).toHaveBeenCalledWith(
+        '/mount/mount',
+        expect.objectContaining({ mountPoint: expect.any(String) })
+      )
     })
   })
 

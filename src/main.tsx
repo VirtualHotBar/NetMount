@@ -11,6 +11,12 @@ import './controller/errorHandling'
 import { logger } from './services'
 import { webviewWindow } from '@tauri-apps/api'
 import { exit } from '@tauri-apps/plugin-process'
+import { setRuntime } from './runtime/port'
+import { tauriRuntime } from './runtime/tauri'
+
+// Install the Tauri runtime before any business logic runs. Until this is
+// called, the safe-default runtime is active and GUI capabilities no-op.
+setRuntime(tauriRuntime)
 
 function StartPage() {
   const { t } = useTranslation()

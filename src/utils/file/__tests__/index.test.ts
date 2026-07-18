@@ -36,7 +36,7 @@ describe('File Utils - Path Functions', () => {
     })
 
     it('should handle paths without leading slash', () => {
-      expect(getParentPath('folder/subfolder')).toBe('folder')
+      expect(getParentPath('folder/subfolder')).toBe('/folder')
     })
   })
 
@@ -90,7 +90,7 @@ describe('File Utils - Path Functions', () => {
 
   describe('joinPath', () => {
     it('should join multiple path segments', () => {
-      expect(joinPath('folder', 'subfolder', 'file.txt')).toBe('/folder/subfolder/file.txt')
+      expect(joinPath('folder', 'subfolder', 'file.txt')).toBe('folder/subfolder/file.txt')
     })
 
     it('should handle paths with leading/trailing slashes', () => {

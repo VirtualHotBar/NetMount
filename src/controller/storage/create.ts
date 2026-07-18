@@ -1,4 +1,4 @@
-import { Message } from '@arco-design/web-react'
+import { getRuntime } from '../../runtime/port'
 import { t } from 'i18next'
 import { ParametersType } from '../../type/defaults'
 import { openlist_api_post } from '../../utils/openlist/request'
@@ -77,14 +77,14 @@ async function createStorage(
   // 输入验证
   const validation = validateStorageInput(name, type, parameters)
   if (!validation.valid) {
-    Message.error(validation.error || t('validation_input_invalid'))
+    getRuntime().notify('error',validation.error || t('validation_input_invalid'))
     logger.error('Storage validation failed', undefined, 'StorageCreate', { error: validation.error })
     return false
   }
 
   const storageInfo = searchStorageInfo(type)
   if (!storageInfo) {
-    Message.error(t('error_unsupported_storage_type') + ': ' + type)
+    getRuntime().notify('error',t('error_unsupported_storage_type') + ': ' + type)
     logger.error('Storage type not found', undefined, 'StorageCreate', { type })
     return false
   }
@@ -117,7 +117,7 @@ async function createStorage(
           serializedAddition = JSON.stringify(parameters.addition)
         } catch (e) {
           logger.error('Failed to serialize addition', e as Error, 'StorageCreate')
-          Message.error(t('error_storage_params_serialization'))
+          getRuntime().notify('error',t('error_storage_params_serialization'))
           return false
         }
 
@@ -135,7 +135,7 @@ async function createStorage(
           // 更新现有存储
           const storageId = storage.other?.openlist?.id
           if (!storageId) {
-            Message.error(t('error_storage_id_not_found'))
+            getRuntime().notify('error',t('error_storage_id_not_found'))
             return false
           }
           backData = await openlist_api_post('/api/admin/storage/update', {
@@ -145,7 +145,7 @@ async function createStorage(
         }
 
         if (backData.code !== 200) {
-          Message.error(backData.message || t('error_operation_failed'))
+          getRuntime().notify('error',backData.message || t('error_operation_failed'))
           return false
         }
 
@@ -154,12 +154,12 @@ async function createStorage(
       }
 
       default:
-        Message.error(t('error_unsupported_framework') + ': ' + storageInfo.framework)
+        getRuntime().notify('error',t('error_unsupported_framework') + ': ' + storageInfo.framework)
         return false
     }
   } catch (error) {
     logger.error('Storage operation failed', error as Error, 'StorageCreate')
-    Message.error(t('error_storage_network_failure'))
+    getRuntime().notify('error',t('error_storage_network_failure'))
     return false
   }
 }
