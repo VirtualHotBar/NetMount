@@ -1,0 +1,389 @@
+name: "Daily Build"
+
+on:
+  schedule:
+    # 每天凌晨 2:00 UTC（北京时间 10:00）
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: daily-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  RUST_TOOLCHAIN: stable
+  OPENLIST_VERSION: "v4.1.10"
+
+jobs:
+  # ========== 获取版本信息 ==========
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      dev_version: ${{ steps.version.outputs.dev_version }}
+      short_sha: ${{ steps.version.outputs.short_sha }}
+      rclone_version: ${{ steps.version.outputs.rclone_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: version
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          DEV_VERSION="${PACKAGE_VERSION}-${SHORT_SHA}"
+          echo "dev_version=$DEV_VERSION" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "Dev version: $DEV_VERSION"
+
+          # rclone 始终从 rclone-current-* 下载最新版本（见 src-tauri/build.rs），
+          # 因此缓存 key 必须绑定实际的当前版本号，而不是固定字符串 "current"，
+          # 否则一旦命中缓存就会永远使用首次缓存时的旧版 rclone。
+          RCLONE_VERSION=$(curl -fsSL https://downloads.rclone.org/version.txt 2>/dev/null | awk '{print $2}')
+          if [ -z "$RCLONE_VERSION" ]; then
+            RCLONE_VERSION="unknown-$(date -u +%Y-%m-%d)"
+            echo "::warning::Failed to resolve current rclone version, falling back to date-based cache key: $RCLONE_VERSION"
+          fi
+          echo "rclone_version=$RCLONE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved rclone version: $RCLONE_VERSION"
+
+  # ========== 创建 draft prerelease（避免多个矩阵任务并发创建/更新同一个 Release）==========
+  create-release:
+    needs: [prepare]
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      release_id: ${{ steps.create-release.outputs.result }}
+    steps:
+      - id: create-release
+        uses: actions/github-script@v7
+        env:
+          DEV_VERSION: ${{ needs.prepare.outputs.dev_version }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const tag = `daily-v${process.env.DEV_VERSION}`
+            try {
+              const { data } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag
+              })
+              core.info(`Release already exists for ${tag} (e.g. re-run), reusing id=${data.id}`)
+              return data.id
+            } catch {
+              core.info(`Creating new draft release for ${tag}`)
+            }
+            const { data } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              target_commitish: context.sha,
+              name: `NetMount Dev ${process.env.DEV_VERSION}`,
+              body: [
+                '> This is an automated daily development build. Use at your own risk.',
+                `> Commit: ${context.sha}`
+              ].join('\n'),
+              draft: true,
+              prerelease: true
+            })
+            core.info(`Created draft release ${tag}, id=${data.id}`)
+            return data.id
+
+  # ========== 多平台构建 ==========
+  build:
+    needs: [prepare, create-release]
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            target: 'aarch64-apple-darwin'
+            args: '--target aarch64-apple-darwin'
+            arch: 'aarch64'
+          - platform: 'macos-latest'
+            target: 'x86_64-apple-darwin'
+            args: '--target x86_64-apple-darwin'
+            arch: 'x86_64'
+          - platform: 'ubuntu-22.04'
+            target: 'x86_64-unknown-linux-gnu'
+            args: ''
+            arch: 'x86_64'
+          - platform: 'ubuntu-22.04-arm'
+            target: 'aarch64-unknown-linux-gnu'
+            args: ''
+            arch: 'aarch64'
+          - platform: 'windows-latest'
+            target: 'x86_64-pc-windows-msvc'
+            args: ''
+            arch: 'x86_64'
+          - platform: 'windows-11-arm'
+            target: 'aarch64-pc-windows-msvc'
+            args: ''
+            arch: 'aarch64'
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: daily-${{ matrix.target }}
+          cache-on-failure: true
+
+      - name: Cache binaries
+        uses: actions/cache@v4
+        id: cache-binaries
+        with:
+          path: |
+            src-tauri/binaries/rclone
+            src-tauri/binaries/openlist
+            src-tauri/binaries/rclone-${{ matrix.target }}${{ contains(matrix.platform, 'windows') && '.exe' || '' }}
+            src-tauri/binaries/openlist-${{ matrix.target }}${{ contains(matrix.platform, 'windows') && '.exe' || '' }}
+            src-tauri/binaries/winfsp.msi
+          key: binaries-${{ matrix.target }}-${{ needs.prepare.outputs.rclone_version }}-${{ env.OPENLIST_VERSION }}
+
+      - name: Resolve skip-downloads flag
+        id: resolve-skip-downloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.cache-binaries.outputs.cache-hit }}" != "true" ]; then
+            echo "skip_downloads=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          ext=""
+          if [ "${{ contains(matrix.platform, 'windows') }}" = "true" ]; then
+            ext=".exe"
+          fi
+
+          has_rclone=false
+          has_openlist=false
+
+          if [ -f "src-tauri/binaries/rclone${ext}" ] || [ -f "src-tauri/binaries/rclone-${{ matrix.target }}${ext}" ]; then
+            has_rclone=true
+          fi
+
+          if [ -f "src-tauri/binaries/openlist${ext}" ] || [ -f "src-tauri/binaries/openlist-${{ matrix.target }}${ext}" ]; then
+            has_openlist=true
+          fi
+
+          if [ "$has_rclone" = "true" ] && [ "$has_openlist" = "true" ]; then
+            echo "skip_downloads=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip_downloads=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Linux dependencies
+        if: contains(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - run: pnpm install --frozen-lockfile
+
+      # 修改版本号为开发版本：{base_version}-{short_sha}
+      - name: Patch version to dev build
+        shell: bash
+        run: |
+          DEV_VERSION="${{ needs.prepare.outputs.dev_version }}"
+
+          # 修改 package.json
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '${DEV_VERSION}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('package.json version set to:', pkg.version);
+          "
+
+          # 同步版本到 Cargo.toml
+          node scripts/sync-version.mjs
+
+      # 检测是否有签名密钥（fork 通常没有此 secret，跳过 updater 签名即可）
+      - name: Check signing key availability
+        id: signing-check
+        shell: bash
+        env:
+          KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then
+            echo "has_key=true" >> "$GITHUB_OUTPUT"
+            echo "Signing key found, updater artifacts will be generated."
+          else
+            echo "has_key=false" >> "$GITHUB_OUTPUT"
+            echo "No signing key configured, disabling updater artifacts."
+            node -e "
+              const fs = require('fs');
+              const path = 'src-tauri/tauri.conf.json';
+              const conf = JSON.parse(fs.readFileSync(path, 'utf8'));
+              conf.bundle.createUpdaterArtifacts = false;
+              fs.writeFileSync(path, JSON.stringify(conf, null, 2) + '\n');
+              console.log('Patched createUpdaterArtifacts to false');
+            "
+          fi
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.resolve-skip-downloads.outputs.skip_downloads }}
+        with:
+          # 复用 create-release job 预先创建好的 draft release，避免多个矩阵任务
+          # 并发创建/更新同一个 tag 的 Release 导致竞争或残留半成品 prerelease。
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          tauriScript: pnpm tauri
+          args: ${{ matrix.args }}
+          includeUpdaterJson: ${{ steps.signing-check.outputs.has_key == 'true' }}
+
+      # Windows 便携式版本
+      - name: Create Windows portable ZIP
+        if: contains(matrix.platform, 'windows')
+        shell: pwsh
+        env:
+          DEV_VERSION: ${{ needs.prepare.outputs.dev_version }}
+          ARCH: ${{ matrix.arch }}
+          TARGET: ${{ matrix.target }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $exeExt = ".exe"
+          $exeName = "NetMount"
+
+          # Tauri 原生编译输出到 target/release/，交叉编译输出到 target/{triple}/release/
+          $releaseDir = "src-tauri/target/release"
+          if (-not (Test-Path "$releaseDir/$exeName$exeExt")) {
+            $releaseDir = "src-tauri/target/$env:TARGET/release"
+          }
+          Write-Host "Release dir: $releaseDir"
+
+          $portableDir = "portable-pack"
+          if (Test-Path $portableDir) { Remove-Item -Recurse -Force $portableDir }
+          New-Item -ItemType Directory -Path $portableDir | Out-Null
+
+          Copy-Item "$releaseDir/$exeName$exeExt" "$portableDir/"
+
+          # 打包运行时依赖：tauri.conf.json 中 resources 配置为 "binaries/**/*"，
+          # 而 Windows 上 resolve_resource 的基准目录就是可执行文件所在目录，
+          # 所以便携版必须在 exe 旁携带同样的 binaries/ 目录（rclone/openlist sidecar、winfsp.msi 等），
+          # 否则挂载 rclone/openlist 或安装 WinFsp 时会因找不到文件而失败。
+          $binariesSrc = "src-tauri/binaries"
+          $binariesDst = Join-Path $portableDir "binaries"
+          New-Item -ItemType Directory -Path $binariesDst | Out-Null
+          if (Test-Path $binariesSrc) {
+            Get-ChildItem "$binariesSrc/*-$env:TARGET*" -ErrorAction SilentlyContinue | Copy-Item -Destination $binariesDst
+            Get-ChildItem "$binariesSrc/winfsp.msi" -ErrorAction SilentlyContinue | Copy-Item -Destination $binariesDst
+          }
+
+          $sidecarCount = (Get-ChildItem $binariesDst -ErrorAction SilentlyContinue | Measure-Object).Count
+          if ($sidecarCount -eq 0) {
+            Write-Error "No sidecar binaries found under $binariesSrc for target $env:TARGET; portable ZIP would be missing rclone/openlist/winfsp at runtime."
+          }
+
+          # 创建 .portable 标记文件
+          New-Item -ItemType File -Path "$portableDir/.portable" -Force | Out-Null
+
+          $zipName = "NetMount_${env:DEV_VERSION}_windows_${env:ARCH}_portable.zip"
+
+          Compress-Archive -Path "$portableDir/*" -DestinationPath $zipName -Force
+
+          # Smoke test：解压到独立目录，验证便携包结构完整
+          $smokeDir = "portable-smoke-test"
+          if (Test-Path $smokeDir) { Remove-Item -Recurse -Force $smokeDir }
+          Expand-Archive -Path $zipName -DestinationPath $smokeDir -Force
+
+          if (-not (Test-Path "$smokeDir/$exeName$exeExt")) {
+            Write-Error "Smoke test failed: $exeName$exeExt missing from extracted portable package"
+          }
+          if (-not (Test-Path "$smokeDir/.portable")) {
+            Write-Error "Smoke test failed: .portable marker missing from extracted portable package"
+          }
+          $extractedSidecars = Get-ChildItem "$smokeDir/binaries" -ErrorAction SilentlyContinue
+          if (-not $extractedSidecars -or $extractedSidecars.Count -eq 0) {
+            Write-Error "Smoke test failed: binaries/ (rclone/openlist/winfsp sidecars) missing from extracted portable package"
+          }
+          Write-Host "Portable ZIP smoke test passed. Extracted contents:"
+          Get-ChildItem $smokeDir -Recurse | ForEach-Object { Write-Host " - $($_.FullName)" }
+
+          Remove-Item -Recurse -Force $portableDir, $smokeDir
+
+          Write-Host "Created portable ZIP: $zipName"
+
+          gh release upload "daily-v${env:DEV_VERSION}" $zipName --clobber
+
+  # ========== 发布 Release（所有矩阵任务成功后统一取消 draft）==========
+  publish-release:
+    needs: [prepare, create-release, build]
+    if: needs.create-release.result == 'success' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: process.env.RELEASE_ID,
+              draft: false,
+              prerelease: true
+            })
+
+  # ========== 清理旧的 Daily Release（保留最新 5 个）==========
+  cleanup:
+    needs: [publish-release]
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Delete old daily releases (keep latest 5)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          KEEP_COUNT: 5
+        run: |
+          set -euo pipefail
+          echo "Fetching daily prereleases..."
+          TAGS=$(gh release list --repo "$GH_REPO" --limit 1000 \
+            --json tagName,isPrerelease,isDraft,createdAt \
+            --jq '[.[] | select(.isPrerelease and (.isDraft | not) and (.tagName | startswith("daily-v")))]
+              | sort_by(.createdAt) | reverse | .['$KEEP_COUNT':] | .[].tagName')
+          if [ -z "$TAGS" ]; then
+            echo "No old daily releases to clean up."
+            exit 0
+          fi
+          while read -r tag; do
+            echo "Deleting old daily release: $tag"
+            # --cleanup-tag 同时删除对应的 git tag，避免残留孤立 tag
+            gh release delete "$tag" --yes --cleanup-tag --repo "$GH_REPO"
+            echo "  -> Deleted"
+          done <<< "$TAGS"
+          echo "Cleanup complete."
