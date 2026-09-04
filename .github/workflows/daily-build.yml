@@ -13,7 +13,6 @@ concurrency:
 env:
   NODE_VERSION: '20'
   RUST_TOOLCHAIN: stable
-  RCLONE_VERSION: "current"
   OPENLIST_VERSION: "v4.1.10"
 
 jobs:
@@ -24,6 +23,7 @@ jobs:
     outputs:
       dev_version: ${{ steps.version.outputs.dev_version }}
       short_sha: ${{ steps.version.outputs.short_sha }}
+      rclone_version: ${{ steps.version.outputs.rclone_version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,9 +36,65 @@ jobs:
           echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
           echo "Dev version: $DEV_VERSION"
 
+          # rclone 始终从 rclone-current-* 下载最新版本（见 src-tauri/build.rs），
+          # 因此缓存 key 必须绑定实际的当前版本号，而不是固定字符串 "current"，
+          # 否则一旦命中缓存就会永远使用首次缓存时的旧版 rclone。
+          RCLONE_VERSION=$(curl -fsSL https://downloads.rclone.org/version.txt 2>/dev/null | awk '{print $2}')
+          if [ -z "$RCLONE_VERSION" ]; then
+            RCLONE_VERSION="unknown-$(date -u +%Y-%m-%d)"
+            echo "::warning::Failed to resolve current rclone version, falling back to date-based cache key: $RCLONE_VERSION"
+          fi
+          echo "rclone_version=$RCLONE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved rclone version: $RCLONE_VERSION"
+
+  # ========== 创建 draft prerelease（避免多个矩阵任务并发创建/更新同一个 Release）==========
+  create-release:
+    needs: [prepare]
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      release_id: ${{ steps.create-release.outputs.result }}
+    steps:
+      - id: create-release
+        uses: actions/github-script@v7
+        env:
+          DEV_VERSION: ${{ needs.prepare.outputs.dev_version }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const tag = `daily-v${process.env.DEV_VERSION}`
+            try {
+              const { data } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag
+              })
+              core.info(`Release already exists for ${tag} (e.g. re-run), reusing id=${data.id}`)
+              return data.id
+            } catch {
+              core.info(`Creating new draft release for ${tag}`)
+            }
+            const { data } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              target_commitish: context.sha,
+              name: `NetMount Dev ${process.env.DEV_VERSION}`,
+              body: [
+                '> This is an automated daily development build. Use at your own risk.',
+                `> Commit: ${context.sha}`
+              ].join('\n'),
+              draft: true,
+              prerelease: true
+            })
+            core.info(`Created draft release ${tag}, id=${data.id}`)
+            return data.id
+
   # ========== 多平台构建 ==========
   build:
-    needs: [prepare]
+    needs: [prepare, create-release]
     permissions:
       contents: write
     strategy:
@@ -103,7 +159,7 @@ jobs:
             src-tauri/binaries/rclone-${{ matrix.target }}${{ contains(matrix.platform, 'windows') && '.exe' || '' }}
             src-tauri/binaries/openlist-${{ matrix.target }}${{ contains(matrix.platform, 'windows') && '.exe' || '' }}
             src-tauri/binaries/winfsp.msi
-          key: binaries-${{ matrix.target }}-${{ env.RCLONE_VERSION }}-${{ env.OPENLIST_VERSION }}
+          key: binaries-${{ matrix.target }}-${{ needs.prepare.outputs.rclone_version }}-${{ env.OPENLIST_VERSION }}
 
       - name: Resolve skip-downloads flag
         id: resolve-skip-downloads
@@ -194,12 +250,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           NETMOUNT_SKIP_BIN_DOWNLOADS: ${{ steps.resolve-skip-downloads.outputs.skip_downloads }}
         with:
-          tagName: daily-v${{ needs.prepare.outputs.dev_version }}
-          releaseName: 'NetMount Dev ${{ needs.prepare.outputs.dev_version }}'
-          releaseBody: |
-            > This is an automated daily development build. Use at your own risk.
-            > Commit: ${{ github.sha }}
-          prerelease: true
+          # 复用 create-release job 预先创建好的 draft release，避免多个矩阵任务
+          # 并发创建/更新同一个 tag 的 Release 导致竞争或残留半成品 prerelease。
+          releaseId: ${{ needs.create-release.outputs.release_id }}
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
           includeUpdaterJson: ${{ steps.signing-check.outputs.has_key == 'true' }}
@@ -211,15 +264,17 @@ jobs:
         env:
           DEV_VERSION: ${{ needs.prepare.outputs.dev_version }}
           ARCH: ${{ matrix.arch }}
+          TARGET: ${{ matrix.target }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          $ErrorActionPreference = "Stop"
           $exeExt = ".exe"
           $exeName = "NetMount"
 
           # Tauri 原生编译输出到 target/release/，交叉编译输出到 target/{triple}/release/
           $releaseDir = "src-tauri/target/release"
           if (-not (Test-Path "$releaseDir/$exeName$exeExt")) {
-            $releaseDir = "src-tauri/target/${{ matrix.target }}/release"
+            $releaseDir = "src-tauri/target/$env:TARGET/release"
           }
           Write-Host "Release dir: $releaseDir"
 
@@ -229,6 +284,23 @@ jobs:
 
           Copy-Item "$releaseDir/$exeName$exeExt" "$portableDir/"
 
+          # 打包运行时依赖：tauri.conf.json 中 resources 配置为 "binaries/**/*"，
+          # 而 Windows 上 resolve_resource 的基准目录就是可执行文件所在目录，
+          # 所以便携版必须在 exe 旁携带同样的 binaries/ 目录（rclone/openlist sidecar、winfsp.msi 等），
+          # 否则挂载 rclone/openlist 或安装 WinFsp 时会因找不到文件而失败。
+          $binariesSrc = "src-tauri/binaries"
+          $binariesDst = Join-Path $portableDir "binaries"
+          New-Item -ItemType Directory -Path $binariesDst | Out-Null
+          if (Test-Path $binariesSrc) {
+            Get-ChildItem "$binariesSrc/*-$env:TARGET*" -ErrorAction SilentlyContinue | Copy-Item -Destination $binariesDst
+            Get-ChildItem "$binariesSrc/winfsp.msi" -ErrorAction SilentlyContinue | Copy-Item -Destination $binariesDst
+          }
+
+          $sidecarCount = (Get-ChildItem $binariesDst -ErrorAction SilentlyContinue | Measure-Object).Count
+          if ($sidecarCount -eq 0) {
+            Write-Error "No sidecar binaries found under $binariesSrc for target $env:TARGET; portable ZIP would be missing rclone/openlist/winfsp at runtime."
+          }
+
           # 创建 .portable 标记文件
           New-Item -ItemType File -Path "$portableDir/.portable" -Force | Out-Null
 
@@ -236,15 +308,56 @@ jobs:
 
           Compress-Archive -Path "$portableDir/*" -DestinationPath $zipName -Force
 
-          Remove-Item -Recurse -Force $portableDir
+          # Smoke test：解压到独立目录，验证便携包结构完整
+          $smokeDir = "portable-smoke-test"
+          if (Test-Path $smokeDir) { Remove-Item -Recurse -Force $smokeDir }
+          Expand-Archive -Path $zipName -DestinationPath $smokeDir -Force
+
+          if (-not (Test-Path "$smokeDir/$exeName$exeExt")) {
+            Write-Error "Smoke test failed: $exeName$exeExt missing from extracted portable package"
+          }
+          if (-not (Test-Path "$smokeDir/.portable")) {
+            Write-Error "Smoke test failed: .portable marker missing from extracted portable package"
+          }
+          $extractedSidecars = Get-ChildItem "$smokeDir/binaries" -ErrorAction SilentlyContinue
+          if (-not $extractedSidecars -or $extractedSidecars.Count -eq 0) {
+            Write-Error "Smoke test failed: binaries/ (rclone/openlist/winfsp sidecars) missing from extracted portable package"
+          }
+          Write-Host "Portable ZIP smoke test passed. Extracted contents:"
+          Get-ChildItem $smokeDir -Recurse | ForEach-Object { Write-Host " - $($_.FullName)" }
+
+          Remove-Item -Recurse -Force $portableDir, $smokeDir
 
           Write-Host "Created portable ZIP: $zipName"
 
           gh release upload "daily-v${env:DEV_VERSION}" $zipName --clobber
 
+  # ========== 发布 Release（所有矩阵任务成功后统一取消 draft）==========
+  publish-release:
+    needs: [prepare, create-release, build]
+    if: needs.create-release.result == 'success' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          RELEASE_ID: ${{ needs.create-release.outputs.release_id }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: process.env.RELEASE_ID,
+              draft: false,
+              prerelease: true
+            })
+
   # ========== 清理旧的 Daily Release（保留最新 5 个）==========
   cleanup:
-    needs: [build]
+    needs: [publish-release]
     if: always() && !cancelled()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -259,9 +372,9 @@ jobs:
         run: |
           set -euo pipefail
           echo "Fetching daily prereleases..."
-          TAGS=$(gh release list --repo "$GH_REPO" --limit 100 \
-            --json tagName,isPrerelease,createdAt \
-            --jq '[.[] | select(.isPrerelease and (.tagName | startswith("daily-v")))]
+          TAGS=$(gh release list --repo "$GH_REPO" --limit 1000 \
+            --json tagName,isPrerelease,isDraft,createdAt \
+            --jq '[.[] | select(.isPrerelease and (.isDraft | not) and (.tagName | startswith("daily-v")))]
               | sort_by(.createdAt) | reverse | .['$KEEP_COUNT':] | .[].tagName')
           if [ -z "$TAGS" ]; then
             echo "No old daily releases to clean up."
@@ -269,7 +382,8 @@ jobs:
           fi
           while read -r tag; do
             echo "Deleting old daily release: $tag"
-            gh release delete "$tag" --yes --repo "$GH_REPO"
+            # --cleanup-tag 同时删除对应的 git tag，避免残留孤立 tag
+            gh release delete "$tag" --yes --cleanup-tag --repo "$GH_REPO"
             echo "  -> Deleted"
           done <<< "$TAGS"
           echo "Cleanup complete."
